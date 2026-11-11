@@ -653,7 +653,7 @@ function goalNow() {
     if (V.phase === 'court') { const c = V.ch; if (!c || c.end || c.stage === 'catch') return null;
       if (c.stage === 'run2') return c.hwGot ? {bn: 'স্কুলের গেটে দৌড়াও!', en: 'Run to the school gate!', x: CT_GATE, k: ['Run']} : {bn: 'টায়ারে লাফিয়ে উঠে দেয়ালের খাতাটা নাও', en: 'Jump onto the tyres, then the wall: get your copy', x: 2340, k: ['Space']};
       if (c.stage === 'search' || c.stage === 'leave' || c.autoHide) return null;
-      return {bn: 'দৌড়াও! ড্রাম আর ব্যাগ লাফিয়ে পার হও', en: 'RUN! Jump over the drum and bags', x: CT_TREE, k: ['Run', 'Space']}; }
+      return {bn: 'দৌড়াও! ব্যাগ লাফাও, বেঞ্চের নিচে বসে যাও', en: 'RUN! Jump the bags, crouch under the bench', x: CT_TREE, k: ['Run', 'Space', 'Shift']}; }
     if (V.phase === 'stairs') return null;
     return G.shown.jhumpa ? {bn: 'বসে বসে ঝুম্পার পেছনে যাও; জানালায় আলো জ্বললে লুকাও', en: 'Crouch and follow Jhumpa. Hide when a window lights up', x: VER_JSPOTS[VER_JSPOTS.length - 1], k: ['Shift']} : {bn: 'বসে বসে বারান্দা ধরে এগোও', en: 'Crouch and sneak along the verandah', x: VER_JSPOTS[VER_JSPOTS.length - 1], k: ['Shift']};
   }
@@ -1352,7 +1352,7 @@ function physics(dt, control) {
   const dir = canMove ? (held.right ? 1 : 0) - (held.left ? 1 : 0) : 0;
   // crouch is a toggle: press C once to tiptoe, again to stand; sprinting stands him up
   if (canMove && edges.sneak) { P.crouchOn = !P.crouchOn; if (P.crouchOn) setRun(false); }
-  const noRun = G.level === 'anko' && P.ground && akBenchAt(P.x, P.z);   // under a bench there is no room to run
+  const noRun = G.level === 'anko' && P.ground && akBenchAt(P.x, P.z) || (G.level === 'anko2' && G.ver && G.ver.phase === 'court' && P.ground && P.x > CT_BENCH.x0 - 10 && P.x < CT_BENCH.x1 + 10);   // under a bench there is no room to run
   if (noRun && canMove && (held.sprint || runOn || (joyRun && !P.crouchOn)) && dir && !G.shown.noRunBench) { G.shown.noRunBench = true; G.pSay = {bn: 'বেঞ্চের নিচে দৌড়ানো যায় না!', en: 'No room to run under a bench!', t: 1.6}; }
   const tired = G.level === 'anko2' && G.ver && G.ver.ch && G.ver.phase === 'court' && G.ver.ch.tired;   // out of breath in the chase: no sprint until he recovers
   const wantRun = (!!held.sprint || runOn || (joyRun && !P.crouchOn)) && !noRun && !tired;   // a hard joystick push runs, but never stands him up from a crouch
@@ -5299,7 +5299,8 @@ function drawVer() {
 // ---- the courtyard (v210, from the user's reference): crates and raised brick ledges to jump, stamina (শক্তি) for sprinting,
 //      lamp posts, a chain-link fence, a big tree to hide behind, and Pupu's homework copy glowing on top of a high wall ledge ----
 const CW = 3000, CT_TREE = 1900, CT_GATE = 2780, CT_CHECKS = [160, 1900];
-const CT_HEDGES = [[1440, 1474]], CT_BUCKET = -9999;   // the low trip-hazard here is a set of cricket stumps with a bat; a football rolls across the yard (CT_ROLL)
+const CT_HEDGES = [], CT_BUCKET = -9999, CT_BENCH = {x0: 1360, x1: 1500, seat: 52, wall: 135};   // (v257) a long yard bench: too high to jump, crouch to get under it (a 100 px gap before the tyres)
+   // the low trip-hazard here is a set of cricket stumps with a bat; a football rolls across the yard (CT_ROLL)
 const CT_ROLL = {a: 1120, b: 1400};
 // solid blocks: crates and raised brick ledges. Their tops are surfaces to land on; their sides are walls (jump them!)
 const CT_BLOCKS = [
@@ -5338,6 +5339,14 @@ function updateCourt(dt) {
   // crates and ledges are solid: running into one stops you dead — jump it, or onto it
   if (!C.autoHide) for (const b of CT_BLOCKS) if (P.y > VF - b.h + 4 && P.x > b.x0 - 8 && P.x < b.x1 + 8) { const ox = P.px0 ?? P.x; P.x = ox <= b.x0 ? b.x0 - 8 : ox >= b.x1 ? b.x1 + 8 : (P.vx >= 0 ? b.x0 - 8 : b.x1 + 8); if (Math.abs(P.vx) > 200 && !(C.bonkT > 0)) { C.bonkT = 1; G.shake = 0.12; tone(170, 0.08, 'square', 0.04, 120); } P.vx = 0; }
   C.bonkT = (C.bonkT || 0) - dt;
+  // the bench: standing (or jumping) into it stops him; crouched on the ground he creeps under it and stays crouched until he is out
+  if (!C.autoHide) { const b = CT_BENCH, inX = P.x > b.x0 - 8 && P.x < b.x1 + 8;
+    if (inX && P.y > VF - b.wall) {
+      const under = P.ground && P.y > VF - 4 && (P.sneak || P.crouchOn), ox = P.px0 ?? P.x, wasIn = ox > b.x0 - 8 && ox < b.x1 + 8;
+      if (under || (wasIn && P.ground && P.y > VF - 4)) P.crouchOn = true;   // already under it: he cannot stand up there
+      else { P.x = ox <= b.x0 ? b.x0 - 8 : ox >= b.x1 ? b.x1 + 8 : (P.vx >= 0 ? b.x0 - 8 : b.x1 + 8); P.vx = 0;
+        if (!(C.benchT > 0)) { C.benchT = 2.2; G.shake = 0.1; tone(170, 0.08, 'square', 0.04, 120); G.pSay = {bn: 'উঁচু বেঞ্চ! বসে নিচ দিয়ে যাও!', en: 'Too high! Crouch under the bench!', t: 1.4}; } } } }
+  C.benchT = (C.benchT || 0) - dt;
   // stamina (শক্তি): sprinting drains it; when it runs out he has to slow down and catch his breath
   if (P.sprint && Math.abs(P.vx) > 200 && P.ground) C.stam = Math.max(0, C.stam - 17 * dt); else C.stam = Math.min(100, C.stam + (Math.abs(P.vx) > 40 ? 9 : 22) * dt);
   if (C.stam <= 0 && !C.tired) { C.tired = true; G.pSay = {bn: 'হাঁপিয়ে গেছি…!', en: 'Out of breath…!', t: 1.4}; }
@@ -5350,7 +5359,7 @@ function updateCourt(dt) {
     if (Math.abs(P.x - CT_BUCKET) < 18) { C.stun = 0.6; P.x = P.vx >= 0 ? CT_BUCKET - 22 : CT_BUCKET + 22; P.vx = 0; tone(300, 0.2, 'square', 0.05, 120); G.pSay = {bn: 'ঠনঠন! বালতি!', en: 'Clang! The bucket!', t: 1}; }
   }
   if (C.stage === 'run1') {
-    const gap = P.x - C.sx, v = G.act && G.act.kind === 'hide' ? 95 : gap > 800 ? 280 : 175;   // (v250) slower, so there is time to think; he almost stops while the HIDE pop-up is up
+    const gap = P.x - C.sx, v = (G.act && G.act.kind === 'hide' ? 95 : gap > 800 ? 280 : 175) * (P.x > CT_BENCH.x0 - 8 && P.x < CT_BENCH.x1 + 8 ? 0.55 : 1);   // (v257) he slows while Pupu creeps under the bench   // (v250) slower, so there is time to think; he almost stops while the HIDE pop-up is up
     C.sx += v * dt; C.sanim += dt * v / (18 * 4);   // his stride matches his speed: no sliding
     if (gap < 70 && !C.hid) return verKO(C.sx + 60, VF - 380);
     C.slamCD -= dt;
@@ -5649,7 +5658,6 @@ function ydBack(v) {
   // bushes and grass along the foot of the fence
   for (let x = Math.floor(v.L / 90) * 90; x < fx1; x += 90) { const r = 18 + ydR(x) * 18; ydBlob(x + 20, VF - r * 0.4, r, '#173A26'); ydBlob(x + 14, VF - r * 0.55, r * 0.6, '#2A5E32'); if (ydR(x + 5) > 0.5) ydBlob(x + 8, VF - r * 0.8, r * 0.3, '#6E9A3E'); }
   // benches and a green bin on the footpath
-  for (const bx of [1180, 2000]) { box(bx, VF - 34, 110, 8, '#7A4A2A', 1.4, 1.6); box(bx, VF - 48, 110, 7, '#8A5630', 1.4, 1.6); for (const lx of [bx + 10, bx + 92]) box(lx, VF - 34, 8, 34, '#3A2A20', 1, 1.4); }
   { const gx = 1790; box(gx - 18, VF - 50, 36, 50, '#2E6A3A', 3, 2); box(gx - 21, VF - 54, 42, 8, '#3A7A44', 2, 1.6); line(gx - 10, VF - 40, gx - 10, VF - 6, 'rgba(0,0,0,.25)', 2); }
 }
 function ydLamp(lx) {   // a tall street lamp with a curved arm and a cone of warm light
@@ -5695,6 +5703,15 @@ function ydLedge(b) {   // a brick wall with a concrete coping, a taped notice a
   ctx.strokeStyle = '#2E5A30'; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.moveTo(b.x1 - 30, top - 4); ctx.bezierCurveTo(b.x1 - 50, top + 40, b.x1 - 20, top + 70, b.x1 - 40, top + 110); ctx.stroke();
   for (let k = 0; k < 7; k++) ydBlob(b.x1 - 34 - Math.sin(k) * 10, top + 4 + k * 15, 9, k % 2 ? '#2C5A2E' : '#4A8A3A');
   for (let k = 0; k < 3; k++) line(b.x0 + 30 + k * 6, top - 8, b.x0 + 28 + k * 9, top - 20, '#3E6A3A', 2.2); }
+function ydBench(b) {   // a long wooden yard bench on iron legs: seat, backrest and armrests (drawn in front, so Pupu creeps under it)
+  const x0 = b.x0, x1 = b.x1, sy = VF - b.seat;
+  ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse((x0 + x1) / 2, VF + 3, (x1 - x0) / 2 + 10, 6, 0, 0, 7); ctx.fill();
+  for (const lx of [x0 + 6, x1 - 16]) { box(lx, sy, 10, b.seat, '#2E2A2A', 2, 2); box(lx - 4, VF - 5, 18, 5, '#2E2A2A', 1, 1.6); line(lx + 5, sy - 4, lx + 5, sy - 66, '#2E2A2A', 6); }   // iron legs and back posts
+  for (const [y, h] of [[sy - 70, 13], [sy - 50, 13]]) { box(x0 - 4, y, x1 - x0 + 8, h, '#8A5630', 2, 2); line(x0 + 2, y + 3, x1 - 2, y + 3, 'rgba(255,210,150,.25)', 1.6); }   // backrest slats
+  box(x0 - 8, sy - 10, x1 - x0 + 16, 12, '#9A6236', 2, 2.2); line(x0 - 4, sy - 7, x1 + 4, sy - 7, 'rgba(255,214,150,.35)', 1.6);   // the seat plank, lit edge
+  for (let x = x0 + 30; x < x1 - 20; x += 34) line(x, sy - 10, x, sy + 2, 'rgba(60,30,14,.4)', 1.2);
+  for (const lx of [x0 + 11, x1 - 11]) { ctx.beginPath(); ctx.moveTo(lx, sy - 10); ctx.quadraticCurveTo(lx + (lx < (x0 + x1) / 2 ? -14 : 14), sy - 34, lx, sy - 40); ctx.strokeStyle = '#2E2A2A'; ctx.lineWidth = 4; ctx.stroke(); }   // curled armrests
+}
 function ydFront() {   // dark foreground leaves along the bottom edge (below the footpath, never over the players)
   const v = akView();
   for (let x = Math.floor(v.L / 640) * 640 + 120; x < v.R + 200; x += 640) { for (let k = 0; k < 6; k++) { ctx.save(); ctx.translate(x + k * 26 - 60, VF + 140); ctx.rotate(-1.1 + k * 0.42); ctx.beginPath(); ctx.ellipse(0, -60, 18, 64, 0, 0, 7); ctx.fillStyle = k % 2 ? '#0A1814' : '#0E201A'; ctx.fill(); ctx.restore(); } }
@@ -5738,11 +5755,13 @@ function drawCourt() {
   if (C && C.end && C.end.cup && !C.end.cupTaken) { C.end.cup.t += 0.016; memoryCup(C.end.cup.x, Math.min(VF, C.end.cup.y + C.end.cup.t * 160)); }
   // Jhumpa runs ahead, hopping up onto the crates and ledges like Pupu; at the tree she crouches and beckons
   const atTree = Math.abs(V.jx - CT_TREE - 40) < 6 && C && (C.stage === 'run1' || C.stage === 'search' || C.stage === 'leave');
-  drawJhumpa(V.jx, ctGround(V.jx), V.jface, {walk: V.jwalk ? V.janim : null, run: V.jwalk, crouch: atTree, beckon: atTree && C.stage === 'run1', talk: G.dialog && G.dialog.who === 'jhumpa' || (V.say && V.say.who === 'jhumpa')});
+  const jUnder = V.jx > CT_BENCH.x0 - 14 && V.jx < CT_BENCH.x1 + 14;
+  drawJhumpa(V.jx, ctGround(V.jx), V.jface, {walk: V.jwalk ? V.janim : null, run: V.jwalk && !jUnder, crouch: atTree || jUnder, beckon: atTree && C.stage === 'run1', talk: G.dialog && G.dialog.who === 'jhumpa' || (V.say && V.say.who === 'jhumpa')});
 }
 function drawCourtFront() {
   const V = G.ver, C = V.ch;
   if (C && C.hid) ydTrunk(CT_TREE, 600, 78, true);
+  ydBench(CT_BENCH);
   ydCanopy(CT_TREE + 30, 470, 290, 120, 11, 1);   // the big yard tree's leaves, lit from the lamp beside it
   ydFront();
   // Anko Sir, seen from the side, striding after them (he shrinks to a normal man in the ending)
