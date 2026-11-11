@@ -3,7 +3,10 @@
 
 Last updated: 2026-11-10 (v197). Chapter 1 finished and approved. **Chapter 2 Part 1 (the classroom) finished and approved by the user** ("save the game system till now… then move onto next level"). Keep this file in sync as the game grows.
 
-
+- **Story bible (full story, cast, chapters):** 
+- **Art bible (Rongpat Character Bible, Design canvas):** 
+- **Playable build (HTML, PC + phone):**  (always republished to this same link; v139)
+- **Saved full game source:** project file `claude/pupus-world-game-v84.html` (name kept for history; always overwritten with the latest, now v175). Restore from this if the session's files are lost.
 - **Android app:** WebView wrapper APK (package `com.rongpat.nandanpur`, app "Pupu's World", landscape, fullscreen, debug-signed), built with Apktool 2.9.3 + uber-apk-signer 1.3.0; smali MainActivity loads `file:///android_asset/www/index.html`; targetSdkVersion 36. Bump versionCode every rebuild (latest built: v0.118 = code 118, older than the current HTML). In the APK the HTML hides the fullscreen button and skips auto-fullscreen (`location.href` starts with `file:///android_asset`). A standalone shareable HTML was also sent (PupusWorld-v0.117.html). Both are out of date: rebuild when asked.
 - **Plan:** build the whole game part by part, the user plays and gives feedback, fix, keep it one HTML file playable on PC and phone; deploy only when everything is ready. Dialogue = subtitles (Bangla line + English); voice audio maybe later.
 
@@ -347,3 +350,8 @@ Dawn, real world. Pupu opens the door of Dadu's room, shut since Dadu passed. Mo
 - Start menu sub-lines start with a capital: "Begin with the Prologue", "Play any part of the demo", "Press to switch to বাংলা".
 - Objects to use glow brighter (stronger halo, fuller fill and a soft outline in the object's own shape).
 - Courtyard: the odd floating red disc on posts is now a swing in the dark yard.
+
+## v256 (user)
+- **Schoolyard (user's night reference), the gate unchanged:** deep blue sky with soft cel-shaded clouds, a full moon with a halo that drifts slowly with the view, far town blocks and a tree line; flat-roofed school blocks with parapets, a rooftop stair hut, water tanks and a railing, windows half lit warm gold; a tall chain-link fence with capped posts, a top rail and creepers; the school's name board on the fence (English or Bangla with the language); curved street lamps with cones and pools of warm light (a third lamp beside the big tree); the big yard tree rebuilt with a thick flared trunk lit orange on the lamp side and a cel-shaded leafy canopy; leafy trees behind the fence; a basketball hoop, a red arch swing, wooden benches, a green bin, bushes along the fence; a paved footpath with a lit edge, a curb, a dark grass verge and dark foreground leaves.
+- Yard obstacles restyled: the football is now a red-and-white oil drum (goal text "Jump over the drum and bags"), tyres are rounded with tread and sheen, the high ledge is a brick wall with a concrete coping, a taped notice and a creeper.
+- **Interaction glow:** the object is no longer washed white. The glow is a soft halo around its outline only; the object keeps its own colours with a faint warm tint and a soft gold rim.
