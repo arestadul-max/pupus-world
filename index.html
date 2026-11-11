@@ -5299,7 +5299,7 @@ function drawVer() {
 // ---- the courtyard (v210, from the user's reference): crates and raised brick ledges to jump, stamina (শক্তি) for sprinting,
 //      lamp posts, a chain-link fence, a big tree to hide behind, and Pupu's homework copy glowing on top of a high wall ledge ----
 const CW = 3000, CT_TREE = 1900, CT_GATE = 2780, CT_CHECKS = [160, 1900];
-const CT_HEDGES = [], CT_BUCKET = -9999, CT_BENCH = {x0: 1360, x1: 1500, seat: 52, wall: 135};   // (v257) a long yard bench: too high to jump, crouch to get under it (a 100 px gap before the tyres)
+const CT_HEDGES = [], CT_BUCKET = -9999, CT_BENCH = {x0: 1340, x1: 1500, seat: 160, wall: 175};   // (v257) a long yard bench: too high to jump, crouch to get under it (a 100 px gap before the tyres)
    // the low trip-hazard here is a set of cricket stumps with a bat; a football rolls across the yard (CT_ROLL)
 const CT_ROLL = {a: 1120, b: 1400};
 // solid blocks: crates and raised brick ledges. Their tops are surfaces to land on; their sides are walls (jump them!)
@@ -5364,7 +5364,7 @@ function updateCourt(dt) {
     if (gap < 70 && !C.hid) return verKO(C.sx + 60, VF - 380);
     C.slamCD -= dt;
     if (!C.slam && C.slamCD <= 0 && gap < 650 && gap > 150) { C.slam = {x: Math.min(CT_GATE - 60, P.x + Math.max(0, P.vx) * 0.2), t: 0}; }
-    if (C.slam) { C.slam.t += dt; if (C.slam.t > 0.85 && !C.slam.hit) { C.slam.hit = true; ANKO_THUD(); if (Math.abs(P.x - C.slam.x) < 46 && !C.hid) { C.slam = null; return verKO(P.x, VF - 200); } } if (C.slam && C.slam.t > 1.3) { C.slam = null; C.slamCD = 2.0 + Math.random() * 1.4; } }
+    if (C.slam) { C.slam.t += dt; if (C.slam.t > 0.85 && !C.slam.hit) { C.slam.hit = true; ANKO_THUD(); if (Math.abs(P.x - C.slam.x) < 46 && !C.hid) { if (P.x > CT_BENCH.x0 - 8 && P.x < CT_BENCH.x1 + 8) { G.pSay = {bn: 'উফ্‌! বেঞ্চটা বাঁচাল!', en: 'Phew! The bench saved me!', t: 1.2}; } else { C.slam = null; return verKO(P.x, VF - 200); } } } if (C.slam && C.slam.t > 1.3) { C.slam = null; C.slamCD = 2.0 + Math.random() * 1.4; } }
     // (v243) at the big tree a HIDE pop-up appears; one press and Pupu runs behind the trunk and crouches by himself
     const nearTree = Math.abs(P.x - CT_TREE) < 95 && P.ground && P.y > VF - 4;   // (v250) only right in front of the tree
     if (!C.autoHide && nearTree) { actOffer('hide', 'HIDE!', 'লুকাও!'); if (actPressed()) { C.autoHide = 1; G.act = null; P.vx = 0; tone(700, 0.08, 'triangle', 0.04); } }
@@ -5703,14 +5703,25 @@ function ydLedge(b) {   // a brick wall with a concrete coping, a taped notice a
   ctx.strokeStyle = '#2E5A30'; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.moveTo(b.x1 - 30, top - 4); ctx.bezierCurveTo(b.x1 - 50, top + 40, b.x1 - 20, top + 70, b.x1 - 40, top + 110); ctx.stroke();
   for (let k = 0; k < 7; k++) ydBlob(b.x1 - 34 - Math.sin(k) * 10, top + 4 + k * 15, 9, k % 2 ? '#2C5A2E' : '#4A8A3A');
   for (let k = 0; k < 3; k++) line(b.x0 + 30 + k * 6, top - 8, b.x0 + 28 + k * 9, top - 20, '#3E6A3A', 2.2); }
-function ydBench(b) {   // a long wooden yard bench on iron legs: seat, backrest and armrests (drawn in front, so Pupu creeps under it)
+function ydBench(b, front) {   // (v257b) a tall long school bench like the corridor ones: the seat high up, a dark hollow under it that a crouching child fits into
   const x0 = b.x0, x1 = b.x1, sy = VF - b.seat;
-  ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse((x0 + x1) / 2, VF + 3, (x1 - x0) / 2 + 10, 6, 0, 0, 7); ctx.fill();
-  for (const lx of [x0 + 6, x1 - 16]) { box(lx, sy, 10, b.seat, '#2E2A2A', 2, 2); box(lx - 4, VF - 5, 18, 5, '#2E2A2A', 1, 1.6); line(lx + 5, sy - 4, lx + 5, sy - 66, '#2E2A2A', 6); }   // iron legs and back posts
-  for (const [y, h] of [[sy - 70, 13], [sy - 50, 13]]) { box(x0 - 4, y, x1 - x0 + 8, h, '#8A5630', 2, 2); line(x0 + 2, y + 3, x1 - 2, y + 3, 'rgba(255,210,150,.25)', 1.6); }   // backrest slats
-  box(x0 - 8, sy - 10, x1 - x0 + 16, 12, '#9A6236', 2, 2.2); line(x0 - 4, sy - 7, x1 + 4, sy - 7, 'rgba(255,214,150,.35)', 1.6);   // the seat plank, lit edge
-  for (let x = x0 + 30; x < x1 - 20; x += 34) line(x, sy - 10, x, sy + 2, 'rgba(60,30,14,.4)', 1.2);
-  for (const lx of [x0 + 11, x1 - 11]) { ctx.beginPath(); ctx.moveTo(lx, sy - 10); ctx.quadraticCurveTo(lx + (lx < (x0 + x1) / 2 ? -14 : 14), sy - 34, lx, sy - 40); ctx.strokeStyle = '#2E2A2A'; ctx.lineWidth = 4; ctx.stroke(); }   // curled armrests
+  if (!front) {
+    ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse((x0 + x1) / 2, VF + 2, (x1 - x0) / 2 + 12, 7, 0, 0, 7); ctx.fill();
+    box(x0 + 16, sy + 14, 10, b.seat - 14, '#3E2A1E', 1.8, 1); box(x1 - 26, sy + 14, 10, b.seat - 14, '#3E2A1E', 1.8, 1);   // back legs
+    line(x0 + 20, VF - 34, x1 - 20, VF - 34, '#3A2618', 5);   // the back stretcher
+    box(x0 - 6, sy - 4, x1 - x0 + 12, 18, '#8A5630', 2, 2.2); line(x0, sy, x1, sy, 'rgba(255,214,150,.35)', 2);   // the seat plank, its lit edge
+    box(x0 + 2, sy + 14, x1 - x0 - 4, 10, '#6A4024', 1, 1.6);   // the apron under the seat
+    for (let x = x0 + 34; x < x1 - 20; x += 40) line(x, sy - 4, x, sy + 14, 'rgba(60,30,14,.35)', 1.2);
+    // things left on top: two school bags and a steel water bottle
+    rr(x0 + 22, sy - 34, 40, 30, 7); fs('#2E4A7A', 1.8); line(x0 + 30, sy - 26, x0 + 54, sy - 26, 'rgba(0,0,0,.3)', 2);
+    rr(x0 + 70, sy - 26, 34, 22, 6); fs('#7A2E2E', 1.8); box(x0 + 82, sy - 20, 10, 7, 'rgba(255,255,255,.15)', 1, 1);
+    box(x1 - 40, sy - 36, 14, 32, '#9AA4B0', 3, 1.6); box(x1 - 38, sy - 42, 10, 7, '#5A6470', 2, 1.2);
+  } else {
+    const g = ctx.createLinearGradient(0, sy + 24, 0, VF); g.addColorStop(0, 'rgba(6,8,16,.5)'); g.addColorStop(1, 'rgba(6,8,16,.12)');
+    ctx.fillStyle = g; ctx.fillRect(x0 + 8, sy + 24, x1 - x0 - 16, VF - sy - 24);   // the shadow under the seat
+    box(x0 + 2, sy + 14, 11, b.seat - 14, '#4E3424', 1.8, 1); box(x1 - 13, sy + 14, 11, b.seat - 14, '#4E3424', 1.8, 1);   // front legs
+    line(x0 + 7, sy + 20, x0 + 7, VF - 4, 'rgba(255,200,140,.18)', 1.6); line(x1 - 8, sy + 20, x1 - 8, VF - 4, 'rgba(255,200,140,.18)', 1.6);
+  }
 }
 function ydFront() {   // dark foreground leaves along the bottom edge (below the footpath, never over the players)
   const v = akView();
@@ -5748,6 +5759,7 @@ function drawCourt() {
       for (let k = 0; k < 8; k++) { const a = k * 0.785 + G.t; line(hx + Math.cos(a) * 16, hy + Math.sin(a) * 16, hx + Math.cos(a) * 30, hy + Math.sin(a) * 30, 'rgba(255,220,140,.4)', 2); } ctx.restore();
       ctx.save(); ctx.translate(hx, hy); ctx.rotate(-0.25); box(-14, -10, 28, 20, '#2E4A7A', 1.8, 2); box(-12, -8, 24, 4, '#ECE6D4', 0, 0); ctx.restore(); }
   }
+  ydBench(CT_BENCH, false);
   // the big mango tree's trunk (its leaves are drawn in front)
   ydTrunk(CT_TREE, 600, 78, true);
   if (C && C.slam && !C.slam.hit) { const k = Math.min(1, C.slam.t / 0.85); ctx.fillStyle = 'rgba(0,0,0,' + (0.15 + 0.4 * k) + ')'; ctx.beginPath(); ctx.ellipse(C.slam.x, VF + 4, 20 + 30 * k, 7, 0, 0, 7); ctx.fill(); }
@@ -5761,7 +5773,7 @@ function drawCourt() {
 function drawCourtFront() {
   const V = G.ver, C = V.ch;
   if (C && C.hid) ydTrunk(CT_TREE, 600, 78, true);
-  ydBench(CT_BENCH);
+  ydBench(CT_BENCH, true);
   ydCanopy(CT_TREE + 30, 470, 290, 120, 11, 1);   // the big yard tree's leaves, lit from the lamp beside it
   ydFront();
   // Anko Sir, seen from the side, striding after them (he shrinks to a normal man in the ending)
