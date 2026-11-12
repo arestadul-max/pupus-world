@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.3-demo · 2026-11-13
+- Dadu's storybook redesigned: brown leather, a darker border and a gold four-pointed star.
+- New book poses: held against the chest, held out open to read (head tipped down), and both arms forward to place it.
+
 ## 1.4.2-demo · 2026-11-13
 - Removed the dead-end ledge beside the top of the lift in Chapter 3.
 

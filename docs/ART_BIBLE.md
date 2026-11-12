@@ -58,3 +58,7 @@
 - Outside: jungle silhouettes behind the roof and at both sides, dark earth and bushes below, a thick dark outline around the building; rubble in the dark machinery space.
 
 - **Dadu's chest (v271):** carved teak chest with iron bands and studs and a carved rosette, red velvet inside with ten shaped hollows, quilted lid lining; never any writing on it. Drawn in 3/4 view (v273): the lid is hinged at the back and swings up and back to open, never slides or pops.
+
+
+## Dadu's storybook (v277)
+Brown leather cover (#7A4A26) with a darker inset border (#4A2A16), a gold four-pointed star in the middle (#E8B53A), cream page edges. Held against the chest when carried; held out flat at chest height to read, head tipped down; both arms forward to place it.

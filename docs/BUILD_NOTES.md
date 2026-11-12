@@ -459,3 +459,8 @@ The user sent a full design document (saved as `claude/chapter4-library-design.m
 
 ## v276 (user)
 - Removed the short dead-end ledge beside the top of the lift shaft in the lab (`f1a`, 2060–2150 at LF1): its floor, its slab and the head-bump ceiling under it. The lift still arrives at the machine-room floor on its right.
+
+## v277 (user's reference sheet: holding a book, side view)
+- **Book poses (`o.book` in `drawPupu`):** *hold* (shut): both hands hold it upright against his chest, cover towards us · *read* (`open` → 1): held out flat at chest height, tipped up towards him, the pages dipping into the gutter, his head tips down to the pages (`pupuHead` rotated about the neck) · *place* (`place` 0 → 1): both arms reach straight forward with the book upright (used to set it on the library's book stand). Opening narrows the shut cover, then the open book widens.
+- **The book's design (from the reference):** brown leather (#7A4A26) with a darker inset border (#4A2A16), a gold four-pointed star in the middle (`star4`), cream page edges. Same in his hands, lying on the secret room floor, and as Dadu's thing #4 icon (`thingIcon(3)`).
+- The library arrival now stands him beside the book stand (x 1352) so he can reach forward and place it.
