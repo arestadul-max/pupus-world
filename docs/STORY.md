@@ -21,13 +21,18 @@ Pupu and Mishti wake up tiny on the floor of a giant maths classroom, ruled by *
 
 At the chained gate he catches them, and finds Pupu's crumpled homework: the last sum crossed out five times and tried again. The giant shrinks to an ordinary teacher. "For trying… here, this is your gift." It is **Dadu's reading glasses**, and **memory 2** opens: Dadu's room at night, little Pupu stuck on a sum, and Dadu saying "আবার চেষ্টা করো" ("Try again"). The player solves the puzzles with Dadu, a sum step by step, a number pattern and a riddle, different every time.
 
+**The bridge to Chapter 3:** back at the gate, the power goes off (load-shedding): the lamps and every window go dark, only the moon. Then a window of the school block flickers with blue sparks, and something inside glows "just like the glasses". Anko Sir: "That's the science lab! But there's no power…" He gives Pupu the lab key ("don't touch any loose wires"). Jhumpa waits with Sir; Pupu and Mishti go.
+
+## Chapter 3 · The Science Lab
+The key turns, the door creaks, and the dark lab is humming with no power at all. Little spark-bugs run along the floor cables, the bench burners flare from a small blue flame to a tall hot one, and loose cables hang from the ceiling spitting sparks. Jumping, waiting for the flames, and crouching under the cables and the big table, Pupu finds three glowing things: a battery, a tuning knob and an antenna, without knowing what they are for. On the power board he joins the wires so the power reaches the bulb (a new puzzle every time); the lights come on, the sparks stop, and the prep-room door opens. Inside, an old radio glows on a little table, with an empty battery box, no knob and no antenna. The three things fit: it is **Dadu's pocket radio**, and **memory 3** opens: an evening on Dadu's verandah, the radio "broken", and the two of them fixing it together: what goes in first, then turning the dial slowly through the hiss until a song comes through. "Fix things with care and patience, and even broken things sing again." Back in the lab, the radio still plays: "Mm… it still sings."
+
 ## Dadu's ten things
 
 | # | Chapter | Thing | Memory |
 |---|---|---|---|
 | 1 | The Ghat | a flat skipping stone | skipping stones at sunset ✔ |
 | 2 | Anko Sir's class | his reading glasses | doing sums together: "Try again" ✔ |
-| 3 | Science lab | his old pocket radio | fixing the radio together |
+| 3 | Science lab | his old pocket radio | fixing the radio together on the verandah ✔ |
 | 4 | Library | a storybook with his handwriting | bedtime folk tales with all the voices |
 | 5 | Rooftop kite war | his kite spool (নাটাই) | flying kites on the roof |
 | 6 | Paper-boat flood | his big black umbrella | finding Mishti as a tiny wet kitten in the rain |
