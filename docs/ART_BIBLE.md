@@ -64,3 +64,5 @@
 Brown leather cover (#7A4A26) with a darker inset border (#4A2A16), a gold four-pointed star in the middle (#E8B53A), cream page edges. Held against the chest when carried; held open at chest height to read (cover and star still facing us, the pages fanned up towards him, never over his face), head tipped down; both arms forward to place it.
 
 Book animation set (v279, from the user's sheet): hold · read (pages turning) · close (snap) · walk/run/jump holding it · use (arms forward, gold rays) · place (laid down flat). The book is drawn with its spine away from Pupu and the pages opening at the top towards him.
+
+**Perspective rule (v280, user):** held objects are drawn as they would really look from the side. A book in profile is edge-on: shut, a thin upright slab (the spine); open for reading, a narrow brown slab tipped back towards his face, the page tops showing, held out at chin height.

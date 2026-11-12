@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.1-demo · 2026-11-13
+- The storybook is now drawn in true side view: edge-on when held shut, a narrow open book tipped towards Pupu's face when he reads.
+
 ## 1.5.0-demo · 2026-11-13
 - Full book animation set: hold, read with turning pages, snap shut, walk/run/jump holding the book, use, and place it down flat.
 

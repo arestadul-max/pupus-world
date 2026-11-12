@@ -1832,10 +1832,10 @@ function drawPupu(x, y, face1, o) {
     if (o.drink && front) return [sx, sy, sx + 8, sy + 7, headX + 6, headY + 12];
     if (o.press && front) { const u = o.press; return [sx, sy, sx + 4 + 7 * u, sy + 9 - 4 * u, sx + 7 + 15 * u, sy + 15 - 9 * u]; }   // (v266) reaching out to press the lift button
     if (o.push) return front ? [sx, sy, sx + 9, sy + 8, sx + 18, sy + 11] : [sx, sy, sx + 8, sy + 9, sx + 16, sy + 12];   // (v262) pushing: both hands flat on the trolley
-    if (o.book && !(run && !front)) { const u = Math.min(1, o.book.open || 0), pl = o.book.place || 0, us = o.book.use || 0;   // (v279, user's animation sheet) hold · read · walk/run/jump holding it · use (arms out) · place (lay it down flat)
+    if (o.book && !(run && !front)) { const u = Math.min(1, o.book.open || 0), pl = o.book.place || 0, us = o.book.use || 0;   // (v280) seen from the side: hold at the chest · read: held out in front, up towards his face · use · place
       if (pl > 0) return front ? [sx, sy, sx + 6 + 4 * pl, sy + 8 + pl, sx + 11 + 8 * pl, sy + 8 + 4 * pl] : [sx, sy, sx + 5 + 4 * pl, sy + 9 + pl, sx + 8 + 7 * pl, sy + 9 + 4 * pl];
       if (us > 0) return front ? [sx, sy, sx + 6 + 4 * us, sy + 8 - 3 * us, sx + 11 + 9 * us, sy + 7 - 4 * us] : [sx, sy, sx + 5 + 4 * us, sy + 9 - 3 * us, sx + 8 + 8 * us, sy + 8 - 4 * us];
-      return front ? [sx, sy, sx + 4 + 2 * u, sy + 10, sx + 9 + 3 * u, sy + 8] : [sx, sy, sx + 3 + 2 * u, sy + 10, sx + 6 + 3 * u, sy + 8]; }
+      return front ? [sx, sy, sx + 4 + 2 * u, sy + 10 - u, sx + 8 + 6 * u, sy + 7 - 2 * u] : [sx, sy, sx + 3 + 2 * u, sy + 10 - u, sx + 6 + 6 * u, sy + 7 - 2 * u]; }
     if (o.carry) return front ? [sx, sy, sx + 5, sy + 9, sx + 11, sy + 6] : [sx, sy, sx + 4, sy + 9, sx + 10, sy + 6];   // carrying the radio in both hands
     if (o.remote && front) { const u = o.remote; return [sx, sy, sx + 2 + 9 * u, sy + 10 - 9 * u, sx + 3 + 17 * u, sy + 20 - 25 * u]; }
     if (o.pouch !== undefined && front) return [sx, sy, sx + 6, sy + 8, sx + 13, sy + 9];   // arm out over the bowl, holding the treat pouch
@@ -1861,18 +1861,24 @@ function drawPupu(x, y, face1, o) {
     if (o.holdStone && front && !tq) circ(hx2 + 1, hy2 - 1, 2.8, '#8A8478', 1.3);
     if (o.plane && front && !(tq && o.throwT >= THROW_REL)) akPlane(hx2 + 2, hy2 - 3, 0.5, tq ? -0.5 : -0.2, 1);
     if (o.book && front) { const B = o.book, u = Math.min(1, B.open || 0), pl = B.place || 0, us = B.use || 0, k = pl > 0 || us > 0 ? 0 : u, flat = Math.max(0, Math.min(1, (pl - 0.35) / 0.65));
-      const bx = hx2 + 1 + 2 * k + 2 * us, by = hy2 - 4 + 3 * flat;
-      ctx.save(); ctx.translate(bx, by); ctx.rotate(pl > 0 ? flat * Math.PI / 2 * 0.98 : us > 0 ? 0 : -0.18 - 0.12 * k); ctx.scale(-(1.15 + 0.1 * k), 1.15 + 0.1 * k);   // (v279) mirrored: the spine away from him, the pages open at the top towards him
-      if (k > 0.02) { ctx.beginPath(); ctx.moveTo(-5.5, 6.4); ctx.lineTo(-5.5 - 3 * k, -8 - 2.2 * k); ctx.lineTo(-4 - 3 * k, -9.5 - 2.2 * k); ctx.lineTo(-5.5, -7.4); ctx.closePath(); fs('#7A4A26', 0.8);   // the other half's cover, swung back
-        ctx.beginPath(); ctx.moveTo(-5.5, -7.4); ctx.lineTo(-4 - 3 * k, -9.5 - 2.2 * k); ctx.quadraticCurveTo(0, -9 - 3 * k, 5.5 + 1 * k, -8.5 - 2 * k); ctx.lineTo(5, -7.4); ctx.closePath(); fs('#F4ECD8', 0.8);   // the pages, fanned open
-        for (let j = 1; j < 4; j++) { const f = j / 4; line(-5.5 + 10.5 * f, -7.4, -4 - 3 * k + (9.5 + 4 * k) * f, -9.5 - 2.2 * k + f, 'rgba(60,40,30,.3)', 0.5); }
-        if (B.flip > 0 && B.flip < 1 && k > 0.9) { const th = B.flip * Math.PI, ex = -0.25 + 5.5 * Math.cos(th), ey = -9.8 - 3.2 * Math.sin(th);   // (Read 2 · Read 3) a page turning over
-          ctx.beginPath(); ctx.moveTo(-0.25, -9); ctx.quadraticCurveTo((ex - 0.25) / 2, ey - 1.5, ex, ey); ctx.lineTo(ex, ey + 2); ctx.quadraticCurveTo((ex - 0.25) / 2, ey + 0.5, -0.25, -7.6); ctx.closePath(); fs('#FBF5E9', 0.6); } }
-      box(4, -6.4, 2, 11.8, '#F1E6C8', 0.3, 0.7); box(-5.5, -7.4, 10.5, 13.8, '#7A4A26', 1, 1.2); ctx.strokeStyle = '#4A2A16'; ctx.lineWidth = 1.1; ctx.strokeRect(-3.4, -5.3, 6.6, 9.6); line(-5.5, -7.4, -5.5, 6.4, '#4A2A16', 2); star4(-0.1, -0.5, 2.6, '#E8B53A');
-      if (B.snap > 0) { ctx.globalAlpha = Math.min(1, B.snap * 3); for (const d of [0, 1]) { ctx.beginPath(); ctx.arc(-8 - d * 2.4, -0.5, 4 + d * 2, Math.PI * 0.6, Math.PI * 1.4); ctx.strokeStyle = INK; ctx.lineWidth = 0.7; ctx.stroke(); } ctx.globalAlpha = 1; }   // (Close) it snaps shut
+      // (v280, user) a real side view: the book is edge-on to us. Shut, we see only its thickness (the spine, with gold bands).
+      // Open to read, its halves make a V towards his face with the spine furthest from him: from the side that is a narrow
+      // slab of brown cover tipped back towards his face, with the tops of the pages showing; a turning page is a thin arc.
+      const bx = hx2 + 1.5 + 0.5 * k + 2 * us, by = hy2 - 5 - 1 * k + 3 * flat, th = 3.6 + 2.4 * k, hh = 14;
+      ctx.save(); ctx.translate(bx, by); ctx.rotate(pl > 0 ? flat * Math.PI / 2 : us > 0 ? 0 : -0.06 - 0.3 * k);
+      if (k > 0.05) {   // the open book: pages (their top edges) towards him, the near cover facing out
+        ctx.beginPath(); ctx.moveTo(-th / 2 - 0.4, -hh / 2 - 1.2 * k); ctx.quadraticCurveTo(0, -hh / 2 - 2.4 * k, th / 2, -hh / 2); ctx.lineTo(th / 2, hh / 2); ctx.lineTo(-th / 2 - 0.4, hh / 2 - 0.6); ctx.closePath(); fs('#F4ECD8', 0.8);
+        for (let j = 1; j < 3; j++) line(-th / 2 + j * 1.1, -hh / 2 + 0.3, -th / 2 + j * 1.1, hh / 2 - 0.8, 'rgba(60,40,30,.22)', 0.45);
+        if (B.flip > 0 && B.flip < 1) { const a = B.flip * Math.PI; ctx.beginPath(); ctx.moveTo(th / 2, -hh / 2 + 1); ctx.quadraticCurveTo(th / 2 - 1 - 2 * Math.sin(a), -hh / 2 - 2 * Math.sin(a), th / 2 - th * B.flip, -hh / 2 - 0.5 - 2.5 * Math.sin(a)); ctx.strokeStyle = '#FBF5E9'; ctx.lineWidth = 1.6; ctx.stroke(); ctx.strokeStyle = 'rgba(28,20,16,.6)'; ctx.lineWidth = 0.45; ctx.stroke(); }
+        box(th / 2 - 1.8 * k, -hh / 2 - 0.4, 1.8 + 1.4 * k, hh + 0.8, '#7A4A26', 0.8, 1);   // the near cover, seen edge-on-ish
+        line(th / 2 - 1.8 * k + 0.9, -hh / 2 + 2, th / 2 - 1.8 * k + 0.9, hh / 2 - 2, '#4A2A16', 0.6); }
+      else {   // shut: the spine towards us
+        box(-th / 2, -hh / 2, th, hh, '#7A4A26', 0.9, 1.1); box(-th / 2 - 0.3, -hh / 2 + 0.6, 1, hh - 1.2, '#F1E6C8', 0.25, 0.4);
+        for (const yy of [-hh / 2 + 2.3, hh / 2 - 2.3]) line(-th / 2 + 0.6, yy, th / 2 - 0.4, yy, '#E8B53A', 0.9); star4(0.2, 0, 1.3, '#E8B53A'); }
+      if (B.snap > 0) { ctx.globalAlpha = Math.min(1, B.snap * 3); for (const d of [0, 1]) { ctx.beginPath(); ctx.arc(th / 2 + 2 + d * 2.4, 0, 4 + d * 2, -Math.PI * 0.4, Math.PI * 0.4); ctx.strokeStyle = INK; ctx.lineWidth = 0.7; ctx.stroke(); } ctx.globalAlpha = 1; }   // (Close) it snaps shut
       ctx.restore();
-      if (us > 0.6) { ctx.save(); ctx.globalAlpha = (us - 0.6) / 0.4; for (let j = 0; j < 3; j++) { const a = -1.35 + j * 0.45, ox = bx + 5, oy = by - 7; line(ox + Math.cos(a) * 6, oy + Math.sin(a) * 6, ox + Math.cos(a) * 10.5, oy + Math.sin(a) * 10.5, '#E8B53A', 2); } ctx.restore(); }   // (Use) a little burst of light
-      G.bookW = {x: x + face1 * SP * (bx - 1), y: y + SP * (by - 9 - 2 * k)}; }
+      if (us > 0.6) { ctx.save(); ctx.globalAlpha = (us - 0.6) / 0.4; for (let j = 0; j < 3; j++) { const a = -1.35 + j * 0.45, ox = bx + 3, oy = by - 7; line(ox + Math.cos(a) * 6, oy + Math.sin(a) * 6, ox + Math.cos(a) * 10.5, oy + Math.sin(a) * 10.5, '#E8B53A', 2); } ctx.restore(); }   // (Use) a little burst of light
+      G.bookW = {x: x + face1 * SP * (bx - 3 * k), y: y + SP * (by - 8)}; }
     if (o.carry && front) drawRadioBox(hx2 - 1, hy2 + 14, 0.3, ['battery', 'knob', 'antenna'], false);   // (v266) hanging from his hands by its strap handle   // (v262) Dadu's radio, held against his chest
     if (o.remote && front) { ctx.save(); ctx.translate(hx2, hy2); ctx.rotate(Math.atan2(hy2 - ey2, hx2 - ex2)); box(-2, -2.2, 10, 4.4, '#222228', 1.5, 1.2); circ(7, 0, 0.9, '#E04A3A', 0); ctx.restore(); }
     ctx.beginPath(); ctx.ellipse(hx2 + (hx2 - ex2) * 0.12, hy2 + (hy2 - ey2) * 0.12, 2.7, 3.1, Math.atan2(hy2 - ey2, hx2 - ex2) - Math.PI / 2, 0, Math.PI * 2); fs(SKIN, 1.7); // hand
