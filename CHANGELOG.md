@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.0-demo · 2026-11-13
+- Full book animation set: hold, read with turning pages, snap shut, walk/run/jump holding the book, use, and place it down flat.
+
 ## 1.4.4-demo · 2026-11-13
 - Reading pose: Pupu holds the open storybook at his chest, cover and gold star facing us, pages fanned up towards him.
 

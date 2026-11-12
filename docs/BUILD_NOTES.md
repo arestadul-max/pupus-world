@@ -467,3 +467,8 @@ The user sent a full design document (saved as `claude/chapter4-library-design.m
 
 ## v278 (user's "Read" reference)
 - **Reading pose redrawn:** the open book stays at chest height, held a little out from his body; the brown cover with its gold star still faces us, the other half's cover swings back and the cream pages fan up towards him (short, so they never cover his face); his head tips down a little. The opening is smooth from shut to open (no flattening). The beam rises from the top of the pages.
+
+## v279 (user's book animation sheet: copy it exactly)
+- The whole book is mirrored left-to-right (spine away from him, the pages open at the top towards him), a little bigger (×1.15).
+- **The set (`o.book` = {open, flip, snap, use, place}; `bookTick` animates it):** *Idle/Hold* shut against his chest, cover and gold star towards us · *Read 1* open, pages fanned at the top, head tipped down · *Read 2 / Read 3* a page turns over every 1.6 s while `turning` (a soft rustle) · *Close* it snaps shut with two motion arcs and a click · *Walk* both hands keep it at his chest (no arm swing) · *Run* the front hand holds it, the back arm pumps · *Jump* held to his chest, knees tucked · *Use / Interact* both arms reach forward with the book upright, three gold rays · *Give / Place* arms reach forward and down, the book turns flat as it is laid down.
+- In the game: he flips through the blank pages in the secret room and on the library table; the book snaps shut before he lays it flat on the library's stand.

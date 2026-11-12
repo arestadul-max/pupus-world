@@ -1832,9 +1832,10 @@ function drawPupu(x, y, face1, o) {
     if (o.drink && front) return [sx, sy, sx + 8, sy + 7, headX + 6, headY + 12];
     if (o.press && front) { const u = o.press; return [sx, sy, sx + 4 + 7 * u, sy + 9 - 4 * u, sx + 7 + 15 * u, sy + 15 - 9 * u]; }   // (v266) reaching out to press the lift button
     if (o.push) return front ? [sx, sy, sx + 9, sy + 8, sx + 18, sy + 11] : [sx, sy, sx + 8, sy + 9, sx + 16, sy + 12];   // (v262) pushing: both hands flat on the trolley
-    if (o.book) { const u = Math.min(1, o.book.open || 0), pl = o.book.place || 0;   // (v277, user's reference sheet) hold: against his chest · read: open in front at chest height · place: both arms reach forward
-      if (pl > 0) return front ? [sx, sy, sx + 6 + 4 * pl, sy + 8 - 3 * pl, sx + 11 + 9 * pl, sy + 7 - 3 * pl] : [sx, sy, sx + 5 + 4 * pl, sy + 9 - 3 * pl, sx + 8 + 8 * pl, sy + 8 - 3 * pl];
-      return front ? [sx, sy, sx + 4 + 2 * u, sy + 10, sx + 9 + 3 * u, sy + 8] : [sx, sy, sx + 3 + 2 * u, sy + 10, sx + 6 + 3 * u, sy + 8]; }   // (v274) holding the storybook in front of him, open or shut
+    if (o.book && !(run && !front)) { const u = Math.min(1, o.book.open || 0), pl = o.book.place || 0, us = o.book.use || 0;   // (v279, user's animation sheet) hold · read · walk/run/jump holding it · use (arms out) · place (lay it down flat)
+      if (pl > 0) return front ? [sx, sy, sx + 6 + 4 * pl, sy + 8 + pl, sx + 11 + 8 * pl, sy + 8 + 4 * pl] : [sx, sy, sx + 5 + 4 * pl, sy + 9 + pl, sx + 8 + 7 * pl, sy + 9 + 4 * pl];
+      if (us > 0) return front ? [sx, sy, sx + 6 + 4 * us, sy + 8 - 3 * us, sx + 11 + 9 * us, sy + 7 - 4 * us] : [sx, sy, sx + 5 + 4 * us, sy + 9 - 3 * us, sx + 8 + 8 * us, sy + 8 - 4 * us];
+      return front ? [sx, sy, sx + 4 + 2 * u, sy + 10, sx + 9 + 3 * u, sy + 8] : [sx, sy, sx + 3 + 2 * u, sy + 10, sx + 6 + 3 * u, sy + 8]; }
     if (o.carry) return front ? [sx, sy, sx + 5, sy + 9, sx + 11, sy + 6] : [sx, sy, sx + 4, sy + 9, sx + 10, sy + 6];   // carrying the radio in both hands
     if (o.remote && front) { const u = o.remote; return [sx, sy, sx + 2 + 9 * u, sy + 10 - 9 * u, sx + 3 + 17 * u, sy + 20 - 25 * u]; }
     if (o.pouch !== undefined && front) return [sx, sy, sx + 6, sy + 8, sx + 13, sy + 9];   // arm out over the bowl, holding the treat pouch
@@ -1859,13 +1860,19 @@ function drawPupu(x, y, face1, o) {
     if (tq && front && o.throwT < THROW_REL) circ(hx2 + 1, hy2, 2.4, '#6A5A4A', 1.2);   // the stone in his hand
     if (o.holdStone && front && !tq) circ(hx2 + 1, hy2 - 1, 2.8, '#8A8478', 1.3);
     if (o.plane && front && !(tq && o.throwT >= THROW_REL)) akPlane(hx2 + 2, hy2 - 3, 0.5, tq ? -0.5 : -0.2, 1);
-    if (o.book && front) { const u = Math.min(1, o.book.open || 0), pl = o.book.place || 0, k = pl > 0 ? 0 : u, bx = hx2 + 1 + 2 * k, by = hy2 - 4;   // (v278, user's reference) open or shut, the brown cover with its gold star faces us; open, the cream pages fan up towards his face
-      ctx.save(); ctx.translate(bx, by); ctx.rotate(pl > 0 ? 0 : -0.18 - 0.12 * k); ctx.scale(1 + 0.1 * k, 1 + 0.1 * k);
+    if (o.book && front) { const B = o.book, u = Math.min(1, B.open || 0), pl = B.place || 0, us = B.use || 0, k = pl > 0 || us > 0 ? 0 : u, flat = Math.max(0, Math.min(1, (pl - 0.35) / 0.65));
+      const bx = hx2 + 1 + 2 * k + 2 * us, by = hy2 - 4 + 3 * flat;
+      ctx.save(); ctx.translate(bx, by); ctx.rotate(pl > 0 ? flat * Math.PI / 2 * 0.98 : us > 0 ? 0 : -0.18 - 0.12 * k); ctx.scale(-(1.15 + 0.1 * k), 1.15 + 0.1 * k);   // (v279) mirrored: the spine away from him, the pages open at the top towards him
       if (k > 0.02) { ctx.beginPath(); ctx.moveTo(-5.5, 6.4); ctx.lineTo(-5.5 - 3 * k, -8 - 2.2 * k); ctx.lineTo(-4 - 3 * k, -9.5 - 2.2 * k); ctx.lineTo(-5.5, -7.4); ctx.closePath(); fs('#7A4A26', 0.8);   // the other half's cover, swung back
         ctx.beginPath(); ctx.moveTo(-5.5, -7.4); ctx.lineTo(-4 - 3 * k, -9.5 - 2.2 * k); ctx.quadraticCurveTo(0, -9 - 3 * k, 5.5 + 1 * k, -8.5 - 2 * k); ctx.lineTo(5, -7.4); ctx.closePath(); fs('#F4ECD8', 0.8);   // the pages, fanned open
-        for (let j = 1; j < 4; j++) { const f = j / 4; line(-5.5 + 10.5 * f, -7.4, -4 - 3 * k + (9.5 + 4 * k) * f, -9.5 - 2.2 * k + f, 'rgba(60,40,30,.3)', 0.5); } }
+        for (let j = 1; j < 4; j++) { const f = j / 4; line(-5.5 + 10.5 * f, -7.4, -4 - 3 * k + (9.5 + 4 * k) * f, -9.5 - 2.2 * k + f, 'rgba(60,40,30,.3)', 0.5); }
+        if (B.flip > 0 && B.flip < 1 && k > 0.9) { const th = B.flip * Math.PI, ex = -0.25 + 5.5 * Math.cos(th), ey = -9.8 - 3.2 * Math.sin(th);   // (Read 2 · Read 3) a page turning over
+          ctx.beginPath(); ctx.moveTo(-0.25, -9); ctx.quadraticCurveTo((ex - 0.25) / 2, ey - 1.5, ex, ey); ctx.lineTo(ex, ey + 2); ctx.quadraticCurveTo((ex - 0.25) / 2, ey + 0.5, -0.25, -7.6); ctx.closePath(); fs('#FBF5E9', 0.6); } }
       box(4, -6.4, 2, 11.8, '#F1E6C8', 0.3, 0.7); box(-5.5, -7.4, 10.5, 13.8, '#7A4A26', 1, 1.2); ctx.strokeStyle = '#4A2A16'; ctx.lineWidth = 1.1; ctx.strokeRect(-3.4, -5.3, 6.6, 9.6); line(-5.5, -7.4, -5.5, 6.4, '#4A2A16', 2); star4(-0.1, -0.5, 2.6, '#E8B53A');
-      ctx.restore(); G.bookW = {x: x + face1 * SP * (bx - 1), y: y + SP * (by - 9 - 2 * k)}; }
+      if (B.snap > 0) { ctx.globalAlpha = Math.min(1, B.snap * 3); for (const d of [0, 1]) { ctx.beginPath(); ctx.arc(-8 - d * 2.4, -0.5, 4 + d * 2, Math.PI * 0.6, Math.PI * 1.4); ctx.strokeStyle = INK; ctx.lineWidth = 0.7; ctx.stroke(); } ctx.globalAlpha = 1; }   // (Close) it snaps shut
+      ctx.restore();
+      if (us > 0.6) { ctx.save(); ctx.globalAlpha = (us - 0.6) / 0.4; for (let j = 0; j < 3; j++) { const a = -1.35 + j * 0.45, ox = bx + 5, oy = by - 7; line(ox + Math.cos(a) * 6, oy + Math.sin(a) * 6, ox + Math.cos(a) * 10.5, oy + Math.sin(a) * 10.5, '#E8B53A', 2); } ctx.restore(); }   // (Use) a little burst of light
+      G.bookW = {x: x + face1 * SP * (bx - 1), y: y + SP * (by - 9 - 2 * k)}; }
     if (o.carry && front) drawRadioBox(hx2 - 1, hy2 + 14, 0.3, ['battery', 'knob', 'antenna'], false);   // (v266) hanging from his hands by its strap handle   // (v262) Dadu's radio, held against his chest
     if (o.remote && front) { ctx.save(); ctx.translate(hx2, hy2); ctx.rotate(Math.atan2(hy2 - ey2, hx2 - ex2)); box(-2, -2.2, 10, 4.4, '#222228', 1.5, 1.2); circ(7, 0, 0.9, '#E04A3A', 0); ctx.restore(); }
     ctx.beginPath(); ctx.ellipse(hx2 + (hx2 - ex2) * 0.12, hy2 + (hy2 - ey2) * 0.12, 2.7, 3.1, Math.atan2(hy2 - ey2, hx2 - ex2) - Math.PI / 2, 0, Math.PI * 2); fs(SKIN, 1.7); // hand
@@ -6498,7 +6505,7 @@ function updateLab(dt) {
   { const kt = G.dialog && G.dialog.who === 'kalo'; if (kt) { L.kmood = (G.dialog.src && G.dialog.src.mood) || 'smug'; L.khold = 0.9; } else L.khold -= dt; const want = kt || L.khold > 0 ? 1 : 0; L.kshow += (want - L.kshow) * Math.min(1, dt * 6); if (L.kshow < 0.02 && !want) L.kshow = 0; }
   for (const b of L.bugs) { if (L.done) { b.pop = Math.min(1, b.pop + dt * 2.5); continue; } b.x += b.dir * 95 * dt; if (b.x > b.b) { b.x = b.b; b.dir = -1; } if (b.x < b.a) { b.x = b.a; b.dir = 1; } b.anim += dt * 14; }
   if (L.fly) L.fly.t += dt;
-  if (P.book) { const to = P.book.to || 0; P.book.open += Math.sign(to - P.book.open) * Math.min(Math.abs(to - P.book.open), dt * 2.2); }
+  bookTick(dt);
   if (L.beam) L.beam.t += dt; if (L.suck) { L.suck.t += dt; L.gone = Math.min(1, Math.max(0, (L.suck.t - 0.5) / 0.9)); }
   labMoving(dt); labTrolley(dt);
   if (!L.done && L.crackT <= 0) { L.crackT = 0.6 + Math.random() * 0.9; if (Math.random() < 0.5) tone(2000 + Math.random() * 1500, 0.05, 'square', 0.01, 700); }
@@ -6717,9 +6724,9 @@ function LAB_BOOK_STEPS() { const L = G.ver.lab; return [
     {say:1, who:'pupu', bn:'কেমন যেন চেনা চেনা লাগছে… কিন্তু মনে পড়ছে না কেন।', en:'It feels so familiar… but I can\'t remember why.', mood: 'sad'},
     {say:1, who:'mishti', bn:'আগে কখনো দেখেছ এটা?', en:'Have you seen it before?'},
     {say:1, who:'pupu', bn:'জানি না…', en:'I… don\'t know.', mood: 'sad'},
-    {do: () => { P.book.to = 1; tone(300, 0.3, 'triangle', 0.02, 380); }}, {wait: 0.8},
+    {do: () => { P.book.to = 1; P.book.turning = true; tone(300, 0.3, 'triangle', 0.02, 380); }}, {wait: 0.8},
     {say:1, who:'pupu', bn:'সব পাতা ফাঁকা! শুধু কয়েকটা হাতে-লেখা অক্ষর… মুছে যাচ্ছে!', en:'Every page is blank! Just a few handwritten letters… and they\'re fading!', mood: 'surprised'},
-    {do: () => { L.beam = {t: 0}; G.flash = 0.35; sfx.memory(); tone(600, 1.4, 'sine', 0.04, 1500); }}, {wait: 1.3},
+    {do: () => { P.book.turning = false; L.beam = {t: 0}; G.flash = 0.35; sfx.memory(); tone(600, 1.4, 'sine', 0.04, 1500); }}, {wait: 1.3},
     {say:1, who:'mishti', bn:'পুপু! আলোটা আমাদের টানছে!', en:'Pupu! The light is pulling us in!', mood: 'scared'},
     {do: () => { L.suck = {t: 0}; tone(1500, 1.2, 'triangle', 0.03, 300); }}, {wait: 1.5},
     {say:1, who:'kalo', bn:'বই?! ওরা গেল কোথায়?… তোমাকে আমি খুঁজে বের করবই, পুপু!', en:'A BOOK?! Where did they go?… I\'ll find you, Pupu!', mood: 'angry'},
@@ -6766,14 +6773,14 @@ function startLib() {
     {say:1, who:'narr', bn:'আলোর ভেতর দিয়ে… গভীর রাতের এক পুরোনো গ্রামের পাঠাগার।', en:'Through the light… an old village library, deep in the night.', auto: 3},
     {say:1, who:'mishti', bn:'(ফিসফিস) আমরা কোথায়? পুরোনো কাগজের গন্ধ…', en:'(whispering) Where are we? It smells of old paper…', mood: 'surprised'},
     {say:1, who:'pupu', bn:'একটা পাঠাগার! সাইনবোর্ডে লেখা… নন্দনপুর ইউনিয়ন পাঠাগার।', en:'A library! The sign says… Nandanpur Union Library.', mood: 'surprised'},
-    {do: () => { P.book.to = 1; }}, {wait: 0.6},
+    {do: () => { P.book.to = 1; P.book.turning = true; }}, {wait: 0.6},
     {say:1, who:'pupu', bn:'বইটা এখনো ফাঁকা…', en:'The book is still blank…', mood: 'sad'},
     {do: () => { L.glow = 0.001; tone(700, 0.5, 'triangle', 0.03, 1100); tone(1050, 0.6, 'triangle', 0.02, 1500, 0.25); }}, {wait: 1.0},
     {say:1, who:'mishti', bn:'পুপু, দেখো! ওই বইগুলো জ্বলছে… আর ভেতর থেকে অক্ষর উড়ে বেরোচ্ছে!', en:'Pupu, look! Those books are glowing… and letters are floating out of them!', mood: 'surprised'},
     {say:1, who:'pupu', bn:'অক্ষরগুলো… আমার বইয়ের হাতের লেখার মতোই!', en:'Those letters… they\'re the same handwriting as in my book!', mood: 'surprised'},
     {say:1, who:'pupu', bn:'আমার বইয়ের লেখাগুলো উড়ে গিয়ে… ওই বইগুলোর ভেতরে ঢুকে গেছে!', en:'The words flew out of my book… into those books!', mood: 'grin'},
     {say:1, who:'mishti', bn:'তাহলে চলো, ফিরিয়ে আনি!', en:'Then let\'s go and get them back!', mood: 'happy'},
-    {do: () => { P.book.to = 0; P.face = -1; }}, {wait: 0.5},
+    {do: () => { P.book.turning = false; P.book.to = 0; P.face = -1; }}, {wait: 0.6},
     {do: () => { P.book.place = 0.001; }}, {until: () => P.book.place >= 1}, {do: () => { P.book = null; L.placed = true; tone(500, 0.08, 'triangle', 0.03); }}, {wait: 0.4},
     {say:1, who:'pupu', bn:'বইটা এখানে রেখে যাই, স্ট্যান্ডের ওপর।', en:'I\'ll leave the book here, on the stand.'},
   ], () => { G.state = 'aplay'; G.goalT = 0; });
@@ -6802,7 +6809,7 @@ function updateLib(dt) {
   if (L.arrive > 0 && L.arrive < 1) L.arrive = Math.min(1, L.arrive + dt * 1.6);
   if (L.portal > 0 && L.portal < 1) L.portal = Math.min(1, L.portal + dt * 1.5);
   if (L.glow > 0 && L.glow < 1) L.glow = Math.min(1, L.glow + dt * 0.9);
-  if (P.book) { const to = P.book.to || 0; P.book.open += Math.sign(to - P.book.open) * Math.min(Math.abs(to - P.book.open), dt * 2.2); if (P.book.place > 0) P.book.place = Math.min(1, P.book.place + dt * 2.2); }
+  bookTick(dt);
   L.pushT -= dt; L.sayT = (L.sayT || 0) - dt;
   libMishti(dt);
   if (G.state !== 'aplay') return;
@@ -8432,6 +8439,14 @@ function drawChestB(cx, by, s, open, n, o) {
 }
 // Dadu's 10 things (v238): each chapter gives back one of Dadu's belongings, and with it a memory.
 const DADU_THINGS = ['the skipping stone', 'reading glasses', 'pocket radio', 'storybook', 'kite spool', 'black umbrella', 'wristwatch', 'hurricane lantern', 'white tupi', 'lathi'];
+function bookTick(dt) {   // (v279) the held book: opening and shutting (with a snap), turning pages while he reads, reaching out, laying it down
+  const B = P.book; if (!B) return; const to = B.to || 0, was = B.open;
+  B.open += Math.sign(to - B.open) * Math.min(Math.abs(to - B.open), dt * 2.2);
+  if (was > 0.05 && B.open <= 0.05 && to === 0) { B.snap = 0.35; tone(220, 0.06, 'square', 0.03, 120); }
+  B.snap = Math.max(0, (B.snap || 0) - dt);
+  if (B.turning && B.open >= 1) { B.ft = (B.ft || 0) + dt; const ph = B.ft % 1.6; B.flip = ph < 0.7 ? ph / 0.7 : 0; if (ph < dt) hiss(0.05, 0.015, 3000, 'highpass'); } else B.flip = 0;
+  if (B.place > 0) B.place = Math.min(1, B.place + dt * 1.8); if (B.use > 0) B.use = Math.min(1, B.use + dt * 2.4);
+}
 function star4(x, y, r, col) { ctx.beginPath(); for (let i = 0; i < 8; i++) { const a = -Math.PI / 2 + i * Math.PI / 4, q = i % 2 ? r * 0.3 : r; ctx.lineTo(x + Math.cos(a) * q, y + Math.sin(a) * q); } ctx.closePath(); ctx.fillStyle = col; ctx.fill(); }   // (v277) the storybook's emblem
 function thingIcon(k, x, y, s) {
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
