@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0-demo · 2026-11-12
+- **Chapter 3:** lift lights turn green only once powered, with a button-press animation; worktables to crawl under instead of crates; the eye zaps with a bolt of current; safe start; no spark-bug by the cabinet; Mishti keeps out of hazards; far fewer hints; floor glitches fixed.
+- **Memory 3:** redrawn village house; Pupu sits on a stool; the knob is turned by circling the mouse (PC) or the joystick (phone); tuning by sliding a finger; the radio is carried by its handle.
+- **Dadu's tin trunk** now appears at the end of every chapter to receive the memory thing.
+- **Story intro:** the enemy bubble shows a masked thief's face.
+
 ## 1.2.5-demo · 2026-11-12
 - **Chapter 3 art:** the lab redrawn in a richer style: stone-block walls, dome lamps with light cones, ivy and plants, neon tubes, jungle outside, a desk with computers, a satellite dish on the tank. New full level map.
 

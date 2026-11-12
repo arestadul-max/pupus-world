@@ -421,3 +421,18 @@ A cut-away building on four floors (ground 1600, machine room 1270, upper hall 9
 - Purple neon tubes on the reactor room walls; the upper hall back wall shows the night jungle through it; the glass tank has diagonal reflections and a small satellite dish on top.
 - Kalo-Bijli's desk with two computers and a chair in the control room; the secret room cover is a plain door marked K-B.
 - Outside: jungle silhouettes behind the roof and at both sides, dark earth and bushes below, a thick dark outline around the building; rubble in the dark machinery space.
+
+## v266 (user fix list)
+- **Lift:** its lights stay red until Pupu powers it with the battery, then turn green. Every ride (and every call from the other floor) starts with Pupu reaching over and pressing the call button.
+- **No spark-bug by the cabinet** (the knob is safe to take); the first spark-bug patrols 860–950, with room to stand on both sides.
+- **Far fewer words in Chapter 3:** goals say only what he's after ("Find the glowing things · n/3", "Where do these belong?"); Kalo/Mishti/Pupu no longer describe puzzles; retry tips only say what happened ("Spotted!", "Squashed!"); thought-hints remain only for the trolley, the high shelf and the locked cabinet, and only after 18 seconds stuck there. The ladder button chip stays.
+- **The eye:** it sweeps 370–750, so the start and checkpoint 1 (now x 215) are safe; when it spots him it shoots a crackling bolt of current down at him before he's knocked out.
+- **Crates replaced by tall lab worktables** (like the schoolyard bench): crawl under to hide; under a table he stays crouched; Mishti tucks under too. Microscope, test tubes and a flask on top.
+- **Mishti keeps out of danger:** she waits at the edge of the crusher, the electric gate, the flame and the sparking wires, never inside them.
+- **Glitches:** the switch machine's panel no longer pokes below the floor; the floor is drawn over the tunnel's foot.
+- **Radio:** Pupu holds it by the strap handle on top.
+- **Memory 3 redrawn after the user's reference:** a tin-roofed plastered house on a brick plinth, a blue door open on a lamp-lit room (shelves, globe, poster), a lantern, a barred orange-lit window with a curtain, a science poster, a potted plant, hanging vines; the courtyard with a brick boundary wall, tube-well and clay pitcher, clothesline with the red-check gamchha and a white cloth, a banana plant, a haystack, palms and the setting sun; dark leaves in the foreground. Dadu on a wooden stool, Pupu on his own little stool (no more sitting in the air), the radio on the floor between them.
+- **Knob:** PC = circle the mouse (an animated mouse circles in the panel); phone = circle the joystick (only the joystick is shown; an animated joystick hint).
+- **Tuning:** phone = slide a finger left/right (PC can drag the mouse, or hold ◀ ▶), with an animated hand sliding along the dial.
+- **Dadu's tin trunk at the end of every chapter:** the trunk from Montu-da's tea stall shimmers into view and the chapter's memory thing flies in (Chapter 2: the glasses, 2/10; Chapter 3: the radio, 3/10).
+- **Story intro:** the "enemy" dream bubble now shows a sly masked thief's face instead of the crow.

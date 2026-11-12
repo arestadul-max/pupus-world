@@ -54,6 +54,7 @@ body.touch #touch{display:block}
 #touch:not(.use) #bU{display:none}
 #touch.minigame #joy{display:none}
 #touch.hideall{display:none!important}
+#touch.knobjoy .btn{display:none!important}
 #touch.menu #joy,#touch.menu .btn:not(.small),#touch.menu #bP{display:none}
 #bJ{right:12px;bottom:12px;--b:clamp(54px,17vh,86px)}
 #bS{right:calc(24px + clamp(54px,17vh,86px));bottom:12px}
@@ -179,14 +180,15 @@ function bindBtn(id, action) {
 }
 bindBtn('bS','sneak');
 // phone joystick: push a little = walk, push all the way left/right = run; up/down only in levels with depth (else ignored, the knob still moves)
-let joyRun = false;
+let joyRun = false, joyVec = {x: 0, y: 0}, joyTurn = 0, joyLastA = null;   // (v266) the raw joystick vector (the radio knob is turned by circling it)
 (() => { const el = document.getElementById('joy'), knob = document.getElementById('joyKnob'); if (!el) return; let pid = null;
   const setH = (a, v) => { if (v && !held[a]) edges[a] = true; held[a] = v; };
   const apply = (dx, dy) => {   // dx, dy in -1..1
     const dp = typeof G !== 'undefined' && G && (G.level === 'anko' || G.level === 'prologue' || inLab());
     setH('left', dx < -0.28); setH('right', dx > 0.28);
     setH('up', dp && dy < -0.45); setH('down', dp && dy > 0.45);
-    joyRun = Math.abs(dx) > 0.82;
+    joyRun = Math.abs(dx) > 0.82; joyVec.x = dx; joyVec.y = dy;
+    if (Math.hypot(dx, dy) > 0.45) { const a = Math.atan2(dy, dx); if (joyLastA !== null) { let d = a - joyLastA; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; if (Math.abs(d) < 2.4) joyTurn += d; } joyLastA = a; } else joyLastA = null;   // (v266) how far the stick has been circled
     const r = el.clientWidth * 0.36; knob.style.transform = 'translate(' + dx * r + 'px,' + dy * r + 'px)';
     el.classList.toggle('on', pid !== null); el.classList.toggle('run', joyRun);
   };
@@ -198,9 +200,10 @@ let joyRun = false;
   el.addEventListener('contextmenu', e => e.preventDefault()); })();
 let runOn = false; // phone RUN is a toggle (hard to hold several buttons at once)
 function setRun(v) { runOn = v; const el = document.getElementById('bRun'); if (el) el.classList.toggle('on', v); } bindBtn('bJ','jump'); bindBtn('bU','use'); bindBtn('bP','pause'); bindBtn('bM','mute');
-let tapX = 0, tapY = 0, ptrX = 0, ptrY = 0, ptrMoves = [];   // (v262) pointer path, for drawing circles round the radio knob
+let tapX = 0, tapY = 0, ptrX = 0, ptrY = 0, ptrMoves = [], ptrDown = false;   // (v262) pointer path, for drawing circles round the radio knob
 canvas.addEventListener('pointermove', e => { const r = canvas.getBoundingClientRect(); ptrX = (e.clientX - r.left) / r.width * W; ptrY = (e.clientY - r.top) / r.height * H; if (ptrMoves.length < 200) ptrMoves.push([ptrX, ptrY]); });
-canvas.addEventListener('pointerdown', e => { const r = canvas.getBoundingClientRect(); ptrX = (e.clientX - r.left) / r.width * W; ptrY = (e.clientY - r.top) / r.height * H; ptrMoves.length = 0; ptrMoves.push([ptrX, ptrY]); });
+['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => canvas.addEventListener(ev, () => { ptrDown = false; }));
+canvas.addEventListener('pointerdown', e => { ptrDown = true; const r = canvas.getBoundingClientRect(); ptrX = (e.clientX - r.left) / r.width * W; ptrY = (e.clientY - r.top) / r.height * H; ptrMoves.length = 0; ptrMoves.push([ptrX, ptrY]); });
 const menuKeyQ = [];   // raw keys for the title menus (arrows work here even outside the depth levels)
 window.addEventListener('keydown', e => { if (typeof G !== 'undefined' && G && G.state === 'title') { menuKeyQ.push(e.code); if (['ArrowUp', 'ArrowDown', 'Space'].includes(e.code)) e.preventDefault(); } });
 canvas.addEventListener('pointermove', e => { if (isTouch || typeof G === 'undefined' || !G || G.state !== 'title') return; const r = canvas.getBoundingClientRect(); const h = menuHit((e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H); if (h >= 0) G.menuSel = h; });
@@ -211,7 +214,7 @@ let LANG = (() => { try { return localStorage.getItem('pupuLang') === 'bn' ? 'bn
 const L2 = (bn, en) => LANG === 'bn' ? (bn || en) : (en || bn);
 const HASBN = /[ঀ-৿]/;
 const TR = {
-  "Spotted! That eye can't see through everything…": "ধরা পড়ে গেলে! চোখটা কিন্তু সবকিছু ভেদ করে দেখতে পায় না…", "Too hot! Watch the flame's colour…": "খুব গরম! আগুনের রংটা খেয়াল করো…", "Squashed! It always pauses at the top…": "চ্যাপ্টা! যন্ত্রটা ওপরে উঠে প্রতিবার একটু থামে…", "Zap! Listen to the gate…": "ঝিঁৎ! গেটটার শব্দ শোনো…", "You fell! Something keeps coming back across the gap…": "পড়ে গেলে! ফাঁকটার ওপর দিয়ে কিছু একটা বারবার ফিরে আসে…", "Zap! Those sparks stay close to the floor…": "ঝিঁৎ! ফুলকিগুলো মেঝের কাছাকাছিই থাকে…", "Spotted! Crouch behind a crate when the red beam comes.": "ধরা পড়লে! লাল আলো এলে বাক্সের পেছনে বসে পড়ো।", "Squashed! Run under when the press goes up.": "চ্যাপ্টা! যন্ত্রটা ওপরে উঠলে নিচ দিয়ে দৌড়াও।",
+  "Spotted!": "ধরা পড়ে গেলে!", "Too hot!": "খুব গরম!", "Squashed!": "চ্যাপ্টা!", "Zap!": "ঝিঁৎ!", "You fell!": "পড়ে গেলে!", "Spotted! That eye can't see through everything…": "ধরা পড়ে গেলে! চোখটা কিন্তু সবকিছু ভেদ করে দেখতে পায় না…", "Too hot! Watch the flame's colour…": "খুব গরম! আগুনের রংটা খেয়াল করো…", "Squashed! It always pauses at the top…": "চ্যাপ্টা! যন্ত্রটা ওপরে উঠে প্রতিবার একটু থামে…", "Zap! Listen to the gate…": "ঝিঁৎ! গেটটার শব্দ শোনো…", "You fell! Something keeps coming back across the gap…": "পড়ে গেলে! ফাঁকটার ওপর দিয়ে কিছু একটা বারবার ফিরে আসে…", "Zap! Those sparks stay close to the floor…": "ঝিঁৎ! ফুলকিগুলো মেঝের কাছাকাছিই থাকে…", "Spotted! Crouch behind a crate when the red beam comes.": "ধরা পড়লে! লাল আলো এলে বাক্সের পেছনে বসে পড়ো।", "Squashed! Run under when the press goes up.": "চ্যাপ্টা! যন্ত্রটা ওপরে উঠলে নিচ দিয়ে দৌড়াও।",
   "Zap! Cross when the electric gate is off.": "ঝিঁৎ! বিজলি-গেট নিভলে পার হও।", "You fell! Ride the moving platform across.": "পড়ে গেলে! চলন্ত তক্তায় চড়ে পার হও।",
   "lift": "লিফট", "switch": "সুইচ", "open": "খোলো", "put in": "বসাও",
   "Chapter 3 · Kalo-Bijli's Lab": "তৃতীয় অধ্যায় · কালো-বিজলির ল্যাব", "The villain's lab: find the glowing things, light the bulb": "ভিলেনের ল্যাব: জ্বলজ্বলে জিনিস খোঁজো, বাতি জ্বালাও", "go in": "ঢোকো",
@@ -1058,6 +1061,7 @@ function update(dt) {
     else if (edges.ch1) { audioInit(); startMission(1); }
     return;
   }
+  if (G.trunk) { const T = G.trunk; T.t += dt; if (T.close) { T.close += dt; if (T.close > 0.9) G.trunk = null; } }
   if (G.state === 'gend') { G.endT += dt; if (G.endT > 1 && (edges.tap || edges.use || edges.jump)) { G.endBlack = false; startAnko(true); } return; }   // Chapter 2 starts with them waking up on the classroom floor
   if (G.state === 'v2end') { G.endT += dt; if (G.endT > 1 && (edges.tap || edges.use || edges.jump)) startLab(); return; }
   if (G.state === 'l3end') { G.endT += dt; if (G.endT > 1 && (edges.tap || edges.use || edges.jump)) { SURF = PRO_SURF; WW = PRO_WW; WH = 840; resetAll(); stopRiver(); } return; }
@@ -1825,8 +1829,9 @@ function drawPupu(x, y, face1, o) {
     if (o.reach && front) { const r = o.reach; return [sx, sy, sx + 1.5 + r * 2.5, sy + 9.5 - r * 0.5, sx + 3 + r * 10.5, sy + 17 - r * 6.5]; }   // squatting: upper arm hangs straight down, forearm reaches forward past the knees
     if (tq) return front ? [sx, sy, sx + tq.e[0], sy + tq.e[1], sx + tq.h[0], sy + tq.h[1]] : [sx, sy, sx - tq.e[0] * 0.45 + 1, sy + 9, sx - tq.h[0] * 0.55 + 4, sy + 16];   // the other arm swings the opposite way for balance
     if (o.drink && front) return [sx, sy, sx + 8, sy + 7, headX + 6, headY + 12];
+    if (o.press && front) { const u = o.press; return [sx, sy, sx + 4 + 7 * u, sy + 9 - 4 * u, sx + 7 + 15 * u, sy + 15 - 9 * u]; }   // (v266) reaching out to press the lift button
     if (o.push) return front ? [sx, sy, sx + 9, sy + 8, sx + 18, sy + 11] : [sx, sy, sx + 8, sy + 9, sx + 16, sy + 12];   // (v262) pushing: both hands flat on the trolley
-    if (o.carry) return front ? [sx, sy, sx + 4, sy + 10, sx + 12, sy + 10] : [sx, sy, sx + 3, sy + 10, sx + 10, sy + 11];   // carrying the radio in both hands
+    if (o.carry) return front ? [sx, sy, sx + 5, sy + 9, sx + 11, sy + 6] : [sx, sy, sx + 4, sy + 9, sx + 10, sy + 6];   // carrying the radio in both hands
     if (o.remote && front) { const u = o.remote; return [sx, sy, sx + 2 + 9 * u, sy + 10 - 9 * u, sx + 3 + 17 * u, sy + 20 - 25 * u]; }
     if (o.pouch !== undefined && front) return [sx, sy, sx + 6, sy + 8, sx + 13, sy + 9];   // arm out over the bowl, holding the treat pouch
     if (o.holdCup && front) { const u = o.holdCup.k; return [sx, sy, sx + 6 + 5 * u, sy + 9 + 1 * u, sx + 9 + 11 * u, sy + 6 + 12 * u]; }  // holding the cup up, then reaching over to the tray
@@ -1850,7 +1855,7 @@ function drawPupu(x, y, face1, o) {
     if (tq && front && o.throwT < THROW_REL) circ(hx2 + 1, hy2, 2.4, '#6A5A4A', 1.2);   // the stone in his hand
     if (o.holdStone && front && !tq) circ(hx2 + 1, hy2 - 1, 2.8, '#8A8478', 1.3);
     if (o.plane && front && !(tq && o.throwT >= THROW_REL)) akPlane(hx2 + 2, hy2 - 3, 0.5, tq ? -0.5 : -0.2, 1);
-    if (o.carry && front) drawRadioBox(hx2 - 3, hy2 + 7, 0.3, ['battery', 'knob', 'antenna'], false);   // (v262) Dadu's radio, held against his chest
+    if (o.carry && front) drawRadioBox(hx2 - 1, hy2 + 14, 0.3, ['battery', 'knob', 'antenna'], false);   // (v266) hanging from his hands by its strap handle   // (v262) Dadu's radio, held against his chest
     if (o.remote && front) { ctx.save(); ctx.translate(hx2, hy2); ctx.rotate(Math.atan2(hy2 - ey2, hx2 - ex2)); box(-2, -2.2, 10, 4.4, '#222228', 1.5, 1.2); circ(7, 0, 0.9, '#E04A3A', 0); ctx.restore(); }
     ctx.beginPath(); ctx.ellipse(hx2 + (hx2 - ex2) * 0.12, hy2 + (hy2 - ey2) * 0.12, 2.7, 3.1, Math.atan2(hy2 - ey2, hx2 - ex2) - Math.PI / 2, 0, Math.PI * 2); fs(SKIN, 1.7); // hand
   };
@@ -3184,6 +3189,42 @@ function wrapLines(str, font, maxW) {   // split a subtitle into lines that fit 
   for (const w of words) { const t = cur ? cur + ' ' + w : w; if (ctx.measureText(t).width > maxW && cur) { out.push(cur); cur = w; } else cur = t; }
   if (cur) out.push(cur); return out;
 }
+// (v266, user) Dadu's tin trunk (first seen at Montu-da's tea stall) appears at the end of every chapter, and Pupu lays the new memory thing inside
+function startTrunk(n, item) { G.trunk = {t: 0, n, item, close: 0}; sfx.memory(); }
+function trunkIcon(k, x, y, s) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  if (k === 'stone') { ctx.beginPath(); ctx.ellipse(0, 0, 16, 9, -0.2, 0, 7); fs('#8A9098', 2); ctx.beginPath(); ctx.ellipse(-4, -3, 7, 3, -0.2, 0, 7); ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.fill(); }
+  else if (k === 'glasses') { circ(-9, 0, 8, 'rgba(200,230,255,.35)', 2.2); circ(9, 0, 8, 'rgba(200,230,255,.35)', 2.2); ctx.beginPath(); ctx.arc(0, 0, 4, Math.PI * 1.1, Math.PI * 1.9); ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.stroke(); line(-17, -2, -22, -6, INK, 2); line(17, -2, 22, -6, INK, 2); }
+  else if (k === 'radio') drawRadioBox(0, 10, 0.5, ['battery', 'knob', 'antenna'], false);
+  ctx.restore();
+}
+function drawTrunkMoment() {
+  const T = G.trunk, t = T.t, ap = Math.min(1, t / 0.6) * (T.close ? Math.max(0, 1 - T.close / 0.9) : 1), cx = W / 2, by = 380, tw = 320, th = 120;
+  ctx.save(); ctx.globalAlpha = ap;
+  ctx.fillStyle = 'rgba(8,6,20,.62)'; ctx.fillRect(0, 0, W, H);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(cx, by - 80, 20, cx, by - 80, 300); g.addColorStop(0, 'rgba(255,214,120,.35)'); g.addColorStop(1, 'rgba(255,214,120,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  for (let i = 0; i < 18; i++) { const a = i * 2.4 + t * 0.6, r = 120 + (i * 37) % 160; circ(cx + Math.cos(a) * r, by - 90 + Math.sin(a) * r * 0.5, 1.6 + (i % 3), 'rgba(255,230,160,' + (0.3 + 0.4 * Math.sin(t * 3 + i)) + ')', 0); } ctx.restore();
+  text(L2('দাদুর টিনের বাক্স', 'Dadu\'s tin trunk') + '  ·  ' + T.n + ' / 10', cx, 92, 22, CREAM, 700, 'center');
+  const open = Math.min(1, Math.max(0, (t - 0.5) / 0.6)) * (T.close ? Math.max(0, 1 - T.close / 0.5) : 1);
+  // the inside: a red cloth lining with ten little places
+  const x0 = cx - tw / 2, y0 = by - th;
+  box(x0, y0, tw, th, '#2A3A8A', 6, 2.6);
+  if (open > 0.05) { box(x0 + 10, y0 + 8, tw - 20, 58, '#8A2A2A', 4, 1.6);
+    const items = ['stone', 'glasses', 'radio'];
+    for (let i = 0; i < 10; i++) { const sx = x0 + 34 + i * ((tw - 68) / 9), sy = y0 + 36; ctx.beginPath(); ctx.ellipse(sx, sy, 12, 9, 0, 0, 7); ctx.fillStyle = 'rgba(40,10,10,.5)'; ctx.fill();
+      if (i < T.n - 1 && items[i]) trunkIcon(items[i], sx, sy, 0.55);
+      if (i === T.n - 1) { const u = Math.min(1, Math.max(0, (t - 1.2) / 0.9)), e = u * u * (3 - 2 * u), fx = 170 + (sx - 170) * e, fy = 430 + (sy - 430) * e - Math.sin(u * Math.PI) * 140;
+        if (u >= 1) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(sx, sy, 2, sx, sy, 40); gg.addColorStop(0, 'rgba(255,220,120,' + (0.4 + 0.3 * Math.sin(t * 5)) + ')'); gg.addColorStop(1, 'rgba(255,220,120,0)'); ctx.fillStyle = gg; ctx.fillRect(sx - 40, sy - 40, 80, 80); ctx.restore(); }
+        if (u > 0) trunkIcon(T.item, fx, fy, 0.55 + (1 - e) * 0.6); } } }
+  // the painted front: flowers and brass corners
+  box(x0, y0 + 64, tw, th - 64, '#24347A', 4, 2.6); for (let k = 0; k < 5; k++) { const fx = x0 + 40 + k * 60, fy = y0 + 92; for (let p = 0; p < 6; p++) { const a = p * 1.047; circ(fx + Math.cos(a) * 7, fy + Math.sin(a) * 7, 5, k % 2 ? '#E3A92B' : '#E8603A', 0); } circ(fx, fy, 4, '#FFE08A', 0); }
+  for (const [qx, qy] of [[x0, y0 + 64], [x0 + tw - 16, y0 + 64], [x0, by - 16], [x0 + tw - 16, by - 16]]) box(qx, qy, 16, 16, '#C8A040', 2, 1.6);
+  box(cx - 12, y0 + 60, 24, 20, '#C8A040', 3, 1.6);
+  // the lid, hinged at the back, swinging up
+  ctx.save(); ctx.translate(cx, y0); const lh = 70 * Math.cos(open * Math.PI * 0.46); ctx.beginPath(); ctx.moveTo(-tw / 2, 0); ctx.lineTo(tw / 2, 0); ctx.lineTo(tw / 2 - 10 * open, -lh - 40 * open); ctx.lineTo(-tw / 2 + 10 * open, -lh - 40 * open); ctx.closePath(); fs(open > 0.5 ? '#1E2C6A' : '#2A3A8A', 2.6);
+  if (open < 0.5) for (let k = 0; k < 4; k++) circ(-110 + k * 73, -lh / 2, 6, '#E3A92B', 0); ctx.restore();
+  ctx.restore();
+}
 function drawDialog() {
   const d = G.dialog; if (!d) return;
   const who = WHO[d.who];
@@ -3495,6 +3536,7 @@ function render() {
   else if (G.level === 'anko2' && ['aplay', 'acut', 'acaught'].includes(G.state)) drawVerHUD();
   else if (G.state === 'play' || G.state === 'caught' || G.state === 'excuse') drawHUD();
   if (G.fb) drawFlashback();
+  if (G.trunk) drawTrunkMoment();
   if (G.flash > 0) { ctx.fillStyle = G.state === 'caught' || G.state === 'ghurt' ? 'rgba(200,52,31,' + G.flash * 0.5 + ')' : 'rgba(255,250,230,' + G.flash * 0.6 + ')'; ctx.fillRect(0, 0, W, H); }
   if (G.state === 'caught') text('Caught!', W / 2, 200, 64, CREAM, 400, 'center', dispFont);
   drawEyelids();
@@ -3688,10 +3730,17 @@ function storyNight(S, k) {   // scene 1: the village asleep under the moon, Pup
   const p1 = i >= 1 ? (i > 1 ? 1 : S.t / 0.7) : 0, p2 = i >= 2 ? (i > 2 ? 1 : S.t / 0.7) : 0;
   bubble(200, 170, 96, p1, '#C8341F', r => {
     for (let y = -r; y < r; y += 22) line(-r, y, r, y, '#A82A18', 6);   // anger: locked stripes
-    // a big crow with a fish eye, beak open (the dream's enemy shape)
-    ctx.beginPath(); ctx.moveTo(-58, 30); ctx.quadraticCurveTo(-40, -40, 20, -34); ctx.quadraticCurveTo(52, -30, 60, -8); ctx.lineTo(92, -2); ctx.lineTo(58, 8); ctx.quadraticCurveTo(40, 40, -10, 44); ctx.lineTo(-60, 70); ctx.lineTo(-40, 34); ctx.closePath(); fs('#1C1410', 2);
-    ctx.beginPath(); ctx.moveTo(14, -16); ctx.quadraticCurveTo(28, -30, 44, -16); ctx.quadraticCurveTo(28, -8, 14, -16); fs('#FFC94A', 2); circ(31, -16, 5, INK, 0); circ(33, -18, 1.6, '#FBF5E9', 0);
-    swell([[8, -30], [26, -36], [48, -24]], 5);
+    // (v266, user) the dream's enemy: a sly thief's face — a flat cap, a black eye-mask, narrow glaring eyes, a curled moustache, a crooked grin
+    ctx.beginPath(); ctx.moveTo(-50, 70); ctx.quadraticCurveTo(-56, 20, -44, -8); ctx.quadraticCurveTo(-30, -44, 4, -46); ctx.quadraticCurveTo(44, -44, 50, -6); ctx.quadraticCurveTo(58, 26, 46, 70); ctx.closePath(); fs('#6A4A44', 3);   // head and neck in shadow
+    ctx.beginPath(); ctx.moveTo(-54, -14); ctx.quadraticCurveTo(-46, -66, 6, -66); ctx.quadraticCurveTo(52, -64, 58, -22); ctx.lineTo(74, -16); ctx.lineTo(56, -8); ctx.quadraticCurveTo(0, -24, -54, -14); ctx.closePath(); fs('#2E2636', 3);   // flat cap with a peak
+    line(-50, -18, 60, -14, '#1A1420', 3);
+    ctx.beginPath(); ctx.moveTo(-50, -2); ctx.quadraticCurveTo(0, -14, 52, 0); ctx.lineTo(50, 18); ctx.quadraticCurveTo(0, 6, -48, 16); ctx.closePath(); fs('#0E0A12', 2);   // the eye-mask
+    line(-48, 4, -66, -6, '#0E0A12', 4); line(-50, 10, -68, 14, '#0E0A12', 4);   // its tails
+    for (const ex of [-20, 22]) { ctx.beginPath(); ctx.moveTo(ex - 14, 7); ctx.quadraticCurveTo(ex, -3, ex + 14, 6); ctx.quadraticCurveTo(ex, 13, ex - 14, 7); fs('#FFD84A', 1.4); circ(ex + 3, 6, 3.6, INK, 0); line(ex - 13, -2, ex + 11, 2 - (ex < 0 ? -4 : 4), '#0E0A12', 4); }   // narrow glaring eyes, brows down
+    ctx.beginPath(); ctx.moveTo(-2, 18); ctx.quadraticCurveTo(-10, 30, 2, 32); ctx.quadraticCurveTo(8, 30, 4, 18); fs('#5A3C38', 1.6);
+    ctx.beginPath(); ctx.moveTo(0, 36); ctx.quadraticCurveTo(-22, 30, -34, 40); ctx.quadraticCurveTo(-28, 34, -20, 40); ctx.quadraticCurveTo(-10, 36, 0, 40); ctx.quadraticCurveTo(10, 36, 20, 40); ctx.quadraticCurveTo(28, 34, 34, 40); ctx.quadraticCurveTo(22, 30, 0, 36); ctx.closePath(); fs('#0E0A12', 1.4);   // a curled moustache
+    ctx.beginPath(); ctx.moveTo(-18, 48); ctx.quadraticCurveTo(4, 60, 26, 44); ctx.quadraticCurveTo(6, 52, -18, 48); fs('#7A1A1A', 1.8); line(-10, 50, 18, 48, '#F0E6D0', 2);   // a crooked grin
+    for (let k = 0; k < 14; k++) circ(-30 + hash2(k, 3) * 60, 52 + hash2(k, 4) * 14, 1.1, 'rgba(10,8,14,.6)', 0);   // stubble
   }, i >= 3 ? diff : 0);
   bubble(760, 196, 92, p2, '#3E7A3A', r => {
     for (let y = -r + 14; y < r; y += 26) for (let x = -r + 14; x < r; x += 26) circ(x, y, 4, 'rgba(251,245,233,.5)', 0);   // calm dots
@@ -4780,7 +4829,7 @@ function drawAnkoPupu() {
   if (P.hidden) { peekEyes(AK_TIFFIN.x + 18, AK_FL - 70); return; }
   const pk = P.pickT > 0 ? Math.sin(Math.PI * (1 - P.pickT / 0.55)) : 0, thr = P.throwT >= 0 ? P.throwT : undefined;
   if (pk > 0 || thr !== undefined) { drawPupu(P.x, P.y, P.face, {anim: 0, reach: pk, throwT: thr, plane: P.plane, expr: 'sneaky', look: P.look}); return; }   // picking up / throwing the paper plane
-  drawPupu(P.x, P.y, P.face, {...jumpPose(), anim: P.anim, plane: P.plane, walkFB: P.zWalk && P.ground ? (P.zDir > 0 ? 'back' : 'front') : undefined, vx: P.zWalk ? P.face * 126 : P.vx, run: P.sprint && P.ground && !P.zWalk, crouch: P.sneak || !!P.crouchOn, push: inLab() && G.ver.lab.pushT > 0 && P.ground,   // stays crouched in cutscenes and while someone talks (never stands up under a bench)
+  drawPupu(P.x, P.y, P.face, {...jumpPose(), anim: P.anim, plane: P.plane, walkFB: P.zWalk && P.ground ? (P.zDir > 0 ? 'back' : 'front') : undefined, vx: P.zWalk ? P.face * 126 : P.vx, run: P.sprint && P.ground && !P.zWalk, crouch: P.sneak || !!P.crouchOn, push: inLab() && G.ver.lab.pushT > 0 && P.ground, press: inLab() && G.ver.lab.press ? Math.sin(Math.min(1, G.ver.lab.press.t / 0.6) * Math.PI) : 0,   // stays crouched in cutscenes and while someone talks (never stands up under a bench)
  expr: G.state === 'acaught' || G.state === 'abook' ? 'scared' : (G.ak && Math.abs(G.ak.bx - P.x) < 240) ? 'scared' : 'sneaky', blink: P.blink > 0, look: P.look, talk: G.dialog && G.dialog.who === 'pupu'});
 }
 function drawAnkoHUD() {
@@ -5521,6 +5570,9 @@ function startGateEnding() {
     {say:1, who:'mishti', bn:'আমিও দেখলাম… তোমার দাদু খুব ভালো মানুষ ছিলেন, তাই না?', en:'I saw it too… your Dadu was a really kind man, wasn\'t he?'},
     {say:1, who:'pupu', bn:'হুঁ… সবচেয়ে ভালো।', en:'Mm… the very best.', mood: 'sad'},
     {say:1, who:'jhumpa', bn:'পুপু, দেখলে? চেষ্টাটাই আসল।', en:'See, Pupu? Trying is what counts.', mood: 'happy'},
+    {do: () => startTrunk(2, 'glasses')}, {wait: 2.4},
+    {say:1, who:'narr', bn:'দাদুর পুরোনো টিনের বাক্সটা আলোয় ভেসে উঠল। পুপু চশমাটা ভেতরে রাখল। দশটার দুটো জায়গা ভরল।', en:'Dadu\'s old tin trunk shimmered into view. Pupu laid the glasses inside. Two of ten places filled.'},
+    {do: () => { if (G.trunk) G.trunk.close = 0.001; }}, {until: () => !G.trunk},
     // (v259, user) the bridge into Chapter 3: a magic sci-fi door crackles into the yard; the player walks Pupu in
     {do: () => { C.end.portal = {x: CT_GATE - 108, t: 0, open: 0.001, enter: 0}; G.ver.jgoal = P.x + 54; G.flash = 0.45; G.shake = 0.3; tone(70, 1.4, 'sawtooth', 0.05, 220); tone(1800, 0.18, 'square', 0.03, 500, 0.25); tone(2600, 0.12, 'square', 0.02, 900, 0.5); }}, {wait: 1.8},
     {do: () => { P.face = 1; }},
@@ -6078,67 +6130,90 @@ function drawRadioBox(x, y, s, have, glow) {   // Dadu's pocket radio: a leather
   ctx.restore();
 }
 function drawFbRadio() {
-  const fb = G.fb, FL = 448, R = fb.rg;
-  // (v262, user) their village house at dusk: a tin-roofed mud house with a raised verandah (dawa), the swept courtyard (uthon),
-  // a tube-well, a haystack, banana plants and areca palms against the sunset; Dadu and little Pupu sit on the dawa
-  { const g = ctx.createLinearGradient(0, 0, 0, 380); g.addColorStop(0, '#4E4482'); g.addColorStop(0.5, '#D9826C'); g.addColorStop(1, '#F4BE68'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, 380); }
-  { const sx = 840, sy = 300; ctx.save(); ctx.globalCompositeOperation = 'lighter'; const sg = ctx.createRadialGradient(sx, sy, 8, sx, sy, 170); sg.addColorStop(0, 'rgba(255,236,160,.75)'); sg.addColorStop(1, 'rgba(255,200,110,0)'); ctx.fillStyle = sg; ctx.fillRect(sx - 170, sy - 170, 340, 340); ctx.restore(); circ(sx, sy, 26, '#FFE592', 0); }
-  for (let i = 0; i < 4; i++) { const bx = 720 + ((i * 70 + G.t * 9) % 240), by = 70 + (i * 29) % 50, f = Math.sin(G.t * 6 + i) * 3; ctx.beginPath(); ctx.moveTo(bx - 7, by - f); ctx.quadraticCurveTo(bx - 3, by - 3, bx, by); ctx.quadraticCurveTo(bx + 3, by - 3, bx + 7, by - f); ctx.strokeStyle = '#4A3040'; ctx.lineWidth = 1.6; ctx.stroke(); }
-  // the village tree line beyond the courtyard: a mango tree's dark crown and thin areca palms
-  ctx.fillStyle = '#3E3A3A'; ctx.beginPath(); ctx.moveTo(640, 360); for (let x = 640; x <= W + 10; x += 14) ctx.lineTo(x, 318 - Math.abs(Math.sin(x * 0.05)) * 18 - Math.abs(Math.sin(x * 0.013)) * 22); ctx.lineTo(W + 10, 360); ctx.closePath(); ctx.fill();
-  for (const [px, ph] of [[700, 230], [905, 260]]) { line(px, 340, px + 6, 340 - ph, '#3A2E2A', 4); for (let k = 0; k < 7; k++) { const a = -Math.PI / 2 + (k - 3) * 0.5, tx = px + 6, ty = 340 - ph; ctx.beginPath(); ctx.moveTo(tx, ty); ctx.quadraticCurveTo(tx + Math.cos(a) * 30, ty + Math.sin(a) * 22 - 6, tx + Math.cos(a) * 52, ty + Math.sin(a) * 18 + 16); ctx.strokeStyle = '#34342A'; ctx.lineWidth = 4; ctx.stroke(); } }
-  { line(812, 340, 806, 268, '#3A2A22', 9); line(808, 290, 778, 262, '#3A2A22', 5); line(808, 286, 842, 256, '#3A2A22', 5);   // a mango tree: a short trunk and a lumpy crown, rim-lit by the sunset
-    for (const [cx, cy, r, c] of [[770, 250, 34, '#3E4A36'], [810, 226, 42, '#44523A'], [852, 248, 34, '#3E4A36'], [790, 270, 30, '#36402F'], [834, 274, 28, '#36402F'], [812, 250, 30, '#4A5A3E']]) { ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.fillStyle = c; ctx.fill(); }
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (const [cx, cy, r] of [[852, 248, 34], [810, 226, 42]]) { ctx.beginPath(); ctx.arc(cx, cy, r, -0.9, 0.5); ctx.strokeStyle = 'rgba(255,170,90,.35)'; ctx.lineWidth = 4; ctx.stroke(); } ctx.restore(); }
-  // the courtyard: packed earth, swept smooth, in the warm low light
-  { const g = ctx.createLinearGradient(0, 360, 0, H); g.addColorStop(0, '#B88A5A'); g.addColorStop(1, '#8A6038'); ctx.fillStyle = g; ctx.fillRect(0, 360, W, H - 360); for (let i = 0; i < 14; i++) { const x = hash2(i, 3) * W, y = 380 + hash2(i, 4) * 150; ctx.beginPath(); ctx.moveTo(x - 30, y); ctx.quadraticCurveTo(x, y - 4, x + 30, y + 2); ctx.strokeStyle = 'rgba(90,60,30,.18)'; ctx.lineWidth = 1.4; ctx.stroke(); } }
-  // a haystack (kher-er gada) on its bamboo pole, banana plants, the tube-well on its little cement platform with a clay pitcher
-  { const hx = 900, hy = 380; ctx.beginPath(); ctx.moveTo(hx - 52, hy); ctx.quadraticCurveTo(hx - 50, hy - 80, hx, hy - 110); ctx.quadraticCurveTo(hx + 50, hy - 80, hx + 52, hy); ctx.closePath(); fs('#D8B05A', 2.2); for (let k = 0; k < 9; k++) line(hx - 44 + k * 11, hy - 4, hx - 14 + k * 4, hy - 90 + Math.abs(k - 4) * 8, 'rgba(140,100,40,.35)', 1.2); line(hx, hy - 110, hx, hy - 130, '#5A3A20', 3); }
-  for (const [bx, s2] of [[770, 1], [985, 0.85]]) { line(bx, 392, bx + 2, 392 - 90 * s2, '#6A7A3A', 7 * s2); for (let k = 0; k < 5; k++) { const a = -Math.PI / 2 + (k - 2) * 0.62 + Math.sin(G.t * 1.2 + k) * 0.04, tx = bx + 2, ty = 392 - 86 * s2; ctx.save(); ctx.translate(tx, ty); ctx.rotate(a + Math.PI / 2); ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(14 * s2, -34 * s2, 2, -70 * s2); ctx.quadraticCurveTo(-12 * s2, -34 * s2, 0, 0); fs(k % 2 ? '#4E7A34' : '#5E8E3C', 1.6); line(0, 0, 2, -66 * s2, 'rgba(30,50,20,.4)', 1); ctx.restore(); } }
-  { const tx = 690, ty = 420; box(tx - 46, ty - 6, 92, 14, '#9A9A90', 2, 2); box(tx - 6, ty - 70, 12, 66, '#3E6A4A', 3, 2); box(tx - 12, ty - 84, 24, 18, '#3E6A4A', 4, 2); line(tx + 10, ty - 78, tx + 38, ty - 92, '#2E4A36', 4); line(tx - 8, ty - 52, tx - 26, ty - 46, '#2E4A36', 4);
-    ctx.beginPath(); ctx.ellipse(tx + 30, ty - 16, 13, 15, 0, 0, 7); fs('#B5582A', 2); box(tx + 24, ty - 34, 12, 6, '#9A4A22', 2, 1.6); }
-  // a clothesline on two bamboo poles with Dadu's checked gamchha drying
-  { line(640, 400, 640, 250, '#7A5A30', 4); line(1000, 260, 640, 262, 'rgba(60,40,20,.7)', 1.4); ctx.save(); ctx.translate(820, 262); box(-26, 0, 52, 42, '#E8E0D0', 2, 1.6); for (let k = 0; k < 4; k++) { ctx.fillStyle = 'rgba(190,50,40,.75)'; ctx.fillRect(-26 + k * 14, 0, 5, 42); ctx.fillRect(-26, k * 11 + 3, 52, 4); } ctx.restore(); }
-  // the house: lime-and-mud plastered walls, a corrugated tin roof, a blue wooden door left ajar with lamplight inside, a window with iron bars
-  const HX1 = 640;
-  { box(-10, 96, HX1 + 10, FL - 96, '#C9A577', 0, 2.4); for (let i = 0; i < 12; i++) { ctx.fillStyle = 'rgba(110,80,50,' + (0.05 + hash2(i, 9) * 0.07) + ')'; ctx.beginPath(); ctx.ellipse(hash2(i, 5) * HX1, 130 + hash2(i, 6) * 290, 26 + hash2(i, 7) * 36, 9, 0, 0, 7); ctx.fill(); } ctx.fillStyle = 'rgba(80,50,30,.25)'; ctx.fillRect(-10, FL - 34, HX1 + 10, 34); }
-  { ctx.beginPath(); ctx.moveTo(-20, 104); ctx.lineTo(HX1 + 34, 104); ctx.lineTo(HX1 + 10, 34); ctx.lineTo(-20, 34); ctx.closePath(); fs('#8A8478', 2.6); ctx.save(); ctx.clip(); for (let x = -20; x < HX1 + 40; x += 16) { line(x, 34, x + 6, 104, 'rgba(40,36,30,.35)', 3); line(x + 7, 34, x + 13, 104, 'rgba(255,250,235,.15)', 2); } ctx.fillStyle = 'rgba(150,80,40,.18)'; ctx.fillRect(-20, 34, HX1 + 60, 70); ctx.restore(); line(-20, 104, HX1 + 34, 104, INK, 3); ctx.fillStyle = 'rgba(30,20,10,.3)'; ctx.fillRect(-10, 104, HX1 + 10, 18); }
-  for (const px of [30, 330, HX1 - 14]) { box(px - 7, 104, 14, FL - 104, '#6A4A2A', 2, 2); line(px - 2, 110, px - 2, FL - 6, 'rgba(255,220,170,.18)', 2); }   // bamboo / wooden posts holding up the eave
-  { const dx = 120, dy = 170, dw = 120, dh = FL - 170; box(dx - 10, dy - 12, dw + 20, dh + 12, '#5A3A22', 2, 2.4); ctx.fillStyle = '#FFCB6E'; ctx.fillRect(dx, dy, dw, dh); { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(dx + dw / 2, dy + 60, 4, dx + dw / 2, dy + 60, 140); g.addColorStop(0, 'rgba(255,200,110,.5)'); g.addColorStop(1, 'rgba(255,200,110,0)'); ctx.fillStyle = g; ctx.fillRect(dx - 80, dy - 40, dw + 160, dh + 120); ctx.restore(); }
-    box(dx, dy, dw * 0.28, dh, '#3E6E8A', 1, 2); box(dx + dw * 0.86, dy, dw * 0.14, dh, '#3E6E8A', 1, 2); for (let k = 0; k < 3; k++) { box(dx + 4, dy + 12 + k * (dh / 3), dw * 0.28 - 8, dh / 3 - 22, 'rgba(0,0,0,.12)', 2, 1); } circ(dx + dw * 0.28 - 6, dy + dh / 2, 2.6, '#C8A040', 1); }
-  { const wx = 430, wy = 168, ww = 140, wh = 104; box(wx - 10, wy - 10, ww + 20, wh + 20, '#5A3A22', 2, 2.4); const g = ctx.createLinearGradient(0, wy, 0, wy + wh); g.addColorStop(0, '#FFC86A'); g.addColorStop(1, '#E89A48'); ctx.fillStyle = g; ctx.fillRect(wx, wy, ww, wh);
-    box(wx + 50, wy + 38, 20, 34, 'rgba(60,40,20,.55)', 3, 0); for (let k = 1; k < 7; k++) line(wx + k * ww / 7, wy, wx + k * ww / 7, wy + wh, '#2A2420', 3); line(wx, wy + wh / 2, wx + ww, wy + wh / 2, '#2A2420', 3); box(wx - 16, wy + wh + 8, ww + 32, 8, '#6A4A2A', 2, 1.6); }
-  // a hurricane lantern hanging from the eave beam, lit
-  { const lx = 300, ly = 150; line(lx, 104, lx, ly - 30, INK, 1.4); ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(lx, ly - 10, 2, lx, ly - 10, 120); g.addColorStop(0, 'rgba(255,210,120,.55)'); g.addColorStop(1, 'rgba(255,210,120,0)'); ctx.fillStyle = g; ctx.fillRect(lx - 120, ly - 130, 240, 240); ctx.restore();
-    box(lx - 11, ly, 22, 7, '#3A3A3A', 2, 1.6); ctx.beginPath(); ctx.ellipse(lx, ly - 13, 11, 13, 0, 0, 7); fs('rgba(255,230,170,.75)', 1.6); circ(lx, ly - 13, 3.5, '#FFB040', 0); box(lx - 9, ly - 32, 18, 6, '#3A3A3A', 2, 1.6); ctx.beginPath(); ctx.arc(lx, ly - 32, 8, Math.PI, 0); ctx.strokeStyle = INK; ctx.lineWidth = 1.4; ctx.stroke(); }
-  // the raised mud verandah (dawa): a smooth earthen floor with a rounded front edge stepping down to the courtyard
-  { ctx.beginPath(); ctx.moveTo(-10, FL); ctx.lineTo(HX1 + 30, FL); ctx.quadraticCurveTo(HX1 + 44, FL + 16, HX1 + 30, FL + 34); ctx.lineTo(-10, FL + 34); ctx.closePath(); fs('#9E7448', 2.4); const g = ctx.createLinearGradient(0, FL - 4, 0, FL + 10); g.addColorStop(0, '#C89A66'); g.addColorStop(1, '#B4875A'); ctx.fillStyle = g; ctx.fillRect(-10, FL - 2, HX1 + 36, 10); line(-10, FL, HX1 + 30, FL, INK, 2.2);
-    ctx.beginPath(); ctx.ellipse(300, FL + 50, 46, 9, 0, 0, 7); fs('#A8794C', 1.8); }   // a flat stone step down into the courtyard
-  // a cool-mat (shital pati) spread on the dawa where they sit
-  { ctx.beginPath(); ctx.moveTo(250, FL + 1); ctx.lineTo(680, FL + 1); ctx.lineTo(690, FL + 12); ctx.lineTo(240, FL + 12); ctx.closePath(); fs('#D8B878', 1.6); line(256, FL + 4, 676, FL + 4, '#B8402A', 2); }
-  // the warm low sun across everything
-  ctx.save(); ctx.globalCompositeOperation = 'lighter'; { const g = ctx.createRadialGradient(840, 300, 40, 700, 380, 560); g.addColorStop(0, 'rgba(255,190,110,.2)'); g.addColorStop(1, 'rgba(255,190,110,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); } ctx.restore();
-  for (let i = 0; i < 6; i++) { const fx = 660 + hash2(i, 11) * 300 + Math.sin(G.t * 0.7 + i) * 14, fy = 330 + hash2(i, 12) * 120 + Math.cos(G.t * 0.9 + i * 2) * 10, a = 0.4 + 0.6 * Math.max(0, Math.sin(G.t * 2.3 + i * 1.7)); ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = a; circ(fx, fy, 2.2, '#F8F0A0', 0); ctx.restore(); }   // fireflies come out
-  // Dadu on his mora, the radio on a low wooden pira between them, little Pupu on his own pira
-  { const mx = 372, my = FL + 22; ctx.beginPath(); ctx.moveTo(mx - 26, my - 46); ctx.quadraticCurveTo(mx - 10, my - 24, mx - 24, my); ctx.lineTo(mx + 24, my); ctx.quadraticCurveTo(mx + 10, my - 24, mx + 26, my - 46); ctx.closePath(); fs('#B88A4A', 2.2); for (let k = 0; k < 5; k++) line(mx - 22 + k * 11, my - 44, mx - 20 + k * 10, my - 2, 'rgba(90,60,20,.35)', 1.2); ctx.beginPath(); ctx.ellipse(mx, my - 46, 28, 7, 0, 0, 7); fs('#C89A58', 2); }
-  drawDadu(372, FL - 26, {talk: G.dialog && G.dialog.who === 'dadu', blink: Math.sin(G.t * 1.3) > 0.97});
-  box(452, FL + 14, 84, 12, '#7A5230', 2, 2); box(458, FL + 26, 8, 10, '#5A3A20', 1, 1.4); box(522, FL + 26, 8, 10, '#5A3A20', 1, 1.4);
+  // (v266, user's reference) the village house at sunset: a tin-roofed plastered house with a verandah on a raised brick plinth,
+  // a blue door open on a lamp-lit room, a barred window glowing orange, a lantern; beyond, the courtyard with a tube-well,
+  // a clothesline with Dadu's checked gamchha, a haystack, a banana plant, a brick boundary wall, palms and the setting sun
+  const fb = G.fb, R = fb.rg, PL = 440, t = G.t;
+  // sky and sun
+  { const g = ctx.createLinearGradient(0, 0, 0, 330); g.addColorStop(0, '#4A3474'); g.addColorStop(0.45, '#C8607A'); g.addColorStop(0.8, '#F08A5A'); g.addColorStop(1, '#F8B868'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, 330); }
+  for (const [cx, cy, w] of [[760, 110, 70], [880, 70, 90], [700, 160, 50]]) { ctx.fillStyle = 'rgba(160,70,110,.45)'; ctx.beginPath(); ctx.ellipse(cx, cy, w, 9, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(cx + w * 0.3, cy - 7, w * 0.45, 8, 0, 0, 7); ctx.fill(); }
+  { const sx = 800, sy = 196; ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(sx, sy, 10, sx, sy, 190); g.addColorStop(0, 'rgba(255,230,150,.8)'); g.addColorStop(1, 'rgba(255,170,90,0)'); ctx.fillStyle = g; ctx.fillRect(sx - 190, sy - 190, 380, 380); ctx.restore(); circ(sx, sy, 32, '#FFE08A', 0); }
+  for (let i = 0; i < 5; i++) { const bx = 700 + ((i * 61 + t * 10) % 260), by = 60 + (i * 23) % 60, f = Math.sin(t * 6 + i) * 3; ctx.beginPath(); ctx.moveTo(bx - 6, by - f); ctx.quadraticCurveTo(bx - 3, by - 3, bx, by); ctx.quadraticCurveTo(bx + 3, by - 3, bx + 6, by - f); ctx.strokeStyle = '#4A2A40'; ctx.lineWidth = 1.5; ctx.stroke(); }
+  // far hills and the village tree line, then two tall palms
+  ctx.fillStyle = '#9A5A6A'; ctx.beginPath(); ctx.moveTo(640, 250); for (let x = 640; x <= W; x += 20) ctx.lineTo(x, 232 - Math.sin(x * 0.02) * 12 - Math.sin(x * 0.007) * 10); ctx.lineTo(W, 260); ctx.closePath(); ctx.fill();
+  for (let i = 0; i < 9; i++) { const cx = 650 + i * 40, cy = 248 - hash2(i, 71) * 34, r = 26 + hash2(i, 72) * 18; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.fillStyle = i % 2 ? '#3A3C2E' : '#323428'; ctx.fill(); }
+  for (const [px, top, lean] of [[722, 70, -10], [928, 46, 8]]) { ctx.strokeStyle = '#2A2620'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(px, 300); ctx.quadraticCurveTo(px + lean, (300 + top) / 2, px + lean * 1.4, top); ctx.stroke();
+    for (let k = 0; k < 8; k++) { const a = -Math.PI / 2 + (k - 3.5) * 0.48 + Math.sin(t * 0.8 + k) * 0.03, tx = px + lean * 1.4, ty = top; ctx.beginPath(); ctx.moveTo(tx, ty); ctx.quadraticCurveTo(tx + Math.cos(a) * 34, ty + Math.sin(a) * 22 - 10, tx + Math.cos(a) * 62, ty + Math.sin(a) * 16 + 20); ctx.strokeStyle = '#26281E'; ctx.lineWidth = 5; ctx.stroke(); } }
+  // the brick boundary wall of the courtyard
+  { const y0 = 256, y1 = 382; ctx.fillStyle = '#6E4A44'; ctx.fillRect(640, y0, W - 640, y1 - y0); for (let r = 0; r * 14 < y1 - y0; r++) for (let c = -1; c * 34 < W - 640; c++) { const x = 640 + c * 34 + (r % 2) * 17, y = y0 + r * 14; ctx.fillStyle = 'rgba(' + (hash2(c, r) > 0.5 ? '150,96,80' : '128,80,70') + ',.9)'; ctx.fillRect(x + 1.5, y + 1.5, 31, 11); }
+    box(636, y0 - 8, W - 630, 10, '#8A6458', 1, 1.6); ctx.fillStyle = 'rgba(255,170,100,.16)'; ctx.fillRect(640, y0, W - 640, 40); }
+  // the courtyard: swept earth with grass tufts
+  { const g = ctx.createLinearGradient(0, 380, 0, H); g.addColorStop(0, '#B08452'); g.addColorStop(1, '#6E5030'); ctx.fillStyle = g; ctx.fillRect(0, 380, W, H - 380); for (let i = 0; i < 18; i++) { const gx = 600 + hash2(i, 81) * 360, gy = 392 + hash2(i, 82) * 130; for (let k = -2; k <= 2; k++) line(gx, gy, gx + k * 3, gy - 7 - Math.abs(k - 0.5) * 2, '#5E7A34', 1.6); } }
+  // the clothesline: Dadu's red-checked gamchha and a white cloth
+  { line(655, 392, 655, 238, '#6A4A2A', 4); line(958, 392, 958, 236, '#6A4A2A', 4); ctx.beginPath(); ctx.moveTo(655, 244); ctx.quadraticCurveTo(806, 262, 958, 242); ctx.strokeStyle = 'rgba(50,30,20,.8)'; ctx.lineWidth = 1.4; ctx.stroke();
+    ctx.save(); ctx.translate(790, 252); ctx.rotate(0.03 + Math.sin(t * 1.2) * 0.02); box(0, 0, 46, 48, '#F0E6D6', 1, 1.6); ctx.save(); ctx.beginPath(); ctx.rect(0, 0, 46, 48); ctx.clip(); for (let k = 0; k < 6; k++) { ctx.fillStyle = 'rgba(200,40,40,.7)'; ctx.fillRect(k * 9 - 2, 0, 5, 48); ctx.fillRect(0, k * 9 - 2, 46, 5); } ctx.restore(); ctx.restore();
+    ctx.save(); ctx.translate(868, 251); ctx.rotate(-0.02 + Math.sin(t * 1.1 + 1) * 0.02); box(0, 0, 40, 56, '#E8E2D6', 1, 1.6); line(4, 8, 36, 8, 'rgba(0,0,0,.08)', 2); ctx.restore(); }
+  // a haystack, a banana plant and the tube-well with a clay pitcher on its platform
+  { const hx = 906, hy = 392; ctx.beginPath(); ctx.moveTo(hx - 62, hy); ctx.quadraticCurveTo(hx - 56, hy - 92, hx, hy - 124); ctx.quadraticCurveTo(hx + 56, hy - 92, hx + 62, hy); ctx.closePath(); fs('#D8A848', 2.2); for (let k = 0; k < 11; k++) line(hx - 54 + k * 11, hy - 4, hx - 18 + k * 4, hy - 100 + Math.abs(k - 5) * 8, 'rgba(140,90,30,.35)', 1.2); ctx.fillStyle = 'rgba(255,200,120,.2)'; ctx.beginPath(); ctx.moveTo(hx - 50, hy - 20); ctx.quadraticCurveTo(hx - 44, hy - 90, hx, hy - 118); ctx.lineTo(hx - 8, hy - 20); ctx.fill(); }
+  { const bx = 772, by = 392; line(bx, by, bx + 2, by - 92, '#6A7A3A', 8); for (let k = 0; k < 5; k++) { const a = -Math.PI / 2 + (k - 2) * 0.62 + Math.sin(t * 1.2 + k) * 0.04; ctx.save(); ctx.translate(bx + 2, by - 88); ctx.rotate(a + Math.PI / 2); ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(15, -36, 2, -74); ctx.quadraticCurveTo(-13, -36, 0, 0); fs(k % 2 ? '#4E7A34' : '#5E8E3C', 1.6); line(0, 0, 2, -70, 'rgba(30,50,20,.4)', 1); ctx.restore(); } }
+  { const tx = 712, ty = 398; box(tx - 40, ty - 22, 84, 22, '#A8A49A', 2, 2); box(tx - 36, ty - 26, 76, 6, '#BEBAB0', 2, 1.4); box(tx - 7, ty - 96, 14, 72, '#3E6A4A', 3, 2); box(tx - 12, ty - 110, 24, 18, '#3E6A4A', 4, 2); box(tx + 8, ty - 70, 18, 8, '#3E6A4A', 2, 1.6); line(tx + 10, ty - 104, tx + 40, ty - 122, '#2E4A36', 5); line(tx - 10, ty - 80, tx - 26, ty - 74, '#2E4A36', 4); box(tx - 30, ty - 52, 16, 26, '#B07A4A', 2, 1.6);
+    ctx.beginPath(); ctx.ellipse(tx + 34, ty - 42, 14, 16, 0, 0, 7); fs('#C0602E', 2); box(tx + 28, ty - 62, 12, 6, '#A04A22', 2, 1.6); ctx.beginPath(); ctx.ellipse(tx + 29, ty - 46, 4, 7, 0, 0, 7); ctx.fillStyle = 'rgba(255,220,170,.35)'; ctx.fill(); }
+  // ---- the house ----
+  const HX = 652;
+  { const g = ctx.createLinearGradient(0, 80, 0, PL); g.addColorStop(0, '#E8B878'); g.addColorStop(1, '#D89A5A'); ctx.fillStyle = g; ctx.fillRect(-10, 80, HX + 10, PL - 80);
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; const lg = ctx.createRadialGradient(300, 140, 20, 300, 160, 340); lg.addColorStop(0, 'rgba(255,200,110,.35)'); lg.addColorStop(1, 'rgba(255,200,110,0)'); ctx.fillStyle = lg; ctx.fillRect(-10, 80, HX + 10, PL - 80); ctx.restore();
+    for (let i = 0; i < 16; i++) { ctx.fillStyle = 'rgba(110,60,30,' + (0.06 + hash2(i, 19) * 0.08) + ')'; ctx.beginPath(); ctx.ellipse(380 + hash2(i, 15) * 270, 110 + hash2(i, 16) * 300, 10 + hash2(i, 17) * 18, 6 + hash2(i, 18) * 6, hash2(i, 20) * 3, 0, 7); ctx.fill(); }   // leaf shadows thrown by the sunset
+    for (let i = 0; i < 7; i++) { ctx.fillStyle = 'rgba(150,90,50,.12)'; ctx.fillRect(hash2(i, 25) * 600, 300 + hash2(i, 26) * 100, 30, 14); }   // plaster patches showing brick
+    ctx.fillStyle = 'rgba(80,40,20,.2)'; ctx.fillRect(-10, PL - 28, HX + 10, 28); }
+  // the door, open on a lamp-lit room (shelves, a globe, a poster)
+  { const dx = 112, dy = 136, dw = 140, dh = PL - dy; box(dx - 12, dy - 12, dw + 24, dh + 12, '#6A4428', 2, 2.4); { const g = ctx.createLinearGradient(0, dy, 0, PL); g.addColorStop(0, '#E8A858'); g.addColorStop(1, '#B87038'); ctx.fillStyle = g; ctx.fillRect(dx, dy, dw, dh); }
+    ctx.save(); ctx.beginPath(); ctx.rect(dx, dy, dw, dh); ctx.clip();
+    box(dx + 28, dy + 150, 84, 120, '#8A5A32', 2, 1.6); for (let k = 0; k < 3; k++) { box(dx + 32, dy + 160 + k * 38, 76, 4, '#6A4024', 1, 0); for (let b = 0; b < 7; b++) box(dx + 36 + b * 10, dy + 136 + k * 38 + 24 - (b % 3) * 3, 8, 22 + (b % 3) * 3, ['#A84A3A', '#4A6A8A', '#C8A040', '#5A8A4A'][b % 4], 1, 0.8); }
+    circ(dx + 96, dy + 128, 11, '#4A8AC0', 1.4); line(dx + 96, dy + 140, dx + 96, dy + 150, '#5A3A22', 3); box(dx + 30, dy + 70, 44, 54, '#F0E6CC', 2, 1.4); ctx.save(); ctx.translate(dx + 52, dy + 97); for (let k = 0; k < 3; k++) { ctx.rotate(Math.PI / 3); ctx.beginPath(); ctx.ellipse(0, 0, 14, 5, 0, 0, 7); ctx.strokeStyle = '#3A4A7A'; ctx.lineWidth = 1.2; ctx.stroke(); } circ(0, 0, 2.5, '#C84A3A', 0); ctx.restore();
+    line(dx + 70, dy, dx + 70, dy + 30, INK, 1.4); ctx.beginPath(); ctx.moveTo(dx + 56, dy + 42); ctx.quadraticCurveTo(dx + 70, dy + 26, dx + 84, dy + 42); ctx.closePath(); fs('#3A3A30', 1.4); ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(dx + 70, dy + 50, 2, dx + 70, dy + 60, 110); g.addColorStop(0, 'rgba(255,220,140,.6)'); g.addColorStop(1, 'rgba(255,200,110,0)'); ctx.fillStyle = g; ctx.fillRect(dx, dy, dw, dh); ctx.restore();
+    ctx.restore();
+    for (const [x0, x1] of [[dx, dx + 30], [dx + dw - 26, dx + dw + 4]]) { ctx.beginPath(); ctx.moveTo(x0, dy); ctx.lineTo(x1, dy - 6); ctx.lineTo(x1, PL + 4); ctx.lineTo(x0, PL); ctx.closePath(); fs('#3A6E9A', 2); for (let k = 0; k < 3; k++) { const yy = dy + 18 + k * (dh / 3); ctx.strokeStyle = 'rgba(20,40,60,.4)'; ctx.lineWidth = 1.4; ctx.strokeRect(x0 + 5, yy, x1 - x0 - 10, dh / 3 - 26); } }
+    circ(dx + 28, dy + dh / 2, 2.6, '#D8B048', 1); box(dx + 30, PL - 6, 84, 8, '#A8483A', 2, 1.4); }
+  // a potted plant by the door, a science poster, the lantern on its bracket
+  { const px = 64, py = PL; box(px - 26, py - 44, 52, 44, '#9A6A52', 3, 2); box(px - 30, py - 50, 60, 9, '#AA7A60', 3, 1.8); for (let k = 0; k < 9; k++) { const a = -Math.PI / 2 + (k - 4) * 0.36, l = 40 + (k % 3) * 14; ctx.save(); ctx.translate(px, py - 50); ctx.rotate(a + Math.PI / 2); line(0, 0, 0, -l, '#4A6A2A', 2); ctx.beginPath(); ctx.ellipse(0, -l, 9, 5, 0.4, 0, 7); fs(k % 2 ? '#5A8A3A' : '#4A7A30', 1.2); ctx.beginPath(); ctx.ellipse(5, -l * 0.6, 8, 4.5, -0.5, 0, 7); fs('#5E923E', 1.2); ctx.restore(); } }
+  { box(272, 176, 58, 72, '#F2E8D0', 2, 1.6); circ(275, 179, 2, '#8A6A4A', 0); circ(327, 179, 2, '#8A6A4A', 0); ctx.save(); ctx.translate(301, 204); for (let k = 0; k < 3; k++) { ctx.rotate(Math.PI / 3); ctx.beginPath(); ctx.ellipse(0, 0, 16, 6, 0, 0, 7); ctx.strokeStyle = '#3A4A6A'; ctx.lineWidth = 1.4; ctx.stroke(); } circ(0, 0, 3, '#C84A3A', 0); ctx.restore(); for (let k = 0; k < 3; k++) line(282, 230 + k * 5, 320 - k * 6, 230 + k * 5, 'rgba(60,60,80,.5)', 1.4); }
+  { const lx = 296, ly = 122; ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(lx, ly + 10, 3, lx, ly + 10, 150); g.addColorStop(0, 'rgba(255,214,130,.7)'); g.addColorStop(1, 'rgba(255,190,100,0)'); ctx.fillStyle = g; ctx.fillRect(lx - 150, ly - 140, 300, 300); ctx.restore();
+    line(lx, 92, lx, ly - 18, '#3A2A1E', 2.4); line(lx - 10, 92, lx + 10, 92, '#3A2A1E', 3); box(lx - 12, ly + 18, 24, 7, '#3A3A3A', 2, 1.6); ctx.beginPath(); ctx.ellipse(lx, ly + 4, 12, 15, 0, 0, 7); fs('rgba(255,236,180,.85)', 1.6); circ(lx, ly + 5, 4, '#FFB040', 0); box(lx - 10, ly - 16, 20, 6, '#3A3A3A', 2, 1.6); line(lx - 9, ly - 10, lx - 9, ly + 18, '#3A3A3A', 1.6); line(lx + 9, ly - 10, lx + 9, ly + 18, '#3A3A3A', 1.6); }
+  // the barred window, glowing orange, a curtain inside
+  { const wx = 425, wy = 132, ww = 164, wh = 138; box(wx - 12, wy - 12, ww + 24, wh + 24, '#6A4428', 2, 2.4); const g = ctx.createLinearGradient(0, wy, 0, wy + wh); g.addColorStop(0, '#FFC060'); g.addColorStop(1, '#F08A38'); ctx.fillStyle = g; ctx.fillRect(wx, wy, ww, wh);
+    ctx.beginPath(); ctx.moveTo(wx + ww - 50, wy); ctx.quadraticCurveTo(wx + ww - 30, wy + wh * 0.5, wx + ww - 44, wy + wh); ctx.lineTo(wx + ww, wy + wh); ctx.lineTo(wx + ww, wy); ctx.closePath(); ctx.fillStyle = 'rgba(220,80,60,.55)'; ctx.fill();
+    for (let k = 1; k < 8; k++) line(wx + k * ww / 8, wy, wx + k * ww / 8, wy + wh, '#3A2418', 3.4); box(wx + ww / 2 - 10, wy + wh / 2 - 22, 20, 44, '#5A3A22', 2, 1.6); box(wx - 18, wy + wh + 10, ww + 36, 9, '#7A5030', 2, 1.6);
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; const lg = ctx.createRadialGradient(wx + ww / 2, wy + wh / 2, 10, wx + ww / 2, wy + wh / 2, 160); lg.addColorStop(0, 'rgba(255,170,80,.25)'); lg.addColorStop(1, 'rgba(255,170,80,0)'); ctx.fillStyle = lg; ctx.fillRect(wx - 120, wy - 100, ww + 240, wh + 220); ctx.restore(); }
+  // the wooden posts and the corrugated tin roof with its eave beam; vines hanging from the edge
+  for (const px of [26, 339, 634]) { box(px - 8, 88, 16, PL - 88, '#7A4E2A', 2, 2.2); line(px - 3, 94, px - 3, PL - 4, 'rgba(255,220,170,.22)', 2); }
+  { ctx.beginPath(); ctx.moveTo(-20, -4); ctx.lineTo(HX + 20, -4); ctx.lineTo(HX + 66, 82); ctx.lineTo(-20, 82); ctx.closePath(); fs('#7E7C80', 2.6); ctx.save(); ctx.clip(); for (let x = -40; x < HX + 80; x += 15) { line(x, -4, x + 22, 82, 'rgba(40,40,46,.4)', 3.2); line(x + 7, -4, x + 29, 82, 'rgba(255,240,230,.14)', 2); } ctx.fillStyle = 'rgba(200,120,90,.2)'; ctx.fillRect(-20, -4, HX + 90, 86); ctx.restore(); box(-20, 78, HX + 86, 12, '#6A4428', 2, 2.4); ctx.fillStyle = 'rgba(30,15,5,.28)'; ctx.fillRect(-10, 90, HX + 10, 16); }
+  for (const [vx, n, sd] of [[10, 5, 1], [150, 3, 2], [560, 4, 3], [650, 3, 4]]) for (let k = 0; k < n; k++) { const x = vx + k * 18, len = 30 + hash2(k, sd) * 70, sw = Math.sin(t * 0.9 + k + sd) * 3; ctx.strokeStyle = '#3A5A2A'; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(x, 86); ctx.quadraticCurveTo(x + 6, 86 + len / 2, x + sw, 86 + len); ctx.stroke(); for (let j = 0; j < len / 10; j++) { ctx.beginPath(); ctx.ellipse(x + sw * j / (len / 10) + (j % 2 ? 4 : -4), 92 + j * 10, 5.5, 3.4, j % 2 ? 0.5 : -0.5, 0, 7); ctx.fillStyle = ['#4E7A36', '#5E8A3E', '#3E6A2E'][j % 3]; ctx.fill(); } }
+  // the raised brick plinth the verandah stands on, with steps down at the left
+  { ctx.fillStyle = '#C8A070'; ctx.fillRect(-10, PL - 4, HX + 50, 10); line(-10, PL - 4, HX + 40, PL - 4, INK, 2); ctx.fillStyle = '#9A7452'; ctx.fillRect(-10, PL + 6, HX + 50, 44); for (let r = 0; r < 3; r++) for (let c = -1; c < 24; c++) { const x = c * 30 + (r % 2) * 15, y = PL + 7 + r * 14; ctx.fillStyle = hash2(c, r + 40) > 0.5 ? 'rgba(170,130,96,.9)' : 'rgba(150,112,84,.9)'; ctx.fillRect(x + 1.5, y + 1.5, 27, 11); } ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.strokeRect(-10, PL + 6, HX + 50, 44); }
+  // a soft sunset wash; fireflies; dark leaves in the foreground corners
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; { const g = ctx.createRadialGradient(800, 200, 40, 700, 300, 620); g.addColorStop(0, 'rgba(255,170,100,.18)'); g.addColorStop(1, 'rgba(255,170,100,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); } ctx.restore();
+  for (let i = 0; i < 6; i++) { const fx = 680 + hash2(i, 11) * 270 + Math.sin(t * 0.7 + i) * 14, fy = 320 + hash2(i, 12) * 120 + Math.cos(t * 0.9 + i * 2) * 10, a = 0.4 + 0.6 * Math.max(0, Math.sin(t * 2.3 + i * 1.7)); ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = a; circ(fx, fy, 2.2, '#F8F0A0', 0); ctx.restore(); }
+  // Dadu on his wooden stool, the radio on the verandah floor between them, little Pupu on his own small stool
+  const base = PL + 2;
+  { const mx = 372, my = base; box(mx - 24, my - 48, 48, 10, '#9A6A3A', 3, 2); for (const lx of [mx - 18, mx + 18]) line(lx, my - 38, lx + (lx < mx ? -3 : 3), my, '#7A4E2A', 6); line(mx - 18, my - 16, mx + 18, my - 16, '#7A4E2A', 4); }
+  drawDadu(372, base - 48, {talk: G.dialog && G.dialog.who === 'dadu', blink: Math.sin(t * 1.3) > 0.97});
   const have = R ? R.placed : [];
-  drawRadioBox(494, FL + 14, 1.2, have, false);
-  if (R && R.fly) { const u = Math.min(1, R.fly.t / 0.7), e = u * u * (3 - 2 * u), sx = 480, sy = 210, tx = 494 + (R.fly.k === 'knob' ? 19 : R.fly.k === 'antenna' ? 40 : -5), ty = FL + 14 - (R.fly.k === 'antenna' ? 60 : 12); drawPartIcon(R.fly.k, sx + (tx - sx) * e, sy + (ty - sy) * e - Math.sin(u * Math.PI) * 60, 1.1 - 0.4 * e); }
-  if (R && R.tune.locked) for (let i = 0; i < 4; i++) { const tt = (G.t * 0.6 + i * 0.25) % 1, nx = 500 + Math.sin(tt * 9 + i) * 18 + tt * 40, ny = FL - 20 - tt * 120; ctx.save(); ctx.globalAlpha = Math.sin(tt * Math.PI); text(i % 2 ? '♪' : '♫', nx, ny, 22, '#5A2A16', 700, 'center'); ctx.restore(); }
-  { const kx = 610, ky = FL + 22; box(kx - 40, ky - 10, 80, 12, '#7A5230', 2, 2); box(kx - 34, ky + 2, 8, 10, '#5A3A20', 1, 1.4); box(kx + 26, ky + 2, 8, 10, '#5A3A20', 1, 1.4); }
+  drawRadioBox(494, base - 2, 1.2, have, false);
+  if (R && R.fly) { const u = Math.min(1, R.fly.t / 0.7), e = u * u * (3 - 2 * u), sx = 480, sy = 210, tx = 494 + (R.fly.k === 'knob' ? 19 : R.fly.k === 'antenna' ? 40 : -5), ty = base - 2 - (R.fly.k === 'antenna' ? 60 : 12); drawPartIcon(R.fly.k, sx + (tx - sx) * e, sy + (ty - sy) * e - Math.sin(u * Math.PI) * 60, 1.1 - 0.4 * e); }
+  if (R && R.tune.locked) for (let i = 0; i < 4; i++) { const tt = (t * 0.6 + i * 0.25) % 1, nx = 500 + Math.sin(tt * 9 + i) * 18 + tt * 40, ny = base - 50 - tt * 120; ctx.save(); ctx.globalAlpha = Math.sin(tt * Math.PI); text(i % 2 ? '♪' : '♫', nx, ny, 22, '#5A2A16', 700, 'center'); ctx.restore(); }
+  { const kx = 606, ky = base, sh = 36; box(kx - 20, ky - sh, 40, 8, '#9A6A3A', 3, 2); for (const lx of [kx - 15, kx + 15]) line(lx, ky - sh + 8, lx + (lx < kx ? -2 : 2), ky, '#7A4E2A', 5); line(kx - 15, ky - 12, kx + 15, ky - 12, '#7A4E2A', 3); }   // (v266) Pupu's own little stool: he no longer sits in the air
   const kidTalk = G.dialog && G.dialog.who === 'pupu', ok = R && (R.tune.locked || R.done);
-  ctx.save(); ctx.translate(608, FL + 14); ctx.scale(0.72, 0.72);
-  drawPupu(0, 0, -1, {anim: 0, vx: 0, sit: 26, shoes: false, noCap: true, expr: R && R.fbk ? (R.fbk.ok ? 'grin' : 'sad') : kidTalk ? talkExpr(ok ? 'grin' : 'sad') : ok ? 'grin' : R ? 'happy' : 'sad', blink: Math.sin(G.t * 1.7) > 0.96, look: -0.6, talk: kidTalk});
+  ctx.save(); ctx.translate(606, base); ctx.scale(0.72, 0.72);
+  drawPupu(0, 0, -1, {anim: 0, vx: 0, sit: 26, shoes: false, noCap: true, expr: R && R.fbk ? (R.fbk.ok ? 'grin' : 'sad') : kidTalk ? talkExpr(ok ? 'grin' : 'sad') : ok ? 'grin' : R ? 'happy' : 'sad', blink: Math.sin(t * 1.7) > 0.96, look: -0.6, talk: kidTalk});
   ctx.restore();
-  { const v = ctx.createRadialGradient(480, 300, 160, 480, 300, 620); v.addColorStop(0, 'rgba(40,16,4,0)'); v.addColorStop(0.7, 'rgba(40,16,4,.3)'); v.addColorStop(1, 'rgba(30,10,2,.75)'); ctx.fillStyle = v; ctx.fillRect(0, 0, W, H); }
+  for (const [lx, ly, s2, fl] of [[-10, H + 10, 1, 1], [W + 10, H + 10, 1, -1]]) for (let k = 0; k < 6; k++) { ctx.save(); ctx.translate(lx, ly); ctx.scale(fl, 1); ctx.rotate(-1.4 + k * 0.28); ctx.beginPath(); ctx.ellipse(56, 0, 58, 16, 0, 0, 7); ctx.fillStyle = k % 2 ? '#1E2A1A' : '#243222'; ctx.fill(); ctx.restore(); }
+  { const v = ctx.createRadialGradient(480, 280, 200, 480, 280, 640); v.addColorStop(0, 'rgba(40,16,4,0)'); v.addColorStop(0.75, 'rgba(40,16,4,.2)'); v.addColorStop(1, 'rgba(30,10,2,.6)'); ctx.fillStyle = v; ctx.fillRect(0, 0, W, H); }
   if (R && !R.done) drawRadioGame();
 }
 // (v261) Memory 3 is hands-on: little Pupu puts the radio back together himself, Dadu shows him how
 const RG_STEPS = [
   {k: 'battery', say: ['আগে ব্যাটারি: এটাই রেডিওর শক্তি। খোপের ভেতর ঠেলে ঢোকা!', 'First the battery: it gives the radio its strength. Push it into the box!'], ok: ['খট্‌! ঢুকে গেছে। এবার রেডিওর গায়ে শক্তি এল।', 'Click! It\'s in. Now the radio has its strength.'], how: ['E / Space চেপে চেপে ঠেলো', 'Press E or Space to push'], howT: ['বারবার চাপ দাও', 'Tap again and again']},
-  {k: 'knob', say: ['এবার নবটা বসা, আর ঘুরিয়ে ঘুরিয়ে টাইট কর।', 'Now fit the knob, and turn it round and round till it\'s tight.'], ok: ['বাহ্‌! এই নব ঘুরিয়েই আমরা স্টেশন খুঁজব।', 'Lovely! We\'ll turn this knob to find a station.'], how: ['মাউস দিয়ে গোল গোল ঘোরাও', 'Move the mouse round in circles'], howT: ['স্ক্রিনে আঙুল দিয়ে গোল গোল ঘোরাও', 'Draw circles on the screen with your finger']},
+  {k: 'knob', say: ['এবার নবটা বসা, আর ঘুরিয়ে ঘুরিয়ে টাইট কর।', 'Now fit the knob, and turn it round and round till it\'s tight.'], ok: ['বাহ্‌! এই নব ঘুরিয়েই আমরা স্টেশন খুঁজব।', 'Lovely! We\'ll turn this knob to find a station.'], how: ['মাউস দিয়ে গোল গোল ঘোরাও', 'Move the mouse round in circles'], howT: ['জয়স্টিকটা গোল গোল ঘোরাও', 'Turn the joystick round in circles']},
   {k: 'antenna', say: ['শেষে অ্যান্টেনা। টেনে টেনে লম্বা কর, আকাশ থেকে গান ধরবে!', 'Last, the antenna. Pull it out nice and long, it catches songs from the sky!'], ok: ['এই তো! পুরো লম্বা।', 'There! All the way out.'], how: ['▲ (W) চেপে চেপে টানো', 'Press ▲ (W) to pull'], howT: ['বারবার চাপ দাও', 'Tap again and again']},
 ];
 function startRadioGame() {
@@ -6158,28 +6233,35 @@ function radioGameUpdate(dt) {
       return; }
     let add = 0;
     if (S.k === 'battery') { if (edges.use || edges.jump || edges.tap) { add = 0.26; tone(300 + R.prog * 300, 0.06, 'square', 0.03); } }
-    else if (S.k === 'knob') {   // (v262) turn it with circles: PC mouse, phone finger
-      for (const [x, y] of ptrMoves) { const lp = R.lp; if (!lp) { R.lp = [x, y]; continue; } const dx = x - lp[0], dy = y - lp[1]; if (Math.hypot(dx, dy) < 4) continue; R.lp = [x, y];
+    else if (S.k === 'knob') {   // (v266) turn it with circles: the mouse on PC, the joystick on phones
+      if (isTouch) { if (R.jt0 === undefined) R.jt0 = joyTurn; R.turn = joyTurn - R.jt0; }
+      for (const [x, y] of isTouch ? [] : ptrMoves) { const lp = R.lp; if (!lp) { R.lp = [x, y]; continue; } const dx = x - lp[0], dy = y - lp[1]; if (Math.hypot(dx, dy) < 4) continue; R.lp = [x, y];
         const hd = Math.atan2(dy, dx); if (R.hd !== undefined) { let d = hd - R.hd; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; d = Math.max(-1.2, Math.min(1.2, d)); R.turn = (R.turn || 0) + d; } R.hd = hd; }
       const p = Math.min(1, Math.abs(R.turn || 0) / (Math.PI * 2 * 3)); if (p > R.prog + 0.001) { if (Math.floor(p * 12) !== Math.floor(R.prog * 12)) tone(500 + p * 300, 0.05, 'triangle', 0.03); R.spin = 1; R.prog = p; if (p >= 1) { R.placed.push(S.k); R.fbk = {ok: true, t: 0}; rgSay(...S.ok); tone(660, 0.15, 'triangle', 0.05); tone(990, 0.25, 'triangle', 0.04, 0, 0.12); } } }
     else { if (edges.up || edges.use || edges.jump || edges.tap) { add = 0.22; tone(700 + R.prog * 500, 0.06, 'triangle', 0.03); } }
     if (add) { R.prog = Math.min(1, R.prog + add); if (R.prog >= 1) { R.placed.push(S.k); R.fbk = {ok: true, t: 0}; rgSay(...S.ok); tone(660, 0.15, 'triangle', 0.05); tone(990, 0.25, 'triangle', 0.04, 0, 0.12); } }
     ptrMoves.length = 0; return;
   }
-  ptrMoves.length = 0;
   // tuning: hold left/right (or tap the dial) to move the needle; the hiss fades as you get near the station
   const T = R.tune;
-  if (T.locked) { T.lockT += dt; radioStatic(0.004); if (T.lockT > 5.2) { R.done = true; G.dialog = null; } return; }
+  if (T.locked) { ptrMoves.length = 0; T.lockT += dt; radioStatic(0.004); if (T.lockT > 5.2) { R.done = true; G.dialog = null; } return; }
   const sp = 0.22; let mv = 0;
   if (held.left) mv -= 1; if (held.right) mv += 1;
-  if (edges.tap) { const d = R.dial; if (d && tapY > d[1] - 30 && tapY < d[1] + d[3] + 30) T.goal = Math.max(0, Math.min(1, (tapX - d[0]) / d[2])); }
+  if (ptrDown && R.dial) { let lx = R.slx; for (const [x] of ptrMoves) { if (lx !== undefined) { T.pos = Math.max(0, Math.min(1, T.pos + (x - lx) / R.dial[2])); T.goal = null; R.slid = true; } lx = x; } R.slx = lx; } else R.slx = undefined;   // (v266) slide a finger (or drag the mouse) left and right
   if (mv) { T.goal = null; T.pos = Math.max(0, Math.min(1, T.pos + mv * sp * dt)); }
   else if (T.goal !== null) { const d = T.goal - T.pos; T.pos += Math.sign(d) * Math.min(Math.abs(d), 0.3 * dt); if (Math.abs(d) < 0.002) T.goal = null; }
   const dist = Math.abs(T.pos - T.target), str = Math.max(0, 1 - dist * 9);
   radioStatic(0.05 * (1 - str * 0.85));
   if (str > 0.45 && Math.random() < dt * 3 * str) tone(RADIO_SONGS[T.song][Math.floor(Math.random() * 5)][0], 0.12, 'triangle', 0.012 * str);
+  ptrMoves.length = 0;
   if (dist < 0.022) { T.hold += dt; if (T.hold > 0.7) { T.locked = true; T.pos = T.target; radioStatic(0.004); radioSong(T.song, 0.04); rgSay('শোন… গান!', 'Listen… a song!'); tone(1320, 0.2, 'triangle', 0.03); } }
   else T.hold = Math.max(0, T.hold - dt);
+}
+function hintHand(x, y, finger) {   // (v266) a little animated pointer: a fingertip on phones, a mouse on PC
+  ctx.save(); ctx.translate(x, y);
+  if (finger) { box(-5, -2, 10, 22, '#E8B888', 5, 1.6); circ(0, -2, 5, '#E8B888', 1.6); box(-9, 14, 18, 16, '#E8B888', 6, 1.6); line(-2, -5, 2, -5, 'rgba(255,255,255,.6)', 1.4); }
+  else { rr(-8, -11, 16, 24, 8); ctx.fillStyle = '#F4F0E6'; ctx.fill(); ink(1.8); ctx.stroke(); line(0, -11, 0, -2, INK, 1.4); line(-8, -2, 8, -2, INK, 1.2); box(-1.5, -8, 3, 4, '#3A4A7A', 1, 0); }
+  ctx.restore();
 }
 function drawRadioGame() {
   const R = G.fb.rg, x0 = 250, y0 = 10, w = 460, h = 196, cx = x0 + w / 2;
@@ -6200,6 +6282,7 @@ function drawRadioGame() {
       if (!R.fbk) { ctx.save(); ctx.translate(16, 2 - (1 - p) * 26); ctx.rotate(G.t * 2.2); ctx.strokeStyle = 'rgba(58,74,122,.55)'; ctx.lineWidth = 1.6; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(0, 0, 15, 0.3, Math.PI * 1.75); ctx.stroke(); ctx.setLineDash([]); const a = Math.PI * 1.75; ctx.beginPath(); ctx.moveTo(Math.cos(a) * 15 + 3, Math.sin(a) * 15 - 3); ctx.lineTo(Math.cos(a) * 15, Math.sin(a) * 15); ctx.lineTo(Math.cos(a) * 15 - 4, Math.sin(a) * 15 - 1); ctx.stroke(); ctx.restore(); } }   // a turning arrow round it
     else { circ(28, -18, 2.4, '#2A1A10', 1); const L2a = 8 + p * 30; line(28, -18, 28 + L2a * 0.9, -18 - L2a * 0.7, '#C8D0D8', 3); for (let k = 0; k < 4; k++) if (p > k * 0.25) line(28 + (k + 1) * 11 * 0.42 * (L2a / 54), -18 - (k + 1) * 11 * (L2a / 54), 28 + (k + 1) * 11 * 0.42 * (L2a / 54) + 2, -18 - (k + 1) * 11 * (L2a / 54) + 1, '#8A929A', 2); circ(28 + L2a * 0.9, -18 - L2a * 0.7, 2.4, '#D8DDE2', 1); }
     ctx.restore();
+    if (S.k === 'knob' && !R.fbk) { const hx = x0 + 70, hy = y0 + 160, a = G.t * 3.2; if (isTouch) { circ(hx, hy, 18, 'rgba(58,74,122,.15)', 1.6); circ(hx + Math.cos(a) * 11, hy + Math.sin(a) * 11, 8, 'rgba(227,169,43,.85)', 1.6); } else { ctx.beginPath(); ctx.arc(hx, hy, 16, 0, 6.283); ctx.strokeStyle = 'rgba(58,74,122,.3)'; ctx.setLineDash([3, 3]); ctx.lineWidth = 1.4; ctx.stroke(); ctx.setLineDash([]); hintHand(hx + Math.cos(a) * 16, hy + Math.sin(a) * 16, false); } }   // (v266) an animated mouse (PC) or joystick (phone) going round
     const ls = wrapLines(L2(S.say[0], S.say[1]), '700 14px ' + bodyFont, 230); ls.forEach((l, i) => text(l, x0 + w - 130, y0 + 56 + i * 19, 14, INK, 700, 'center'));
     box(x0 + w - 230, y0 + 128, 200, 14, '#E6E0D2', 6, 1.6); box(x0 + w - 230, y0 + 128, 200 * p, 14, R.fbk ? LEAF : TURMERIC, 6, 0);
     text(R.fbk ? '✓' : L2((isTouch ? S.howT : S.how)[0], (isTouch ? S.howT : S.how)[1]), x0 + w - 130, y0 + 166, R.fbk ? 20 : 13, R.fbk ? LEAF : '#3A4A7A', 700, 'center');
@@ -6214,7 +6297,8 @@ function drawRadioGame() {
   circ(dx + dw + 6, dy + dh + 40, 7, str > 0.8 ? '#FFC24A' : str > 0.3 ? '#C8862A' : '#5A3A20', 1.6);
   ctx.beginPath(); for (let i = 0; i <= 60; i++) { const x = dx + 10 + (dw - 60) * i / 60, a = (1 - str) * 9 * Math.sin(i * 1.7 + G.t * 40) * Math.sin(i * 0.31 + G.t * 7) + str * 7 * Math.sin(i * 0.45 + G.t * 6); if (i) ctx.lineTo(x, dy + dh + 40 + a); else ctx.moveTo(x, dy + dh + 40 + a); }
   ctx.strokeStyle = str > 0.8 ? LEAF : '#3A4A7A'; ctx.lineWidth = 2; ctx.stroke();
-  text(T.locked ? L2('গান পাওয়া গেছে!', 'Found a song!') : isTouch ? L2('ডায়ালে চাপ দিয়ে কাঁটা সরাও', 'Tap the dial to move the needle') : L2('◀ ▶ চেপে ধরে আস্তে আস্তে ঘোরাও', 'Hold ◀ ▶ to turn the knob slowly'), cx, y0 + h - 14, 13, T.locked ? LEAF : '#3A4A7A', 700, 'center');
+  text(T.locked ? L2('গান পাওয়া গেছে!', 'Found a song!') : isTouch ? L2('আঙুল দিয়ে ডানে-বাঁয়ে টানো', 'Slide your finger left and right') : L2('◀ ▶ চেপে ধরো, বা মাউস দিয়ে টানো', 'Hold ◀ ▶, or drag with the mouse'), cx, y0 + h - 14, 13, T.locked ? LEAF : '#3A4A7A', 700, 'center');
+  if (!T.locked && !R.slid) { const u = (Math.sin(G.t * 2.2) + 1) / 2, fx = dx + 40 + (dw - 80) * u; ctx.save(); ctx.globalAlpha = 0.85; line(dx + 30, dy + dh + 22, dx + dw - 30, dy + dh + 22, 'rgba(58,74,122,.35)', 2); for (const [ax, sg] of [[dx + 30, -1], [dx + dw - 30, 1]]) { ctx.beginPath(); ctx.moveTo(ax - sg * 8, dy + dh + 16); ctx.lineTo(ax, dy + dh + 22); ctx.lineTo(ax - sg * 8, dy + dh + 28); ctx.strokeStyle = 'rgba(58,74,122,.5)'; ctx.lineWidth = 2; ctx.stroke(); } hintHand(fx, dy + dh + 18, isTouch); ctx.restore(); }   // (v266) an animated hand/mouse sliding along the dial
 }
 
 function drawLabEnd() {
@@ -6240,11 +6324,12 @@ function drawLabEnd() {
 //   powers down, the secret room opens: Dadu's radio.
 const LG = 1660, LF1 = 1270, LF2 = 980, LF3 = 560, LROOF = 220, LW = 3420, LSL = 22;
 const LAB_SECRET_X = 300, LAB_RADIO_X = 150, LAB_LIFT = {x0: 2150, x1: 2280}, LAB_EYE = {x: 530, y: LF1 + LSL};
-const LAB_CRATES = [430, 650], LAB_SOCKETS = [760, 900, 1040], LAB_SOCK_PART = ['battery', 'knob', 'antenna'];
+const LAB_CRATES = [470, 690],   // (v266) these are now tall lab worktables he crawls under (like the schoolyard bench)
+      LAB_SOCKETS = [760, 900, 1040], LAB_SOCK_PART = ['battery', 'knob', 'antenna'];
 const LAB_PRESS_X = 2380, LAB_GATE_X = 2500, LAB_PIT = [2580, 2820], LAB_CAB_X = 3150, LAB_SWITCH_X = 3320, LAB_CAP_X = 2060;
 const LAB_TUNNEL = {x0: 2880, x1: 3060, y: LF1}, LAB_WIRES = {x0: 3150, x1: 3250, y: LF2};
 const LAB_BURNERS = [{x: 1250, ph: 0, y: LG - 100}];
-const LAB_CHECKS = [{x: 260, y: LG}, {x: 2100, y: LG}, {x: 3330, y: LF2}];
+const LAB_CHECKS = [{x: 215, y: LG}, {x: 2100, y: LG}, {x: 3330, y: LF2}];
 const AK_FL_VF = VF;
 const LS_ = (x0, x1, y, o) => Object.assign({x0, y0: y, x1, y1: y, floor: 1}, o || {});
 const LAB_S = {
@@ -6260,7 +6345,7 @@ const LAB_LADDERS = [
   {id: 's2', x: 3236, y0: LF1, y1: LF1 - 100, kind: 'side'}, {id: 's3', x: 3392, y0: LF1, y1: LF2, kind: 'back'},
   {id: 'bv', x: 2990, y0: LF2, y1: LF2 - 180, kind: 'front'}, {id: 's4', x: 2915, y0: LF2 - 180, y1: LF2 - 340, kind: 'side'},
 ];
-const LAB_BUGS0 = [{a: 800, b: 980, y: LG}, {a: 3080, b: 3190, y: LF1}, {a: 2720, b: 2850, y: LF2 - 340}];
+const LAB_BUGS0 = [{a: 860, b: 950, y: LG}, {a: 2720, b: 2850, y: LF2 - 340}];   // (v266) no spark-bug by the cabinet any more; room on both sides of the first one
 function inLab() { return typeof G !== 'undefined' && G && G.level === 'anko2' && G.ver && G.ver.phase === 'lab'; }
 function labFlame(bn) { const L = G.ver && G.ver.lab; if (L && L.done) return 0; const t = (G.t + bn.ph) % 3.2; return t < 1.5 ? 0 : t < 1.9 ? 1 : 2; }
 function labCyc(t, per, a, b, c) {   // 0 at rest, rising to 1 and back: a = hold at 0, b = move, c = hold at 1 (the rest moves back)
@@ -6299,7 +6384,7 @@ function startLab() {
     {do: () => { L.shut = 0.001; tone(90, 0.5, 'sawtooth', 0.06, 50); G.shake = 0.3; }}, {wait: 0.8},
     {do: () => { L.eye = 0.001; tone(600, 0.4, 'square', 0.03, 300); }}, {wait: 0.9},
     {say:1, who:'mishti', bn:'দরজাটা বন্ধ হয়ে গেল! আর ছাদে একটা বিশাল চোখ!', en:'The door\'s shut! And there\'s a giant eye on the ceiling!', mood: 'scared'},
-    {say:1, who:'kalo', bn:'আমার চোখ সব দেখে! আর আমার জ্বলজ্বলে জিনিসে একদম হাত দেবে না!', en:'My eye sees everything! And keep your hands off my glowing treasures!', mood: 'laugh'},
+    {say:1, who:'kalo', bn:'আমার জ্বলজ্বলে জিনিসে একদম হাত দেবে না!', en:'Keep your hands off my glowing treasures!', mood: 'laugh'},
     {say:1, who:'pupu', bn:'জ্বলজ্বলে জিনিস? চশমাটার মতো? তাহলে আমরাই আগে খুঁজে নেব!', en:'Glowing treasures? Like the glasses? Then we\'ll find them first!', mood: 'grin'},
   ], () => { G.state = 'aplay'; G.goalT = 0; });
 }
@@ -6336,7 +6421,7 @@ function labHurt(why) {
   else { tone(1800, 0.25, 'square', 0.05, 300); tone(90, 0.3, 'sawtooth', 0.05, 60, 0.05); G.pSay = {bn: 'ঝিঁইইৎ!', en: 'Zzzzt!', t: 1}; }
 }
 function labRetryTip() { const w = G.ver.lab.why;
-  retryTip({eye: 'Spotted! That eye can\'t see through everything…', fire: 'Too hot! Watch the flame\'s colour…', crush: 'Squashed! It always pauses at the top…', gate: 'Zap! Listen to the gate…', fall: 'You fell! Something keeps coming back across the gap…'}[w] || 'Zap! Those sparks stay close to the floor…'); }
+  retryTip({eye: 'Spotted!', fire: 'Too hot!', crush: 'Squashed!', gate: 'Zap!', fall: 'You fell!'}[w] || 'Zap!'); }   // (v266) just what happened, no answers
 // crouch-under places (the crawl tunnel and the live wires): standing or jumping in stops him; crouched he creeps through
 function labLow(z, wire) {
   const L = G.ver.lab; if (wire && L.done) return;
@@ -6382,7 +6467,8 @@ function labMishti(dt) {
   if (P.ladder || !P.ground || !P.surf || P.surf.mov) return;
   if (Math.abs(P.vx) > 40) { G.mturn = (G.mturn || 0) + (Math.sign(P.vx) !== (G.mside || 1) ? dt : -G.mturn); if (G.mturn > 0.35) { G.mside = Math.sign(P.vx); G.mturn = 0; } }
   const s = P.surf; let tx = P.x - (G.mside || 1) * 46; tx = Math.max(s.x0 + 12, Math.min(s.x1 - 12, tx));
-  { const hc = Math.abs(P.y - LG) < 4 ? LAB_CRATES.find(c => Math.abs(P.x - c) < 70) : undefined; if (hc !== undefined && (P.crouchOn || P.sneak)) tx = hc + (P.x >= hc ? -6 : 6); }   // (v262) hiding: she ducks behind the same crate
+  for (const [a, b, yy] of [[2330, 2430, LF1], [2470, 2530, LF1], [1215, 1285, LG - 100], [LAB_WIRES.x0 - 20, LAB_WIRES.x1 + 20, LF2]]) if (Math.abs(P.y - yy) < 4 && tx > a && tx < b) tx = G.mx <= (a + b) / 2 ? a : b;   // (v266) she waits at the edge of a danger, never in it
+  { const hc = Math.abs(P.y - LG) < 4 ? LAB_CRATES.find(c => Math.abs(P.x - c) < 80) : undefined; if (hc !== undefined && (P.crouchOn || P.sneak)) tx = hc + (P.x >= hc ? -6 : 6); }   // (v262) hiding: she ducks behind the same crate
   const ty = surfYc(s, tx);
   if (Math.abs(G.my - ty) > 20 || Math.abs(G.mx - tx) > 460) { const dy = G.my - ty; G.mleap = {x0: G.mx, y0: G.my, x1: tx, y1: ty, t: 0, dur: 0.5 + Math.min(0.45, Math.abs(dy) / 800), h: Math.max(36, dy * 0.25 + 50)}; G.mwalk = false; return; }
   const dm = tx - G.mx; if (!G.mwalk && Math.abs(dm) > 24) G.mwalk = true; if (G.mwalk && Math.abs(dm) < 3) G.mwalk = false;
@@ -6398,7 +6484,7 @@ function labCeil() {
 }
 function updateLab(dt) {
   const V = G.ver, L = V.lab; if (!L) return;
-  L.zapT -= dt; L.crackT -= dt; L.pushT = (L.pushT || 0) - dt;
+  L.zapT -= dt; L.crackT -= dt; L.pushT = (L.pushT || 0) - dt; if (L.press) L.press.t += dt;
   if (L.arrive > 0 && L.arrive < 1) L.arrive = Math.min(1, L.arrive + dt * 1.2);
   if (L.shut > 0 && L.shut < 1) { L.shut = Math.min(1, L.shut + dt * 4); L.portal = 1 - L.shut; }
   if (L.eye > 0 && L.eye < 1) L.eye = Math.min(1, L.eye + dt * 1.5);
@@ -6419,6 +6505,7 @@ function updateLab(dt) {
     if (near) { P.ladder = near; P.climbPh = 0; P.vx = 0; P.vy = 0; P.ground = false; P.surf = null; P.buffer = 0; edges.jump = false; edges.sneak = false; P.mantle = null; if (Math.abs(P.y - near.y1) < 6) { P.y = near.y1; P.mantle = {u: 0, dir: -1}; } if (!G.shown.ladder) { G.shown.ladder = true; } if (near.y0 - P.y < 10) G.shown.ladderUp = true; } }
   if (P.ladder) return;
   labCeil(); L.bumpT = (L.bumpT || 0) - dt; labHints(dt);
+  if (P.ground && Math.abs(P.y - LG) < 4 && LAB_CRATES.some(c => Math.abs(P.x - c) < 80) && !P.crouchOn) P.crouchOn = true;   // (v266) under a worktable: stay crouched
   // side walls of the building, and the secret room's sliding wall until it opens
   if (Math.abs(P.y - LF3) < 120 && P.x < LAB_SECRET_X + 30 && L.secret < 0.95) P.x = LAB_SECRET_X + 30;
   if (P.y > LF1 + 10 && P.x > 2290 && P.x < 2420) P.x = 2290;   // the ground floor ends at the lift shaft
@@ -6431,7 +6518,7 @@ function updateLab(dt) {
   // hazards
   if (!L.done) {
     const g = Math.abs(P.y - LG) < 3 || (P.y > LF1 + 40 && P.y <= LG);
-    if (L.eye >= 1 && P.y > LF1 + 60 && P.x < 820) { const bx = labEyeX(); const cov = (P.sneak || P.crouchOn) && P.ground && LAB_CRATES.some(c => Math.abs(P.x - c) < 46); if (Math.abs(P.x - bx) < 44 && !cov) return labHurt('eye'); }
+    if (L.eye >= 1 && P.y > LF1 + 60 && P.x < 820) { const bx = labEyeX(); const cov = (P.sneak || P.crouchOn) && P.ground && LAB_CRATES.some(c => Math.abs(P.x - c) < 62); if (Math.abs(P.x - bx) < 44 && !cov) return labHurt('eye'); }
     for (const b of L.bugs) if (Math.abs(P.x - b.x) < 24 && P.y > b.y - 30 && P.y <= b.y + 2) return labHurt('bug');
     for (const bn of LAB_BURNERS) if (labFlame(bn) === 2 && Math.abs(P.x - bn.x) < 24 && P.y > bn.y - 156 && P.y <= bn.y + 2) return labHurt('fire');
     if (labPress() > 0.55 && Math.abs(P.x - LAB_PRESS_X) < 38 && P.y > LF1 - 170 && P.y <= LF1 + 2) return labHurt('crush');
@@ -6446,20 +6533,16 @@ function updateLab(dt) {
   if (L.parts[0] && L.chk < 1 && Math.abs(P.y - LG) < 4 && P.x > 2040) { L.chk = 1; labCP(); }
   if (L.parts[1] && L.chk < 2 && Math.abs(P.y - LF2) < 4 && P.x > 3200) { L.chk = 2; labCP(); labSay2(); return; }
   if (!L.seen.f1 && Math.abs(P.y - LF1) < 4 && P.x > 2280 && P.x < 2560) { L.seen.f1 = true; G.state = 'acut'; P.vx = 0; play([
-      {say:1, who:'kalo', bn:'আমার যন্ত্রঘরে স্বাগতম! পিষে-যন্ত্র আর বিজলি-গেট থেকে সাবধান, হা হা!', en:'Welcome to my machine room! Mind my crusher and my electric gate, ha ha!', mood: 'laugh'},
-      {say:1, who:'mishti', bn:'(ফিসফিস) ওরে বাবা… ওটার নিচে পড়লে একদম চ্যাপ্টা!', en:'(whispering) Yikes… anything under that gets squashed flat!', mood: 'scared'}], () => { G.state = 'aplay'; G.goalT = 0; }); return; }
+      {say:1, who:'kalo', bn:'আমার যন্ত্রঘরে স্বাগতম! হা হা!', en:'Welcome to my machine room! Ha ha!', mood: 'laugh'}], () => { G.state = 'aplay'; G.goalT = 0; }); return; }
   if (!L.seen.f3 && Math.abs(P.y - LF3) < 4 && P.x < 1500) { L.seen.f3 = true; G.state = 'acut'; P.vx = 0; P.face = -1; play([
-      {say:1, who:'pupu', bn:'ওর নিয়ন্ত্রণ-ঘর! কনসোলে তিনটে ফাঁকা খোপ… একটা বিজলি, একটা গোল চাকতি, একটা ঢেউ।', en:'His control room! Three empty slots on the console… a lightning bolt, a round dial and a wave.', mood: 'surprised'},
-      {say:1, who:'mishti', bn:'আমাদের তিনটে জ্বলজ্বলে জিনিস! কোনটা কোথায় বসবে?', en:'Our three glowing things! Which one goes where?'},
-      {say:1, who:'kalo', bn:'খবরদার! ওই খোপগুলোয় হাত দেবে না!', en:'Don\'t you DARE touch those slots!', mood: 'angry'}], () => { G.state = 'aplay'; G.goalT = 0; }); return; }
+      {say:1, who:'pupu', bn:'ওর নিয়ন্ত্রণ-ঘর!', en:'His control room!', mood: 'surprised'},
+      {say:1, who:'kalo', bn:'খবরদার! কিছুতে হাত দেবে না!', en:'Don\'t you DARE touch anything!', mood: 'angry'}], () => { G.state = 'aplay'; G.goalT = 0; }); return; }
   if (edges.use && !G.dialog) labUse();
 }
 function labCP() { tone(880, 0.12, 'triangle', 0.03); tone(1320, 0.18, 'triangle', 0.03, 0, 0.1); }
 function labSay2() { G.state = 'acut'; P.vx = 0; play([
-  {say:1, who:'mishti', bn:'ওরে বাবা, কত উঁচু হলঘর!', en:'Wow, look how tall this hall is!', mood: 'surprised'},
-  {say:1, who:'pupu', bn:'আর ওই কাচের ট্যাঙ্কের একদম মাথায় কী যেন জ্বলছে!', en:'And something\'s glowing right at the top of that glass tank!', mood: 'surprised'},
-  {say:1, who:'kalo', bn:'আমার ট্যাঙ্কের মাথায় তুমি কোনোদিন পৌঁছাতে পারবে না!', en:'You\'ll never reach the top of my tank!', mood: 'laugh'}], () => { G.state = 'aplay'; G.goalT = 0; }); }
-function labEyeX() { return LAB_EYE.x + Math.sin(G.t * 1.15) * 230; }
+  {say:1, who:'mishti', bn:'ওরে বাবা, কত উঁচু হলঘর!', en:'Wow, look how tall this hall is!', mood: 'surprised'}], () => { G.state = 'aplay'; G.goalT = 0; }); }
+function labEyeX() { return 560 + Math.sin(G.t * 1.15) * 190; }   // (v266) sweeps 370..750: the start and the checkpoint are safe
 function labTrolley(dt) {   // push it along the loft, off the edge it rolls and drops; climb on it
   const L = G.ver.lab, T = L.tro, hw = 45;
   if (T.lvl === 'air') { T.vy += 1800 * dt; T.y += T.vy * dt; T.x += T.vx * dt; if (T.y >= LG) { T.y = LG; T.vy = 0; T.lvl = 'g'; G.shake = 0.25; tone(90, 0.3, 'square', 0.06, 50); tone(400, 0.2, 'triangle', 0.03, 0, 0.1);
@@ -6496,13 +6579,14 @@ function labLiftUse() {
   const L = G.ver.lab, li = L.lift, onLift = P.ground && P.x >= LAB_LIFT.x0 - 6 && P.x <= LAB_LIFT.x1 + 6 && Math.abs(P.y - li.y) < 4;
   if (onLift) P.surf = L.sLift;
   if (!L.parts[0]) { G.pSay = {bn: 'বিদ্যুৎ নেই… একটা ব্যাটারি লাগবে।', en: 'No power… it needs a battery.', t: 2}; return; }
-  if (!onLift) { if (Math.abs(li.y - P.y) > 4) { li.to = P.y; tone(300, 0.4, 'sawtooth', 0.02, 200); } return; }   // call it down (or up) to him
+  const pressBtn = (yy) => [{do: () => { L.press = {t: 0, y: yy}; P.face = 1; tone(1200, 0.05, 'square', 0.03, 0, 0.3); }}, {until: () => L.press.t > 0.6}, {do: () => { L.press = null; }}];   // (v266) he reaches over and presses the button
+  if (!onLift) { if (Math.abs(li.y - P.y) > 4 && li.bat) { G.state = 'acut'; P.vx = 0; play([...pressBtn(P.y), {do: () => { li.to = P.y; tone(300, 0.4, 'sawtooth', 0.02, 200); }}], () => { G.state = 'aplay'; }); } else if (!li.bat) G.pSay = {bn: 'বাতি লাল… লিফটে বিদ্যুৎ নেই।', en: 'The light\'s red… the lift has no power.', t: 2}; return; }   // call it down (or up) to him
   const hop = () => { const mx = P.x > 2215 ? 2180 : 2250; G.mleap = {x0: G.mx, y0: G.my, x1: mx, y1: li.y, t: 0, dur: 0.45, h: 40}; };   // (v262) Mishti hops on first…
   const ride = () => { li.to = li.y > LF1 + 10 ? LF1 : LG; tone(140, 1.6, 'sawtooth', 0.03, 180); };   // …then the lift goes, carrying them both
   G.state = 'acut'; P.vx = 0;
   const steps = [];
   if (!li.bat) steps.push({say:1, who:'pupu', bn:'এই পুরোনো লিফটে বিদ্যুৎ নেই… ব্যাটারিটা লাগাই!', en:'This old lift has no power… let\'s try the battery!'}, {do: () => { li.bat = true; tone(700, 0.15, 'triangle', 0.04); }}, {wait: 0.5});
-  steps.push({do: hop}, {until: () => !G.mleap}, {wait: 0.2}, {do: ride}, {until: () => Math.abs(L.lift.y - L.lift.to) < 1});
+  steps.push({do: () => { P.x = Math.min(P.x, LAB_LIFT.x1 - 20); }}, ...pressBtn(li.y), {do: hop}, {until: () => !G.mleap}, {wait: 0.2}, {do: ride}, {until: () => Math.abs(L.lift.y - L.lift.to) < 1});
   if (!L.seen.lift) steps.push({say:1, who:'pupu', bn:'চলছে! ব্যাটারিটা খুলে রাখি, পরে লাগবে।', en:'It works! I\'ll take the battery back out, we\'ll need it later.', mood: 'grin'}, {do: () => { L.seen.lift = true; }});
   play(steps, () => { G.state = 'aplay'; G.goalT = 0; });
 }
@@ -6548,41 +6632,19 @@ function labPick(i) {
 }
 // (v262, user) the puzzles are never spelled out: the goal only says what he wants, never how. Indirect hints come as Pupu's
 // own thoughts, and only when he stands in front of a puzzle for a moment (labHints). New controls still get their button chip.
-function labGoal() {
+function labGoal() {   // (v266, user) no puzzle is explained: only what he is after; a chip for a new control (the ladder)
   const L = G.ver.lab; if (!L || L.pick || G.state !== 'aplay' || P.ladder) return null;
-  const p = L.parts, y = P.y, onG = y > LF1 + 20, onF1 = y > LF2 + 20 && y <= LF1 + 20, onF2 = y > LF3 + 20 && y <= LF2 + 20;
-  const lad = LAB_LADDERS.find(d => Math.abs(P.x - d.x) < 60 && Math.abs(P.y - d.y0) < 6 && P.ground);
-  const up = (g) => lad && !G.shown.ladderUp ? Object.assign(g, {k: ['Up']}) : g;   // the first ladder: show which button climbs
-  if (!p[0]) {
-    if (!onG) return up({bn: 'জ্বলজ্বলে জিনিসটার কাছে পৌঁছানোর উপায় খোঁজো', en: 'Find a way to reach the glow', x: 2090});
-    if (P.x < 1000) return {bn: 'চোখটার নজর এড়িয়ে এগোও', en: 'Get past the watching eye', x: 1100};
-    return up({bn: L.seen.batt ? 'জ্বলজ্বলে জিনিসটার কাছে পৌঁছানোর উপায় খোঁজো' : 'ভেতরে আরও এগোও', en: L.seen.batt ? 'Find a way to reach the glow' : 'Go deeper into the lab', x: 2090});
-  }
-  if (onG) return {bn: 'ওপরের তলায় যাওয়ার উপায় খোঁজো', en: 'Find a way to the next floor', x: 2215};
-  if (!p[1] && onF1) return up(L.sw ? {bn: 'আলমারিতে কিছু একটা জ্বলছে', en: 'Something is glowing in the cabinet', x: LAB_CAB_X} : L.seen.cab ? {bn: 'বন্ধ আলমারিটা খোলার উপায় খোঁজো', en: 'Find a way to open the locked cabinet', x: LAB_CAB_X} : {bn: 'যন্ত্রঘর পেরিয়ে এগোও', en: 'Get through the machine room', x: 3150});
-  if (onF1) return up({bn: 'আরও ওপরে ওঠার উপায় খোঁজো', en: 'Find a way further up', x: 3392});
-  if (!p[2]) return up({bn: 'কাচের ট্যাঙ্কের মাথার আলোটায় পৌঁছাও', en: 'Reach the glow on top of the glass tank', x: LAB_CAP_X, y: 500});
-  if (!L.done) return {bn: 'তিনটে জ্বলজ্বলে জিনিস কোথায় লাগে, খুঁজে বের করো', en: 'Find where the three glowing things belong', x: 900, y: LF3};
-  return L.radioTaken ? null : {bn: 'গোপন ঘরে কী জ্বলছে, দেখো', en: 'See what\'s glowing in the secret room', x: LAB_RADIO_X, y: LF3, k: ['E']};
+  const n = L.parts.filter(Boolean).length, lad = LAB_LADDERS.find(d => Math.abs(P.x - d.x) < 60 && Math.abs(P.y - d.y0) < 6 && P.ground);
+  const g = n < 3 ? {bn: 'জ্বলজ্বলে জিনিস খোঁজো · ' + n + '/৩', en: 'Find the glowing things · ' + n + '/3', x: P.y > LF1 + 20 ? (n ? 2215 : 2090) : P.y > LF2 + 20 ? 3392 : LAB_CAP_X, y: P.y}
+    : !L.done ? {bn: 'এগুলো কোথায় লাগে?', en: 'Where do these belong?', x: 900, y: LF3} : L.radioTaken ? null : {bn: 'গোপন ঘরে কী জ্বলছে?', en: 'What\'s glowing in the secret room?', x: LAB_RADIO_X, y: LF3, k: ['E']};
+  if (g && lad && !G.shown.ladderUp) g.k = ['Up'];
+  return g;
 }
 // Pupu's own thoughts in front of a puzzle (each once, after he has stood there a moment): hints, never instructions
-const LAB_HINTS = [
-  {id: 'eye', w: L => L.eye >= 1 && !L.parts[0] && Math.abs(P.y - LG) < 4 && P.x > 280 && P.x < 380, bn: '(মনে মনে) চোখটা সব দেখে… কিন্তু বাক্সের পেছনে কী আছে, সেটা কি দেখতে পায়?', en: '(thinking) That eye sees everything… but can it see behind a box?'},
-  {id: 'bug', w: L => !L.parts[0] && Math.abs(P.y - LG) < 4 && P.x > 690 && P.x < 790, bn: '(মনে মনে) ফুলকিটা মেঝে ধরে লাফিয়ে লাফিয়ে চলে… মাথার ওপর দিয়ে তো যায় না।', en: '(thinking) That spark only hops along the floor… it never goes high.'},
-  {id: 'fire', w: L => !L.parts[0] && Math.abs(P.y - (LG - 100)) < 4 && P.x > 1140 && P.x < 1215, bn: '(মনে মনে) আগুনটা একবার লম্বা কমলা, একবার ছোট্ট নীল…', en: '(thinking) The flame goes tall and orange… then small and blue…'},
-  {id: 'hang', w: L => !L.parts[0] && Math.abs(P.y - (LG - 100)) < 4 && P.x > 1300, bn: '(মনে মনে) শিকলে ঝোলানো তক্তাটা… এখান থেকে নাগাল পাওয়া যায়?', en: '(thinking) That platform on the chains… could I reach it from here?'},
-  {id: 'shelf', w: L => !L.parts[0] && Math.abs(P.y - LG) < 4 && P.x > 1990 && P.x < 2160 && L.tro.lvl === 'loft', bn: '(মনে মনে) অনেক উঁচু, লাফিয়ে নাগাল পাব না… দাঁড়ানোর মতো কিছু একটা পেলে হতো।', en: '(thinking) Too high to jump… if only I had something to stand on.'},
-  {id: 'tro', w: L => !L.parts[0] && Math.abs(P.y - LF1) < 4 && P.x > 1520 && P.x < 1640 && L.tro.lvl === 'loft', bn: '(মনে মনে) এটার চাকা আছে… আর মাচার কিনারার ঠিক নিচেই সেই জ্বলজ্বলে জিনিসটা।', en: '(thinking) This thing has wheels… and that glow is right below the edge of the loft.'},
-  {id: 'lift', w: L => L.parts[0] && !L.seen.lift && Math.abs(P.y - LG) < 4 && P.x > 2120, bn: '(মনে মনে) পুরোনো লিফট, একদম মরা… একে কে জাগাবে?', en: '(thinking) An old lift, completely dead… what could wake it up?'},
-  {id: 'press', w: L => !L.parts[1] && Math.abs(P.y - LF1) < 4 && P.x > 2290 && P.x < 2330, bn: '(মনে মনে) ধপ্‌… সাঁই… ধপ্‌… ওপরে উঠে প্রতিবার একটু থামে।', en: '(thinking) Thud… whoosh… thud… it always waits a moment at the top.'},
-  {id: 'gate', w: L => !L.parts[1] && Math.abs(P.y - LF1) < 4 && P.x > 2430 && P.x < 2475, bn: '(মনে মনে) ঝিঁৎ… ঝিঁৎ… তারপর একটুখানি চুপ।', en: '(thinking) Bzzt… bzzt… and then, for a moment, quiet.'},
-  {id: 'pit', w: L => !L.parts[1] && Math.abs(P.y - LF1) < 4 && P.x > 2530 && P.x < 2585, bn: '(মনে মনে) এত দূর লাফানো যাবে না… কিন্তু ওই তক্তাটা বারবার ফিরে আসে।', en: '(thinking) Too far to jump… but that platform keeps coming back.'},
-  {id: 'tunnel', w: L => !L.parts[1] && Math.abs(P.y - LF1) < 4 && P.x > 2830 && P.x < 2875, bn: '(মনে মনে) ফাঁকটা এত নিচু… নিজেকে একদম ছোট্ট করতে হবে।', en: '(thinking) That gap is so low… I\'d have to make myself really small.'},
-  {id: 'cab', w: L => !L.parts[1] && !L.sw && Math.abs(P.y - LF1) < 4 && Math.abs(P.x - LAB_CAB_X) < 60, bn: '(মনে মনে) তালা দেওয়া! ভেতরে কী যেন জ্বলছে… কাছাকাছি কোনো সুইচ আছে নাকি?', en: '(thinking) Locked! Something glows inside… is there a switch around here?'},
-  {id: 'wires', w: L => !L.done && Math.abs(P.y - LF2) < 4 && P.x > LAB_WIRES.x1 + 15 && P.x < LAB_WIRES.x1 + 90, bn: '(মনে মনে) তারগুলো ঠিক মাথার উচ্চতায় ফুলকি ছড়াচ্ছে… নিচু হয়ে গেলে?', en: '(thinking) The wires spit sparks right at head height… what if I stayed low?'},
-  {id: 'tank', w: L => !L.parts[2] && Math.abs(P.y - LF2) < 4 && P.x > 2380 && P.x < 2700, bn: '(মনে মনে) আলোটা ট্যাঙ্কের একদম মাথায়… ওপর থেকে ঝোলানো তক্তাগুলো কিন্তু কাছেই।', en: '(thinking) The glow is right at the top of the tank… and those hanging platforms are close to it.'},
-  {id: 'elev', w: L => !L.parts[2] && labOn(LAB_S.gantry) && P.x < 2760, bn: '(মনে মনে) ওই তক্তাটা ওঠে আর নামে… ওপরে উঠলে ঝোলানো তক্তাগুলোর পাশে পৌঁছায়।', en: '(thinking) That platform rides up and down… at the top it\'s right beside the hanging ones.'},
-  {id: 'slots', w: L => !L.done && L.parts[2] && Math.abs(P.y - LF3) < 4 && P.x < 1150 && P.x > 650, bn: '(মনে মনে) একটা বিজলি, একটা গোল চাকতি, একটা ঢেউ… আমার তিনটে জিনিসের কোনটা কেমন দেখতে?', en: '(thinking) A bolt, a round dial, a wave… which of my three things looks like each one?'},
+const LAB_HINTS = [   // (v266) only for the trickiest spots, and only after he has been stuck there a long while
+  {id: 'tro', w: L => !L.parts[0] && Math.abs(P.y - LF1) < 4 && P.x > 1520 && P.x < 1700 && L.tro.lvl === 'loft', bn: '(মনে মনে) এটার চাকা আছে…', en: '(thinking) This thing has wheels…'},
+  {id: 'shelf', w: L => !L.parts[0] && Math.abs(P.y - LG) < 4 && P.x > 1990 && P.x < 2160, bn: '(মনে মনে) অনেক উঁচু…', en: '(thinking) So high up…'},
+  {id: 'cab', w: L => !L.parts[1] && !L.sw && Math.abs(P.y - LF1) < 4 && Math.abs(P.x - LAB_CAB_X) < 80, bn: '(মনে মনে) তালা দেওয়া…', en: '(thinking) Locked…'},
 ];
 function labHints(dt) {
   const L = G.ver.lab; if (G.state !== 'aplay' || G.dialog || G.pSay) { L.hintT = 0; return; }
@@ -6590,7 +6652,7 @@ function labHints(dt) {
   if (!h) { L.hintT = 0; L.hintId = null; return; }
   if (L.hintId !== h.id) { L.hintId = h.id; L.hintT = 0; }
   L.hintT += dt;
-  if (L.hintT > 1.1) { L.seen['h_' + h.id] = true; G.pSay = {bn: h.bn, en: h.en, t: 4.2}; L.hintT = 0; }
+  if (L.hintT > 18) { L.seen['h_' + h.id] = true; G.pSay = {bn: h.bn, en: h.en, t: 4.2}; L.hintT = 0; }
   if (!L.seen.batt && Math.abs(P.y - LG) < 4 && P.x > 1700) L.seen.batt = true;
   if (!L.seen.cab && Math.abs(P.y - LF1) < 4 && Math.abs(P.x - LAB_CAB_X) < 120) L.seen.cab = true;
 }
@@ -6624,6 +6686,9 @@ function labRadio() {
     {say:1, who:'mishti', bn:'এখনো বাজে?', en:'Does it still play?'},
     {do: () => { radioSong(2, 0.02); }}, {wait: 1.2},
     {say:1, who:'pupu', bn:'হুঁ… এখনো গান গায়।', en:'Mm… it still sings.', mood: 'happy'},
+    {do: () => startTrunk(3, 'radio')}, {wait: 2.4},
+    {say:1, who:'narr', bn:'দাদুর টিনের বাক্সটা আবার এল। পুপু রেডিওটা ভেতরে রাখল। দশটার তিনটে জায়গা ভরল।', en:'Dadu\'s tin trunk came again. Pupu laid the radio inside. Three of ten places filled.'},
+    {do: () => { if (G.trunk) G.trunk.close = 0.001; }}, {until: () => !G.trunk},
     {do: () => { G.fadeTarget = 1; G.fadeSpeed = 0.7; }}, {wait: 1.8},
     {do: () => { G.state = 'l3end'; G.endT = 0; G.fade = 0; G.fadeTarget = 0; }},
   ]);
@@ -6705,6 +6770,16 @@ function labWindowRound(x, y, r) { circ(x, y, r + 8, '#2A3440', 2); const g = ct
 function labGear(x, y, r, t, col) { ctx.save(); ctx.translate(x, y); ctx.rotate(t); ctx.beginPath(); for (let i = 0; i < 24; i++) { const a = i / 24 * 6.283, rr2 = i % 2 ? r : r * 0.86; ctx.lineTo(Math.cos(a) * rr2, Math.sin(a) * rr2); } ctx.closePath(); fs(col, 2); circ(0, 0, r * 0.55, 'rgba(0,0,0,.25)', 1.4); for (let i = 0; i < 4; i++) { ctx.rotate(Math.PI / 2); box(-2, -r * 0.5, 4, r * 0.5, col, 1, 1); } circ(0, 0, r * 0.18, '#2A2420', 1.4); ctx.restore(); }
 function labTank(x, y, w, h, col) { box(x, y, w, h, 'rgba(160,200,210,.18)', 8, 2); box(x + 4, y + h * 0.35, w - 8, h * 0.65 - 4, col, 6, 0); for (let i = 0; i < 4; i++) circ(x + 8 + ((G.t * 20 + i * 13) % (w - 16)), y + h - 8 - ((G.t * 30 + i * 37) % (h * 0.6)), 2.5, 'rgba(255,255,255,.5)', 0); box(x - 4, y - 8, w + 8, 10, '#4A525A', 2, 1.6); box(x - 4, y + h - 2, w + 8, 10, '#4A525A', 2, 1.6);
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(x + w / 2, y + h * 0.6, 4, x + w / 2, y + h * 0.6, w * 1.6); g.addColorStop(0, col.replace(/[\d.]+\)$/, '.35)')); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(x - w, y - h * 0.2, w * 3, h * 1.4); ctx.restore(); }
+function labTable(cx) {   // (v266) a tall steel lab worktable with things on top; Pupu (and Mishti) crawl under it to hide from the eye
+  const y = LG, top = LG - 140, w = 176, x0 = cx - w / 2;
+  for (const lx of [x0 + 8, x0 + w - 20]) { box(lx, top + 12, 12, y - top - 12, '#5A6270', 2, 1.8); line(lx + 3, top + 16, lx + 3, y - 4, 'rgba(255,255,255,.18)', 2); box(lx - 4, y - 6, 20, 6, '#3A404A', 2, 1.4); }
+  box(x0, top, w, 14, '#7A8494', 3, 2.2); line(x0 + 4, top + 3, x0 + w - 4, top + 3, 'rgba(255,255,255,.3)', 2); box(x0 + 4, top + 14, w - 8, 8, '#4A525E', 1, 1.4);
+  ctx.save(); ctx.translate(cx, top);   // on top: a microscope, a rack of test tubes, a flask
+  box(-70, -6, 30, 6, '#3A404A', 2, 1.4); box(-60, -34, 8, 28, '#3A404A', 2, 1.4); ctx.save(); ctx.translate(-56, -34); ctx.rotate(-0.5); box(-4, -18, 8, 20, '#5A6270', 2, 1.4); ctx.restore(); box(-66, -16, 20, 4, '#5A6270', 1, 1.2);
+  box(-14, -10, 44, 10, '#6A4A2E', 2, 1.4); for (let k = 0; k < 4; k++) box(-10 + k * 10, -30, 6, 22, ['rgba(120,230,150,.8)', 'rgba(240,120,200,.8)', 'rgba(120,180,255,.8)', 'rgba(255,210,90,.8)'][k], 3, 1.2);
+  ctx.beginPath(); ctx.moveTo(48, -30); ctx.lineTo(54, -30); ctx.lineTo(54, -20); ctx.lineTo(66, -2); ctx.lineTo(36, -2); ctx.lineTo(48, -20); ctx.closePath(); fs('rgba(190,230,255,.35)', 1.6); ctx.beginPath(); ctx.moveTo(42, -10); ctx.lineTo(60, -10); ctx.lineTo(65, -3); ctx.lineTo(37, -3); ctx.closePath(); ctx.fillStyle = 'rgba(120,230,150,.7)'; ctx.fill();
+  ctx.restore();
+}
 function labCrate(x, y, w, h) { box(x - w / 2, y - h, w, h, '#7A5434', 2, 2.2); line(x - w / 2 + 4, y - h + 4, x + w / 2 - 4, y - 4, '#5A3A22', 3); line(x + w / 2 - 4, y - h + 4, x - w / 2 + 4, y - 4, '#5A3A22', 3); box(x - w / 2, y - h, w, 8, '#8A6440', 1, 1.4); }
 function labHazardBox(x0, y0, w, h) { box(x0, y0, w, h, '#2A2E34', 2, 2); ctx.save(); ctx.beginPath(); ctx.rect(x0, y0, w, 8); ctx.clip(); for (let x = x0 - 8; x < x0 + w; x += 14) { ctx.beginPath(); ctx.moveTo(x, y0 + 8); ctx.lineTo(x + 8, y0); ctx.lineTo(x + 15, y0); ctx.lineTo(x + 7, y0 + 8); ctx.closePath(); ctx.fillStyle = '#E3B02B'; ctx.fill(); } ctx.restore(); }
 function labPartGlow(k, x, y, s) {
@@ -6844,7 +6919,7 @@ function drawLab() {
   for (const s of [LAB_S.sp1, LAB_S.sp2]) { for (const cx of [s.x0 + 10, s.x1 - 10]) for (let y = LROOF; y < s.y0; y += 10) { ctx.beginPath(); ctx.ellipse(cx, y + 5, 3, 5, 0, 0, 7); ctx.strokeStyle = '#8A929C'; ctx.lineWidth = 1.8; ctx.stroke(); } box(s.x0, s.y0, s.x1 - s.x0, 12, '#5A6474', 2, 2); }
   { const s = LAB_S.n1; box(s.x0, s.y0, s.x1 - s.x0, 10, '#5A6474', 2, 2); line((s.x0 + s.x1) / 2, s.y0 + 10, (s.x0 + s.x1) / 2, LF1 + 200, '#3A424A', 6); }
   // the machine with the switch on top, and the cabinet
-  { const s = LAB_S.swTop; labHazardBox(s.x0, s.y0, s.x1 - s.x0, LF1 - s.y0); for (let k = 0; k < 3; k++) circ(s.x0 + 30 + k * 30, s.y0 + 60, 9, '#1A1E24', 1.6); box(s.x0 + 20, s.y0 + 100, 80, 40, '#1E3A4A', 3, 1.6);
+  { const s = LAB_S.swTop; labHazardBox(s.x0, s.y0, s.x1 - s.x0, LF1 - s.y0); for (let k = 0; k < 3; k++) circ(s.x0 + 30 + k * 30, s.y0 + 60, 9, '#1A1E24', 1.6); box(s.x0 + 20, s.y0 + 46, 80, 34, '#1E3A4A', 3, 1.6);
     const lx = LAB_SWITCH_X; box(lx - 12, s.y0 - 10, 24, 10, '#3A4048', 2, 1.6); ctx.save(); ctx.translate(lx, s.y0 - 6); ctx.rotate(-0.6 + L.sw * 1.2); line(0, 0, 0, -34, '#C8CED4', 4); circ(0, -36, 6, SINDOOR, 1.6); ctx.restore();
     if (!L.sw && L.parts[0]) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(lx, s.y0 - 30, 2, lx, s.y0 - 30, 40); g.addColorStop(0, 'rgba(255,214,120,.45)'); g.addColorStop(1, 'rgba(255,214,120,0)'); ctx.fillStyle = g; ctx.fillRect(lx - 40, s.y0 - 70, 80, 80); ctx.restore(); } }
   { const cx = LAB_CAB_X, o = L.cab; box(cx - 40, LF1 - 80, 80, 80, '#4E3826', 3, 2.4); box(cx - 32, LF1 - 72, 64, 62, 'rgba(150,190,210,.2)', 2, 1.4);
@@ -6858,7 +6933,7 @@ function drawLab() {
     line((LAB_LIFT.x0 + LAB_LIFT.x1) / 2, LF2 + LSL, (LAB_LIFT.x0 + LAB_LIFT.x1) / 2, y - 170, '#8A929C', 2.4); box(LAB_LIFT.x0, y - 172, LAB_LIFT.x1 - LAB_LIFT.x0, 8, '#5A6474', 2, 1.6);
     for (let x = LAB_LIFT.x0 + 8; x < LAB_LIFT.x1; x += 18) line(x, y - 164, x, y - 4, 'rgba(160,170,180,.45)', 1.6);
     box(LAB_LIFT.x0, y, LAB_LIFT.x1 - LAB_LIFT.x0, 12, '#5A6474', 2, 2);
-    for (const yy of [LG, LF1]) { box(LAB_LIFT.x1 + 14, yy - 100, 22, 34, '#2A2E34', 3, 1.6); circ(LAB_LIFT.x1 + 25, yy - 83, 5, L.parts[0] ? '#3AE07A' : '#E83A2A', 1); } }
+    for (const yy of [LG, LF1]) { const pr = L.press && Math.abs(L.press.y - yy) < 10 && L.press.t > 0.25 && L.press.t < 0.55; box(LAB_LIFT.x1 + 14, yy - 100, 22, 34, '#2A2E34', 3, 1.6); circ(LAB_LIFT.x1 + 25, yy - 83, pr ? 4 : 5, L.lift.bat ? '#3AE07A' : '#E83A2A', 1); if (L.lift.bat) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(LAB_LIFT.x1 + 25, yy - 83, 1, LAB_LIFT.x1 + 25, yy - 83, 22); g.addColorStop(0, 'rgba(90,240,140,.5)'); g.addColorStop(1, 'rgba(90,240,140,0)'); ctx.fillStyle = g; ctx.fillRect(LAB_LIFT.x1 + 3, yy - 105, 44, 44); ctx.restore(); } } }   // (v266) red until he powers the lift, then green
   // moving platforms (pistons below them)
   for (const s of [L.sM1, L.sE1]) { const cx = (s.x0 + s.x1) / 2, base = s === L.sM1 ? LF1 + 200 : LF2; box(cx - 8, s.y0 + 12, 16, base - s.y0 - 12, '#6A7484', 2, 1.6); box(cx - 14, base - 10, 28, 10, '#3A424A', 2, 1.6); box(s.x0, s.y0, s.x1 - s.x0, 12, '#E3B02B', 2, 2); ctx.save(); ctx.beginPath(); ctx.rect(s.x0, s.y0, s.x1 - s.x0, 12); ctx.clip(); for (let x = s.x0 - 8; x < s.x1; x += 16) { ctx.beginPath(); ctx.moveTo(x, s.y0 + 12); ctx.lineTo(x + 8, s.y0); ctx.lineTo(x + 14, s.y0); ctx.lineTo(x + 6, s.y0 + 12); ctx.closePath(); ctx.fillStyle = '#1A1A1E'; ctx.fill(); } ctx.restore(); }
   for (const D of LAB_LADDERS) labLadderDraw(D);
@@ -6922,11 +6997,15 @@ function labBug3(b) {
 function drawLabFront() {
   const L = G.ver.lab, v = akView(), on = !L.done;
   // the cover crates by the door (crouch behind them), the tunnel's front, the front-view ladder's rungs over Pupu
-  for (const c of LAB_CRATES) { labCrate(c, LG, 132, 150); labCrate(c + 72, LG, 56, 64); }   // (v262) tall enough to hide him crouched, and Mishti beside him
-  { const z = LAB_TUNNEL; labHazardBox(z.x0 - 6, LF1 - 170, z.x1 - z.x0 + 12, 16); box(z.x0 - 6, LF1 - 158, 14, 158, '#2A2E34', 1, 1.6); box(z.x1 - 8, LF1 - 158, 14, 158, '#2A2E34', 1, 1.6); }
+  for (const c of LAB_CRATES) labTable(c);   // (v266) worktables to crawl under: the eye can't see under the top
+  { const z = LAB_TUNNEL; labSlab(z.x0 - 8, z.x1 + 8, LF1, true); labHazardBox(z.x0 - 6, LF1 - 170, z.x1 - z.x0 + 12, 16); box(z.x0 - 6, LF1 - 158, 14, 158, '#2A2E34', 1, 1.6); box(z.x1 - 8, LF1 - 158, 14, 158, '#2A2E34', 1, 1.6); }
   // sparks on the live wires
   if (on) { const z = LAB_WIRES, mx = (z.x0 + z.x1) / 2, y = LF2 - 146, fl = Math.sin(G.t * 31) * Math.sin(G.t * 13); ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(mx, y, 4, mx, y, 120); g.addColorStop(0, 'rgba(120,200,255,' + (0.18 + Math.max(0, fl) * 0.25) + ')'); g.addColorStop(1, 'rgba(120,200,255,0)'); ctx.fillStyle = g; ctx.fillRect(mx - 120, y - 120, 240, 240);
     if (fl > -0.2) for (let s = 0; s < 3; s++) { const sx = z.x0 + 14 + ((G.t * 300 + s * 47) % (z.x1 - z.x0 - 28)); ctx.beginPath(); ctx.moveTo(sx, y - 4); for (let j = 1; j < 6; j++) ctx.lineTo(sx + (hash2(Math.floor(G.t * 20) + s, j) - 0.5) * 18, y + j * 5); ctx.strokeStyle = 'rgba(200,240,255,.9)'; ctx.lineWidth = 1.6; ctx.stroke(); } ctx.restore(); }
+  if (G.state === 'acaught' && L.why === 'eye' && G.ko && G.ko.t > 0.1) {   // (v266) the eye shoots a crackling bolt of current down at him
+    const ex = LAB_EYE.x, ey = LAB_EYE.y + 48, tx = P.x, ty = P.y - 70; ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (let s2 = 0; s2 < 3; s2++) { ctx.beginPath(); ctx.moveTo(ex, ey); const n = 9; for (let j = 1; j <= n; j++) { const u = j / n, jx = (hash2(Math.floor(G.t * 30) + s2, j) - 0.5) * (j < n ? 36 : 0); ctx.lineTo(ex + (tx - ex) * u + jx, ey + (ty - ey) * u + jx * 0.4); } ctx.strokeStyle = s2 ? 'rgba(255,120,90,.7)' : 'rgba(255,240,220,.95)'; ctx.lineWidth = s2 ? 2 : 3.4; ctx.stroke(); }
+    const g = ctx.createRadialGradient(tx, ty, 4, tx, ty, 90); g.addColorStop(0, 'rgba(255,90,60,.55)'); g.addColorStop(1, 'rgba(255,90,60,0)'); ctx.fillStyle = g; ctx.fillRect(tx - 90, ty - 90, 180, 180); ctx.restore(); }
   // the light: a cool cast while the Lightning Collector runs, warm work lights when it's off
   ctx.save();
   if (L.lights < 1) { ctx.fillStyle = 'rgba(6,14,34,' + (0.16 * (1 - L.lights)) + ')'; ctx.fillRect(v.L, v.T, v.R - v.L, v.B - v.T); }
@@ -8840,7 +8919,8 @@ function frame(now) {
   if (dp !== frame.dp) { frame.dp = dp; const t = document.getElementById('touch'); if (t) t.classList.toggle('depth', dp); }
   const mn = ['title', 'story', 'howto', 'end', 'gend', 'aend', 'v2end', 'l3end'].includes(G.state);   // menus and chapter screens: no game buttons
   if (mn !== frame.mn) { frame.mn = mn; const t = document.getElementById('touch'); if (t) t.classList.toggle('menu', mn); }
-  { const ha = !!(G.fb && G.fb.rg && !G.fb.rg.done); if (ha !== frame.ha) { frame.ha = ha; const t = document.getElementById('touch'); if (t) t.classList.toggle('hideall', ha); if (ha) { held.left = held.right = held.up = held.down = false; joyRun = false; } } }   // (v262) fixing the radio: no buttons at all
+  { const R = G.fb && G.fb.rg, kj = !!(R && !R.done && R.step === 'build' && RG_STEPS[R.i] && RG_STEPS[R.i].k === 'knob' && !R.fbk), ha = !!(R && !R.done) && !kj, md = kj ? 'k' : ha ? 'h' : '';
+    if (md !== frame.ha) { frame.ha = md; const t = document.getElementById('touch'); if (t) { t.classList.toggle('hideall', ha); t.classList.toggle('knobjoy', kj); } held.left = held.right = held.up = held.down = false; joyRun = false; } }   // (v266) fixing the radio: no buttons, except the joystick to circle the knob
   const sp = !!(G.act || G.state === 'abook' || (G.ver && G.ver.ch && G.ver.ch.autoHide));   // a surprise action: every button hides, only the pop-up over Pupu counts
   if (sp !== frame.sp) { frame.sp = sp; const t = document.getElementById('touch'); if (t) t.classList.toggle('surprise', sp); if (sp) { held.left = held.right = held.up = held.down = false; joyRun = false; } }
   const us = (useGlowOn && ['play', 'gplay', 'aplay'].includes(G.state) && !G.dialog) || G.state === 'abook' || G.state === 'gaim';   // USE only shows when there is something to use
