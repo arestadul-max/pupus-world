@@ -2385,6 +2385,20 @@ function drawWorld() {
 }
 
 // ---------- Pupu's wall posters (original made-up shows) and desk action figures ----------
+function thunderBoyArt(w, h) {   // (v269) Thunder Boy as on Pupu's bedroom poster (also on Kalo-Bijli's crossed-out poster)
+    for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8; line(w / 2, 62, w / 2 + Math.cos(a) * 120, 62 + Math.sin(a) * 120, 'rgba(255,255,255,.14)', 2); }
+    ctx.beginPath(); ctx.moveTo(60, 6); ctx.lineTo(44, 40); ctx.lineTo(56, 40); ctx.lineTo(40, 76); ctx.lineTo(70, 30); ctx.lineTo(57, 30); ctx.lineTo(70, 6); ctx.closePath(); fs(TURMERIC, 1.8);
+    ctx.beginPath(); ctx.moveTo(20, 60); for (let i = 0; i < 7; i++) ctx.lineTo(18 + i * 9, i % 2 ? 26 : 44 - i); ctx.lineTo(76, 60); ctx.closePath(); fs('#F2F2F2', 2);
+    ctx.beginPath(); ctx.ellipse(46, 70, 19, 21, 0, 0, Math.PI * 2); fs('#F2C8A0', 2);
+    ctx.beginPath(); ctx.moveTo(26, 58); ctx.lineTo(40, 48); ctx.lineTo(54, 56); ctx.lineTo(68, 46); ctx.lineTo(66, 60); ctx.closePath(); fs('#F2F2F2', 1.6);
+    for (const ex of [38, 54]) { ctx.beginPath(); ctx.ellipse(ex, 70, 5.5, 7.5, 0, 0, Math.PI * 2); fs(CREAM, 1.5); circ(ex + 0.5, 71, 4, '#2C8ACB', 0); circ(ex + 0.5, 71, 2, INK, 0); circ(ex + 2, 68.5, 1.4, '#FFF', 0); }
+    line(33, 61, 42, 63, INK, 2); line(50, 63, 59, 61, INK, 2);
+    ctx.beginPath(); ctx.moveTo(41, 82); ctx.quadraticCurveTo(46, 86, 52, 81); ink(1.6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(18, 120); ctx.lineTo(28, 90); ctx.lineTo(64, 90); ctx.lineTo(74, 120); ctx.closePath(); fs(SINDOOR, 2);
+    ctx.beginPath(); ctx.moveTo(36, 92); ctx.lineTo(46, 104); ctx.lineTo(56, 92); ink(2); ctx.stroke();
+    ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, h - 26, w, 26);
+    text('THUNDER BOY', w / 2, h - 9, 12, TURMERIC, 700, 'center');
+}
 function tapedPoster(x, y, w, h, rot, bg, draw) {
   ctx.save(); ctx.translate(x + w / 2, y + h / 2); ctx.rotate(rot); ctx.translate(-w / 2, -h / 2);
   ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(3, 4, w, h);
@@ -2427,20 +2441,7 @@ function drawWallPosters() {
     text('SKY RIDER', w / 2, h - 5, 10, '#FFE9A8', 700, 'center');
   });
   // Thunder Boy, his number-one favourite: the biggest poster, right in the middle
-  tapedPoster(300, 94, 90, 146, 0.02, '#1E2A6A', (w, h) => {
-    for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8; line(w / 2, 62, w / 2 + Math.cos(a) * 120, 62 + Math.sin(a) * 120, 'rgba(255,255,255,.14)', 2); }
-    ctx.beginPath(); ctx.moveTo(60, 6); ctx.lineTo(44, 40); ctx.lineTo(56, 40); ctx.lineTo(40, 76); ctx.lineTo(70, 30); ctx.lineTo(57, 30); ctx.lineTo(70, 6); ctx.closePath(); fs(TURMERIC, 1.8);
-    ctx.beginPath(); ctx.moveTo(20, 60); for (let i = 0; i < 7; i++) ctx.lineTo(18 + i * 9, i % 2 ? 26 : 44 - i); ctx.lineTo(76, 60); ctx.closePath(); fs('#F2F2F2', 2);
-    ctx.beginPath(); ctx.ellipse(46, 70, 19, 21, 0, 0, Math.PI * 2); fs('#F2C8A0', 2);
-    ctx.beginPath(); ctx.moveTo(26, 58); ctx.lineTo(40, 48); ctx.lineTo(54, 56); ctx.lineTo(68, 46); ctx.lineTo(66, 60); ctx.closePath(); fs('#F2F2F2', 1.6);
-    for (const ex of [38, 54]) { ctx.beginPath(); ctx.ellipse(ex, 70, 5.5, 7.5, 0, 0, Math.PI * 2); fs(CREAM, 1.5); circ(ex + 0.5, 71, 4, '#2C8ACB', 0); circ(ex + 0.5, 71, 2, INK, 0); circ(ex + 2, 68.5, 1.4, '#FFF', 0); }
-    line(33, 61, 42, 63, INK, 2); line(50, 63, 59, 61, INK, 2);
-    ctx.beginPath(); ctx.moveTo(41, 82); ctx.quadraticCurveTo(46, 86, 52, 81); ink(1.6); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(18, 120); ctx.lineTo(28, 90); ctx.lineTo(64, 90); ctx.lineTo(74, 120); ctx.closePath(); fs(SINDOOR, 2);
-    ctx.beginPath(); ctx.moveTo(36, 92); ctx.lineTo(46, 104); ctx.lineTo(56, 92); ink(2); ctx.stroke();
-    ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, h - 26, w, 26);
-    text('THUNDER BOY', w / 2, h - 9, 12, TURMERIC, 700, 'center');
-  });
+  tapedPoster(300, 94, 90, 146, 0.02, '#1E2A6A', thunderBoyArt);
   // his own crayon drawing of Thunder Boy, stuck at the corner of the big poster
   tapedPoster(390, 198, 42, 50, -0.14, '#FBFBF4', (w, h) => {
     for (let y = 10; y < h; y += 7) line(0, y, w, y, 'rgba(70,120,200,.35)', 1);
@@ -6335,14 +6336,14 @@ const LS_ = (x0, x1, y, o) => Object.assign({x0, y0: y, x1, y1: y, floor: 1}, o 
 const LAB_S = {
   floorA: LS_(-400, 1040, LG), ramp: {x0: 1040, y0: LG, x1: 1130, y1: LG - 100, floor: 1}, bench: LS_(1130, 1360, LG - 100), floorB: LS_(1360, 2300, LG),
   hang: LS_(1400, 1500, LG - 172), loft: LS_(1470, 1900, LF1), shelfB: LS_(2050, 2130, LG - 150),
-  f1a: LS_(2060, 2150, LF1), f1b: LS_(2280, LAB_PIT[0], LF1), n1: LS_(2735, 2795, LF1 - 60), f1c: LS_(LAB_PIT[1], LW + 400, LF1), swTop: LS_(3225, 3350, LF1 - 100),
+  f1a: LS_(2060, 2150, LF1), f1b: LS_(2280, LAB_PIT[0], LF1), n1: LS_(2735, 2795, LF1 - 60), f1c: LS_(LAB_PIT[1], LW + 400, LF1), swTop: LS_(3225, 3350, LF1 - 70),
   f2: LS_(1500, LW + 400, LF2), shelfA: LS_(2900, 3080, LF2 - 180), gantry: LS_(2700, 2930, LF2 - 340), sp1: LS_(2390, 2495, 460), sp2: LS_(2200, 2320, 480), cap: LS_(1995, 2125, 500),
   f3: LS_(40, 1990, LF3),
 };
 // ladders: x, bottom (y0, feet) and top (y1); kind = how he is seen climbing it
 const LAB_LADDERS = [
   {id: 's1', x: 1478, y0: LG - 172, y1: LF1, kind: 'side'}, {id: 's0', x: 1885, y0: LG, y1: LF1, kind: 'side'},
-  {id: 's2', x: 3236, y0: LF1, y1: LF1 - 100, kind: 'side'}, {id: 's3', x: 3392, y0: LF1, y1: LF2, kind: 'back'},
+  {id: 's3', x: 3392, y0: LF1, y1: LF2, kind: 'back'},
   {id: 'bv', x: 2990, y0: LF2, y1: LF2 - 180, kind: 'front'}, {id: 's4', x: 2915, y0: LF2 - 180, y1: LF2 - 340, kind: 'side'},
 ];
 const LAB_BUGS0 = [{a: 860, b: 950, y: LG}, {a: 2720, b: 2850, y: LF2 - 340}];   // (v266) no spark-bug by the cabinet any more; room on both sides of the first one
@@ -6467,7 +6468,7 @@ function labMishti(dt) {
   if (P.ladder || !P.ground || !P.surf || P.surf.mov) return;
   if (Math.abs(P.vx) > 40) { G.mturn = (G.mturn || 0) + (Math.sign(P.vx) !== (G.mside || 1) ? dt : -G.mturn); if (G.mturn > 0.35) { G.mside = Math.sign(P.vx); G.mturn = 0; } }
   const s = P.surf; let tx = P.x - (G.mside || 1) * 46; tx = Math.max(s.x0 + 12, Math.min(s.x1 - 12, tx));
-  for (const [a, b, yy] of [[2330, 2430, LF1], [2470, 2530, LF1], [1215, 1285, LG - 100], [LAB_WIRES.x0 - 20, LAB_WIRES.x1 + 20, LF2]]) if (Math.abs(P.y - yy) < 4 && tx > a && tx < b) tx = G.mx <= (a + b) / 2 ? a : b;   // (v266) she waits at the edge of a danger, never in it
+  for (const [a, b, yy] of [[2330, 2430, LF1], [2470, 2530, LF1], [1215, 1285, LG - 100], [LAB_WIRES.x0 - 20, LAB_WIRES.x1 + 20, LF2], ...G.ver.lab.bugs.filter(q => q.pop < 1).map(q => [q.a - 30, q.b + 30, q.y])]) if (Math.abs(P.y - yy) < 4 && tx > a && tx < b) tx = G.mx <= (a + b) / 2 ? a : b;   // (v266) she waits at the edge of a danger, never in it
   { const hc = Math.abs(P.y - LG) < 4 ? LAB_CRATES.find(c => Math.abs(P.x - c) < 80) : undefined; if (hc !== undefined && (P.crouchOn || P.sneak)) tx = hc + (P.x >= hc ? -6 : 6); }   // (v262) hiding: she ducks behind the same crate
   const ty = surfYc(s, tx);
   if (Math.abs(G.my - ty) > 20 || Math.abs(G.mx - tx) > 460) { const dy = G.my - ty; G.mleap = {x0: G.mx, y0: G.my, x1: tx, y1: ty, t: 0, dur: 0.5 + Math.min(0.45, Math.abs(dy) / 800), h: Math.max(36, dy * 0.25 + 50)}; G.mwalk = false; return; }
@@ -6577,7 +6578,7 @@ function labUse() {
   if (n.k === 'switch') { G.state = 'acut'; P.vx = 0; P.face = 1; play([{do: () => { L.sw = 0.001; tone(500, 0.08, 'square', 0.05); tone(200, 0.6, 'sawtooth', 0.03, 120, 0.1); }}, {wait: 0.6}, {do: () => { L.cab = 0.001; tone(700, 0.3, 'triangle', 0.03, 900); }}, {wait: 0.8},
       {say:1, who:'mishti', bn:'নিচের আলমারিটা খুলে গেছে!', en:'The cabinet down there just opened!', mood: 'happy'}], () => { G.state = 'aplay'; G.goalT = 0; }); return; }
   if (n.k === 'comp') { G.state = 'acut'; P.vx = 0; play([{do: () => { L.comp = 0.001; tone(900, 0.2, 'triangle', 0.03, 600); }}, {wait: 0.7}], () => { G.state = 'aplay'; G.goalT = 0; }); return; }
-  if (n.k === 'sock') { if (n.i > 0 && !L.sock[n.i - 1]) { G.pSay = {bn: 'আগে বাঁয়ের জ্বলন্ত খোপটা…', en: 'The glowing slot on the left first…', t: 1.6}; return; } L.pick = {i: n.i, sel: 0, rects: []}; P.vx = 0; G.state = 'acut'; return; }
+  if (n.k === 'sock') { L.pick = {i: n.i, sel: 0, rects: []}; P.vx = 0; G.state = 'acut'; return; }
   if (n.k === 'radio') return labRadio();
 }
 function labLiftUse() {
@@ -6854,7 +6855,7 @@ function drawLab() {
     labPostersVillainAt(1060, LF3 - 272, 1220, LF3 - 268);
     box(660, LF3 - 70, 440, 70, '#3A2E50', 6, 2.4); box(670, LF3 - 92, 420, 26, '#4A3A66', 4, 2);   // the console
     const syms = ['bolt', 'dial', 'wave'];
-    LAB_SOCKETS.forEach((sx, i) => { const lit = !L.sock[i] && (i === 0 || L.sock[i - 1]) && !L.done, done2 = L.sock[i];
+    LAB_SOCKETS.forEach((sx, i) => { const lit = !L.sock[i] && !L.done, done2 = L.sock[i];   // (v269) every empty slot glows: fill them in any order
       box(sx - 26, LF3 - 88, 52, 40, done2 ? '#2E5A3A' : '#1A1424', 4, 1.6);
       ctx.save(); ctx.translate(sx, LF3 - 108); ctx.strokeStyle = done2 ? '#9AF0A0' : lit ? '#FFD23A' : '#6A5A80'; ctx.lineWidth = 2.6; ctx.beginPath();
       if (syms[i] === 'bolt') { ctx.moveTo(2, -10); ctx.lineTo(-4, 1); ctx.lineTo(2, 1); ctx.lineTo(-2, 10); }
@@ -6898,7 +6899,7 @@ function drawLab() {
   // ---- the ground-floor lab ----
   for (const wx of [600, 1200]) { box(wx - 90, LF1 + 60, 180, 150, '#2A3440', 3, 2); const g = ctx.createLinearGradient(0, LF1 + 60, 0, LF1 + 210); g.addColorStop(0, '#16285A'); g.addColorStop(1, '#2C4486'); ctx.fillStyle = g; ctx.fillRect(wx - 82, LF1 + 68, 164, 134); line(wx, LF1 + 68, wx, LF1 + 202, '#2A3440', 4); line(wx - 82, LF1 + 135, wx + 82, LF1 + 135, '#2A3440', 4); }
   labTank(60, LG - 210, 70, 190, 'rgba(90,230,130,.6)'); labTank(1580, LG - 150, 54, 130, 'rgba(230,120,200,.55)');
-  labPostersVillainAt(240, LF1 + 70, 880, LF1 + 60);
+  labPostersVillainAt(240, LF1 + 70, 985, LF1 + 60);
   labLamp(330, LF1 + LSL + 46, 'rgb(255,214,150)', 220, 0.16); labLamp(1450, LF1 + LSL + 46, 'rgb(255,214,150)', 200, 0.14); labLamp(1700, LF2 + LSL + 46, 'rgb(255,214,150)', 160, 0.16);
   labIvy(0, 160, LF1 + LSL, 41); labIvy(1470, 1560, LF2 + LSL, 43);
   labPlant(26, LG, 1.15, 1); labPlant(1960, LG, 1.0, 0);
@@ -6924,7 +6925,7 @@ function drawLab() {
   for (const s of [LAB_S.sp1, LAB_S.sp2]) { for (const cx of [s.x0 + 10, s.x1 - 10]) for (let y = LROOF; y < s.y0; y += 10) { ctx.beginPath(); ctx.ellipse(cx, y + 5, 3, 5, 0, 0, 7); ctx.strokeStyle = '#8A929C'; ctx.lineWidth = 1.8; ctx.stroke(); } box(s.x0, s.y0, s.x1 - s.x0, 12, '#5A6474', 2, 2); }
   { const s = LAB_S.n1; box(s.x0, s.y0, s.x1 - s.x0, 10, '#5A6474', 2, 2); line((s.x0 + s.x1) / 2, s.y0 + 10, (s.x0 + s.x1) / 2, LF1 + 200, '#3A424A', 6); }
   // the machine with the switch on top, and the cabinet
-  { const s = LAB_S.swTop; labHazardBox(s.x0, s.y0, s.x1 - s.x0, LF1 - s.y0); for (let k = 0; k < 3; k++) circ(s.x0 + 30 + k * 30, s.y0 + 60, 9, '#1A1E24', 1.6); box(s.x0 + 20, s.y0 + 46, 80, 34, '#1E3A4A', 3, 1.6);
+  { const s = LAB_S.swTop; labHazardBox(s.x0, s.y0, s.x1 - s.x0, LF1 - s.y0); for (let k = 0; k < 3; k++) circ(s.x0 + 18 + k * 22, s.y0 + 36, 7, '#1A1E24', 1.6); box(s.x0 + 78, s.y0 + 22, 38, 36, '#1E3A4A', 3, 1.6);
     const lx = LAB_SWITCH_X; box(lx - 12, s.y0 - 10, 24, 10, '#3A4048', 2, 1.6); ctx.save(); ctx.translate(lx, s.y0 - 6); ctx.rotate(-0.6 + L.sw * 1.2); line(0, 0, 0, -34, '#C8CED4', 4); circ(0, -36, 6, SINDOOR, 1.6); ctx.restore();
     if (!L.sw && L.parts[0]) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(lx, s.y0 - 30, 2, lx, s.y0 - 30, 40); g.addColorStop(0, 'rgba(255,214,120,.45)'); g.addColorStop(1, 'rgba(255,214,120,0)'); ctx.fillStyle = g; ctx.fillRect(lx - 40, s.y0 - 70, 80, 80); ctx.restore(); } }
   { const cx = LAB_CAB_X, o = L.cab; box(cx - 40, LF1 - 80, 80, 80, '#4E3826', 3, 2.4); box(cx - 32, LF1 - 72, 64, 62, 'rgba(150,190,210,.2)', 2, 1.4);
@@ -6971,10 +6972,7 @@ function drawLab() {
 function labPostersVillainAt(bx, by, tx, ty) {   // his blueprint and a Thunder Boy poster he has crossed out
   { const px = bx, py = by; box(px, py, 150, 110, '#1E4A8A', 2, 2); ctx.strokeStyle = 'rgba(220,235,255,.25)'; ctx.lineWidth = 1; for (let k = 1; k < 9; k++) { ctx.beginPath(); ctx.moveTo(px + k * 17, py); ctx.lineTo(px + k * 17, py + 110); ctx.stroke(); }
     text(L2('বিজলি-চোর যন্ত্র', 'LIGHTNING STEALER'), px + 75, py + 16, 10, '#E8F0FF', 700, 'center'); ctx.strokeStyle = '#E8F0FF'; ctx.lineWidth = 1.6; ctx.strokeRect(px + 45, py + 38, 60, 44); ctx.beginPath(); ctx.arc(px + 75, py + 60, 12, 0, 7); ctx.stroke(); }
-  { const px = tx, py = ty; box(px, py, 110, 140, '#F0D060', 2, 2); box(px + 8, py + 8, 94, 100, '#2C3E8C', 1, 1.4);
-    ctx.save(); ctx.translate(px + 55, py + 60); circ(0, -22, 12, '#E8B888', 1.6); ctx.beginPath(); ctx.moveTo(-17, -8); ctx.lineTo(17, -8); ctx.lineTo(12, 34); ctx.lineTo(-12, 34); ctx.closePath(); fs('#E8402A', 1.6);
-    ctx.beginPath(); ctx.moveTo(4, -4); ctx.lineTo(-6, 12); ctx.lineTo(2, 12); ctx.lineTo(-4, 26); ctx.lineTo(10, 6); ctx.lineTo(2, 6); ctx.lineTo(8, -4); ctx.closePath(); fs('#FFD23A', 1.2); ctx.restore();
-    text('THUNDER BOY', px + 55, py + 128, 10, INK, 700, 'center'); line(px + 12, py + 14, px + 98, py + 104, 'rgba(200,30,30,.85)', 6); line(px + 98, py + 14, px + 12, py + 104, 'rgba(200,30,30,.85)', 6); }
+  { tapedPoster(tx, ty, 90, 146, 0.03, '#1E2A6A', thunderBoyArt); const px = tx, py = ty; line(px + 6, py + 10, px + 84, py + 132, 'rgba(210,30,30,.9)', 7); line(px + 84, py + 10, px + 6, py + 132, 'rgba(210,30,30,.9)', 7); }   // (v269) the same Thunder Boy as Pupu's poster, crossed out in red by Kalo-Bijli
 }
 function labBurner3(bn) {
   const top = bn.y, x = bn.x, st = labFlame(bn);
@@ -6988,15 +6986,34 @@ function labBurner3(bn) {
   for (const [k, col] of [[1, 'rgba(255,120,40,.85)'], [0.7, 'rgba(255,200,80,.9)'], [0.35, 'rgba(140,190,255,.9)']]) { ctx.beginPath(); ctx.moveTo(x - ww * k, fy); ctx.bezierCurveTo(x - ww * k * 1.2, fy - hh * k * 0.5, x - ww * k * 0.4 + Math.sin(t * 13) * 4, fy - hh * k * 0.8, x + Math.sin(t * 11) * 5, fy - hh * k); ctx.bezierCurveTo(x + ww * k * 0.4 + Math.sin(t * 9) * 4, fy - hh * k * 0.8, x + ww * k * 1.2, fy - hh * k * 0.5, x + ww * k, fy); ctx.closePath(); ctx.fillStyle = col; ctx.fill(); }
   ctx.restore();
 }
-function labBug3(b) {
+function labBug3(b) {   // (v269, user reference) a little red robot imp: a black TV-screen head with angry red eyes and a jagged grin, red spikes, a red glow and floating red cubes
+  // its red warning lamp in the ceiling, casting a cone down onto its patrol
+  { const mx = (b.a + b.b) / 2, ly = b.y > LF2 ? LF1 + LSL : b.y - 230; if (b.y <= LF2) line(mx, LROOF, mx, ly - 8, '#14181E', 2);
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.beginPath(); ctx.moveTo(mx - 14, ly + 6); ctx.lineTo(mx + 14, ly + 6); ctx.lineTo(mx + 70, b.y); ctx.lineTo(mx - 70, b.y); ctx.closePath(); const g = ctx.createLinearGradient(0, ly, 0, b.y); g.addColorStop(0, 'rgba(255,40,40,.45)'); g.addColorStop(1, 'rgba(255,40,40,.04)'); ctx.fillStyle = g; ctx.fill(); ctx.restore();
+    box(mx - 18, ly - 8, 36, 12, '#2A2E36', 3, 1.8); box(mx - 14, ly + 2, 28, 5, '#FF3A3A', 2, 0); }
   if (b.pop >= 1) return;
   line(b.a - 30, b.y - 3, b.b + 30, b.y - 3, '#121418', 6);
-  const y = b.y - 12 - Math.abs(Math.sin(b.anim)) * 4, s = 1 - b.pop;
-  ctx.save(); ctx.translate(b.x, y); ctx.scale(s, s);
-  ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(0, 0, 2, 0, 0, 34); g.addColorStop(0, 'rgba(140,220,255,.7)'); g.addColorStop(1, 'rgba(140,220,255,0)'); ctx.fillStyle = g; ctx.fillRect(-34, -34, 68, 68); ctx.restore();
-  ctx.beginPath(); for (let i = 0; i < 14; i++) { const a = i / 14 * 6.283, r = i % 2 ? 7 : 12 + Math.sin(G.t * 40 + i) * 2; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.closePath(); fs('#8ADCFF', 1.6);
-  circ(0, 0, 6, '#F0FBFF', 0); for (const ex of [-3, 4]) { circ(ex + b.dir * 2, -2, 3, '#FFFFFF', 1); circ(ex + b.dir * 3, -2, 1.5, INK, 0); }
-  for (const lx of [-6, 0, 6]) line(lx, 8, lx + Math.sin(b.anim + lx) * 3, 13, '#8ADCFF', 1.6);
+  const s = 1 - b.pop, hop = Math.abs(Math.sin(b.anim)) * 3, t = G.t, d = b.dir;
+  ctx.save(); ctx.translate(b.x, b.y - hop); ctx.scale(s * d * 1.35, s * 1.35);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(0, -26, 4, 0, -26, 54); g.addColorStop(0, 'rgba(255,40,40,.65)'); g.addColorStop(1, 'rgba(255,40,40,0)'); ctx.fillStyle = g; ctx.fillRect(-54, -80, 108, 108);
+  for (let k = 0; k < 9; k++) { const ph = (t * 0.7 + k * 0.37) % 1, px = Math.sin(k * 2.3 + t) * 26 + (k % 2 ? 10 : -10), py = -10 - ph * 60, sz = 3 + (k % 3) * 1.6; ctx.globalAlpha = Math.sin(ph * Math.PI); ctx.fillStyle = '#FF3A3A'; ctx.fillRect(px - sz / 2, py - sz / 2, sz, sz); } ctx.restore();
+  const R = '#E8282C', RD = '#9A1418', K = '#14161C';
+  // legs and arms
+  const st = Math.sin(b.anim * 2);
+  box(-8 + st * 2, -10, 6, 10, RD, 2, 1.6); box(3 - st * 2, -10, 6, 10, RD, 2, 1.6); box(-10 + st * 2, -2, 9, 3, K, 1, 1); box(2 - st * 2, -2, 9, 3, K, 1, 1);
+  ctx.beginPath(); ctx.moveTo(-10, -20); ctx.lineTo(-17, -12 + st * 2); ctx.lineTo(-14, -9 + st * 2); ink(1.6); ctx.strokeStyle = RD; ctx.lineWidth = 4; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(10, -20); ctx.lineTo(16, -13 - st * 2); ctx.strokeStyle = RD; ctx.lineWidth = 4; ctx.stroke();
+  // the body: red armour with a dark diamond core
+  ctx.beginPath(); ctx.moveTo(-11, -24); ctx.lineTo(11, -24); ctx.lineTo(8, -9); ctx.lineTo(-8, -9); ctx.closePath(); fs(R, 1.8);
+  ctx.beginPath(); ctx.moveTo(0, -21); ctx.lineTo(4, -16); ctx.lineTo(0, -11); ctx.lineTo(-4, -16); ctx.closePath(); fs(RD, 1.2);
+  // spikes: a big horn on top, a smaller one beside it, and spikes down the left side
+  for (const [x0, y0, x1, y1, x2, y2] of [[-2, -46, 6, -66, 10, -45], [-12, -46, -14, -60, -4, -47], [-16, -40, -27, -38, -16, -32], [-16, -32, -26, -26, -16, -26]]) { ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.lineTo(x2, y2); ctx.closePath(); fs(R, 1.6); }
+  line(4, -60, 6, -50, 'rgba(255,200,200,.6)', 1.4);
+  // the TV-screen head: red casing, black screen, slanted angry red eyes and a jagged grin
+  box(-17, -48, 34, 26, R, 5, 2); box(-13, -45, 26, 20, K, 4, 1.4); box(15, -40, 4, 8, RD, 1, 1.2);
+  ctx.save(); ctx.shadowColor = '#FF2A2A'; ctx.shadowBlur = 8;
+  for (const ex of [-6, 6]) { ctx.beginPath(); ctx.moveTo(ex - 4 * Math.sign(ex), -40); ctx.lineTo(ex + 4 * Math.sign(ex), -37); ctx.lineTo(ex - 3 * Math.sign(ex), -35); ctx.closePath(); ctx.fillStyle = '#FF3A3A'; ctx.fill(); }
+  ctx.beginPath(); ctx.moveTo(-6, -31); ctx.lineTo(-3, -29); ctx.lineTo(0, -31); ctx.lineTo(3, -29); ctx.lineTo(6, -31); ctx.lineTo(3, -28); ctx.lineTo(0, -29.5); ctx.lineTo(-3, -28); ctx.closePath(); ctx.fillStyle = '#FF3A3A'; ctx.fill(); ctx.restore();
   ctx.restore();
 }
 function drawLabFront() {

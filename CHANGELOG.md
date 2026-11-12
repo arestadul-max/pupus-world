@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.3-demo · 2026-11-12
+- **Chapter 3:** the switch machine is a jump-up step (no ladder); new red robot imp enemy under red warning lamps; Thunder Boy posters match Pupu's bedroom poster; console slots in any order.
+
 ## 1.3.2-demo · 2026-11-12
 - **Chapter 3:** the lab tables use the Chapter 2 bench rule: standing he bumps his head and stops; crouch to creep under.
 
