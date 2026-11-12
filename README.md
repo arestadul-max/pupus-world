@@ -45,7 +45,7 @@ The whole game is a single HTML file: no engine, no images, no downloads. It run
 | ![Chapter 2: the chase](assets/screenshots/08-chapter2-chase.png) | ![Dadu's maths game](assets/screenshots/09-dadu-maths-game.png) |
 | **Chapter 2 · The schoolyard chase** | **Memory · Dadu's maths game** |
 | ![Chapter 3: the science lab](assets/screenshots/11-chapter3-lab.png) | ![Fixing the radio with Dadu](assets/screenshots/12-dadu-radio.png) |
-| **Chapter 3 · The science lab** | **Memory · Fixing the radio with Dadu** |
+| **Chapter 3 · Kalo-Bijli's lab** | **Memory · Fixing the radio with Dadu** |
 | ![The story intro](assets/screenshots/04-story-intro.png) | ![The start menu in Bangla](assets/screenshots/10-title-bangla.png) |
 | **Story intro** | **Start menu in বাংলা** |
 
@@ -73,7 +73,7 @@ The game teaches each control the first time it is needed; the pause menu lists 
 | **Chapter 2 · Anko Sir's class** | A giant classroom | Crawl under the benches unseen while the giant maths teacher's glasses sweep the room. |
 | **Chapter 2 · The verandah** | The school verandah | Follow Jhumpa and hide whenever a window lights up. |
 | **Chapter 2 · The schoolyard** | A moonlit schoolyard | Run, jump, hide behind the big tree, and reach the gate, where Anko Sir has a gift: Dadu's reading glasses. |
-| **Chapter 3 · The science lab** | The school lab in a power cut | Jump the spark-bugs, cross the burners while the flame is low, crouch under live cables, find three glowing parts, join the wires on the power board, and fix Dadu's radio with him on the verandah. |
+| **Chapter 3 · Kalo-Bijli's lab** | The lab of the villain from Pupu's favourite cartoon, through a magic door | Jump his spark-bugs, cross the burners while the flame is low, crouch under live cables, find three glowing parts, reroute his power board, teach Professor Kalo-Bijli a lesson, and fix Dadu's radio with him on the verandah. |
 
 Chapters 4 to 10 and the epilogue in Dadu's room are planned; see [docs/STORY.md](docs/STORY.md).
 

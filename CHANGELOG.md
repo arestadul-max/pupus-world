@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1-demo · 2026-11-12
+- Chapter 2 now ends with a magic sci-fi door crackling into the schoolyard; the player walks Pupu into it.
+- Chapter 3 becomes **Kalo-Bijli's Lab**: the lab of Professor Kalo-Bijli, the villain of Pupu's favourite cartoon *Thunder Boy*. He taunts Pupu from his live screen, sends his spark-bugs, and is zapped by his own lightning when Pupu takes back Dadu's radio.
+
 ## 1.1.0-demo · 2026-11-12
 Chapter 3 · The Science Lab.
 

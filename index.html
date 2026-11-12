@@ -208,11 +208,11 @@ let LANG = (() => { try { return localStorage.getItem('pupuLang') === 'bn' ? 'bn
 const L2 = (bn, en) => LANG === 'bn' ? (bn || en) : (en || bn);
 const HASBN = /[ঀ-৿]/;
 const TR = {
-  "Chapter 3 · The Science Lab": "তৃতীয় অধ্যায় · বিজ্ঞানাগার", "Find the glowing things, light the bulb, open the door": "জ্বলজ্বলে জিনিস খোঁজো, বাতি জ্বালাও, দরজা খোলো",
+  "Chapter 3 · Kalo-Bijli's Lab": "তৃতীয় অধ্যায় · কালো-বিজলির ল্যাব", "The villain's lab: find the glowing things, light the bulb": "ভিলেনের ল্যাব: জ্বলজ্বলে জিনিস খোঁজো, বাতি জ্বালাও", "go in": "ঢোকো",
   "Demo version: the Prologue and Chapters 1 to 3": "ডেমো সংস্করণ: প্রস্তাবনা আর ১ থেকে ৩ অধ্যায়",
   "Too hot! Cross when the flame is low and blue.": "খুব গরম! শিখা নীল আর নিচু হলে পার হও।", "Zap! Jump over the little sparks.": "ঝিঁৎ! ছোট্ট ফুলকিগুলো লাফিয়ে পার হও।",
   "Dadu's things 3 of 10: his pocket radio": "দাদুর জিনিস ১০টির ৩টি: তাঁর পকেট রেডিও", "It still sings.": "এখনো গান গায়।", "Dadu's things: 3 of 10  ·  his pocket radio": "দাদুর জিনিস: ১০টির ৩টি  ·  তাঁর পকেট রেডিও",
-  "FOUND": "পেয়েছি", "Next: Chapter 3 · The Science Lab": "এরপর: তৃতীয় অধ্যায় · বিজ্ঞানাগার", "Press Enter to continue to Chapter 3": "তৃতীয় অধ্যায়ে যেতে Enter চাপো", "Tap to continue to Chapter 3": "তৃতীয় অধ্যায়ে যেতে চাপ দাও",
+  "FOUND": "পেয়েছি", "Next: Chapter 3 · Kalo-Bijli's Lab": "এরপর: তৃতীয় অধ্যায় · কালো-বিজলির ল্যাব", "Press Enter to continue to Chapter 3": "তৃতীয় অধ্যায়ে যেতে Enter চাপো", "Tap to continue to Chapter 3": "তৃতীয় অধ্যায়ে যেতে চাপ দাও",
   "power board": "বিদ্যুৎ বোর্ড", "look": "দেখো",
   // menus
   "A RONGPAT GAME  ·  রংপট": "একটি রংপট গেম", "Demo version: the Prologue, Chapter 1 and Chapter 2": "ডেমো সংস্করণ: প্রস্তাবনা, প্রথম ও দ্বিতীয় অধ্যায়",
@@ -658,7 +658,8 @@ function goalNow() {
   if (G.level === 'anko2') {
     const V = G.ver; if (G.state !== 'aplay' || !V) return null;
     if (V.phase === 'lab') return labGoal();
-    if (V.phase === 'court') { const c = V.ch; if (!c || c.end || c.stage === 'catch') return null;
+    if (V.phase === 'court') { const c = V.ch; if (c && c.end && c.end.portal && c.stage === 'door') return {bn: 'নীল দরজাটায় ঢোকো', en: 'Walk into the glowing door', x: c.end.portal.x, k: ['E']};
+      if (!c || c.end || c.stage === 'catch') return null;
       if (c.stage === 'run2') return c.hwGot ? {bn: 'স্কুলের গেটে দৌড়াও!', en: 'Run to the school gate!', x: CT_GATE, k: ['Run']} : {bn: 'টায়ারে লাফিয়ে উঠে দেয়ালের খাতাটা নাও', en: 'Jump onto the tyres, then the wall: get your copy', x: 2340, k: ['Space']};
       if (c.stage === 'search' || c.stage === 'leave' || c.autoHide) return null;
       return {bn: 'দৌড়াও! ব্যাগ লাফাও, বেঞ্চের নিচে বসে যাও', en: 'RUN! Jump the bags, crouch under the bench', x: CT_TREE, k: ['Run', 'Space', 'Shift']}; }
@@ -3108,7 +3109,8 @@ function worldPrompt() {
     label = P.plane && !(P.throwT >= 0) ? uk + ': throw the paper plane' : akPlaneNear() >= 0 && !(P.busyT > 0) ? uk + ': pick up the paper plane' : null;
   } else if (G.level === 'anko2') {
     if (G.state !== 'aplay' || G.dialog) return;
-    label = null; { const n = G.ver && G.ver.phase === 'lab' ? labNear() : null; if (n) label = uk + ': ' + (n.k === 'part' ? 'pick up' : n.k === 'board' ? 'power board' : 'look'); }
+    label = null; { const c = G.ver && G.ver.ch; if (G.ver && G.ver.phase === 'court' && c && c.stage === 'door' && c.end && c.end.portal && Math.abs(P.x - c.end.portal.x) < 46) label = uk + ': go in'; }
+    { const n = G.ver && G.ver.phase === 'lab' ? labNear() : null; if (n) label = uk + ': ' + (n.k === 'part' ? 'pick up' : n.k === 'board' ? 'power board' : 'look'); }
   } else if (G.level === 'ghat') {
     if (G.state !== 'gplay' || G.dialog) return;
     const st = P.sit ? null : atSeat();
@@ -3190,7 +3192,7 @@ const MISSIONS = [
   {t: 'Chapter 2 · Part 1: Anko Sir\'s Class', s: 'Crawl under the benches to the door, unseen'},
   {t: 'Chapter 2 · Part 2: The Verandah', s: 'Hide from the windows, follow Jhumpa to the stairs'},
   {t: 'Chapter 2 · Part 3: The Schoolyard', s: 'Down the stairs and RUN, all the way to the gate'},
-  {t: 'Chapter 3 · The Science Lab', s: 'Find the glowing things, light the bulb, open the door'},
+  {t: 'Chapter 3 · Kalo-Bijli\'s Lab', s: 'The villain\'s lab: find the glowing things, light the bulb'},
 ];
 function startMission(i) {
   setRun(false);
@@ -3591,7 +3593,7 @@ Object.assign(sfx, {
   fish() { hiss(0.25, 0.06, 1400, 'bandpass'); },
 });
 Object.assign(WHO, {
-  anko: {name:'Anko Sir · অঙ্ক স্যার', col:'#5A5A6A'}, jhumpa: {name:'Jhumpa · ঝুম্পা', col:'#2E5E7A'}, mishti: {name:'Mishti · মিষ্টি', col:'#C8641E'}, montu: {name:'Montu-da · মন্টুদা', col:LEAF}, dadu: {name:'Dadu · দাদু', col:'#7A5A3A'}, voice: {name:'A voice · একটা কণ্ঠ', col:'#7A5A3A'},
+  anko: {name:'Anko Sir · অঙ্ক স্যার', col:'#5A5A6A'}, kalo: {name:'Professor Kalo-Bijli · প্রফেসর কালো-বিজলি', col:'#4A2A7A'}, jhumpa: {name:'Jhumpa · ঝুম্পা', col:'#2E5E7A'}, mishti: {name:'Mishti · মিষ্টি', col:'#C8641E'}, montu: {name:'Montu-da · মন্টুদা', col:LEAF}, dadu: {name:'Dadu · দাদু', col:'#7A5A3A'}, voice: {name:'A voice · একটা কণ্ঠ', col:'#7A5A3A'},
 });
 
 // ---- before Chapter 1: an illustrated story in the Rongpat style (v228, from the art bible): flat painted grounds whose colour
@@ -5348,7 +5350,8 @@ function updateCourt(dt) {
   if (C.getUp > 0 && C.getUp < 1) C.getUp = Math.min(1, C.getUp + dt / 1.4);
   if (C.sitDown > 0 && C.sitDown < 1) C.sitDown = Math.min(1, C.sitDown + dt / 0.9);   // standing → squat → sits down on the ground
   if (C.end && C.end.open > 0 && C.end.open < 1) C.end.open = Math.min(1, C.end.open + dt * 0.7);   // the gate slides open
-  if (C.end && C.end.dark > 0 && C.end.dark < 1) C.end.dark = Math.min(1, C.end.dark + dt * 3);   // the power cut
+  if (C.end && C.end.portal) { const pt = C.end.portal; pt.t += dt; if (pt.open < 1) pt.open = Math.min(1, pt.open + dt * 1.1); if (pt.enter > 0) pt.enter = Math.min(1, pt.enter + dt * 1.2);
+    if (G.state === 'aplay' && C.stage === 'door' && Math.abs(P.x - pt.x) < 46 && P.ground && edges.use && !G.dialog) ctEnterPortal(); }
   if (C.pupuWalkTo) { const d = C.pupuWalkTo - P.x; if (Math.abs(d) < 3) { P.x = C.pupuWalkTo; C.pupuWalkTo = 0; P.vx = 0; } else { P.x += Math.sign(d) * Math.min(Math.abs(d), 150 * dt); P.vx = Math.sign(d) * 150; P.face = Math.sign(d); P.anim += dt * 150 / 18.6; } }
   if (G.state !== 'aplay') return;
   if (P.x < 40) P.x = 40;
@@ -5406,6 +5409,15 @@ function updateCourt(dt) {
     if (P.x > CT_GATE - 60 && P.ground) { if (C.hwGot) startGateEnding(); else if (!(C.hwNag > 0)) { C.hwNag = 3; V.say = {who: 'jhumpa', bn: 'আগে খাতাটা নাও! দেয়ালের ওপরে!', en: 'Get your copy first! On top of the wall!', t: 2.2}; } }
     C.hwNag = (C.hwNag || 0) - dt;
   }
+}
+function ctEnterPortal() {   // (v259) Pupu walks into the door, Mishti follows; a flash of blue, and Chapter 2 is over
+  const C = G.ver.ch, pt = C.end.portal; G.state = 'acut'; P.vx = 0; G.act = null;
+  play([
+    {do: () => { C.pupuWalkTo = pt.x; }}, {until: () => !C.pupuWalkTo},
+    {do: () => { pt.enter = 0.001; tone(300, 1.0, 'sine', 0.05, 1200); tone(1600, 0.4, 'triangle', 0.03, 2400, 0.3); }}, {wait: 0.8},
+    {do: () => { G.flash = 0.6; G.fadeTarget = 1; G.fadeSpeed = 1.1; }}, {wait: 1.4},
+    {do: () => { G.state = 'v2end'; G.endT = 0; G.fade = 0; G.fadeTarget = 0; }},
+  ]);
 }
 function ctAutoHide(dt) {   // he hurries behind the trunk (a real run, no sliding) and crouches there until Anko Sir has gone
   const C = G.ver.ch, tx = CT_TREE + 6, d = tx - P.x;
@@ -5469,22 +5481,16 @@ function startGateEnding() {
     {say:1, who:'mishti', bn:'আমিও দেখলাম… তোমার দাদু খুব ভালো মানুষ ছিলেন, তাই না?', en:'I saw it too… your Dadu was a really kind man, wasn\'t he?'},
     {say:1, who:'pupu', bn:'হুঁ… সবচেয়ে ভালো।', en:'Mm… the very best.', mood: 'sad'},
     {say:1, who:'jhumpa', bn:'পুপু, দেখলে? চেষ্টাটাই আসল।', en:'See, Pupu? Trying is what counts.', mood: 'happy'},
-    // (v258) the bridge into Chapter 3: a power cut; then blue sparks and a golden glow in a dark window of the school behind the gate
-    {do: () => { C.end.dark = 0.001; tone(90, 0.5, 'sawtooth', 0.05, 50); tone(60, 0.6, 'sine', 0.05, 40, 0.05); G.shake = 0.1; }}, {wait: 1.3},
-    {say:1, who:'jhumpa', bn:'ধুর! লোডশেডিং!', en:'Oh no! A power cut!', mood: 'surprised'},
-    {say:1, who:'anko', bn:'যথারীতি।', en:'As usual.'},
-    {do: () => { C.end.spark = 0.001; tone(1800, 0.12, 'square', 0.03, 600); tone(2400, 0.08, 'square', 0.02, 900, 0.15); }}, {wait: 1.1},
-    {say:1, who:'mishti', bn:'পুপু! ওই জানালাটা দেখো! নীল ফুলকি!', en:'Pupu! Look at that window! Blue sparks!', mood: 'scared'},
-    {say:1, who:'pupu', bn:'আর ভেতরে কী যেন জ্বলছে… ঠিক চশমাটার মতো!', en:'And something\'s glowing in there… just like the glasses!', mood: 'surprised'},
-    {say:1, who:'anko', bn:'ওটা তো বিজ্ঞানাগার! কিন্তু কারেন্টই তো নেই… ফুলকি আসছে কোথা থেকে?', en:'That\'s the science lab! But there\'s no power… so where are those sparks coming from?', mood: 'surprised'},
-    {say:1, who:'pupu', bn:'স্যার, আমি গিয়ে দেখি?', en:'Sir, can I go and look?'},
-    {do: () => { tone(1300, 0.1, 'triangle', 0.04); tone(1700, 0.12, 'triangle', 0.03, 0, 0.1); }}, {wait: 0.5},
-    {say:1, who:'anko', bn:'এই নাও বিজ্ঞানাগারের চাবি। কিন্তু খবরদার, খোলা তারে হাত দেবে না!', en:'Here\'s the key to the lab. But careful: don\'t touch any loose wires!'},
-    {say:1, who:'jhumpa', bn:'আমি স্যারের সঙ্গে এখানেই থাকি। সাবধানে যেও, পুপু!', en:'I\'ll wait here with Sir. Be careful, Pupu!', mood: 'happy'},
-    {say:1, who:'mishti', bn:'চলো! আমিও যাব!', en:'Come on! I\'m coming too!', mood: 'happy'},
-    {do: () => { C.pupuWalkTo = P.x - 520; }}, {wait: 1.6},   // off along the yard to the science block
-    {do: () => { G.fadeTarget = 1; G.fadeSpeed = 0.9; }}, {wait: 1.6},
-    {do: () => { G.state = 'v2end'; G.endT = 0; G.fade = 0; G.fadeTarget = 0; }},
+    // (v259, user) the bridge into Chapter 3: a magic sci-fi door crackles into the yard; the player walks Pupu in
+    {do: () => { C.end.portal = {x: CT_GATE - 108, t: 0, open: 0.001, enter: 0}; G.ver.jgoal = P.x + 54; G.flash = 0.45; G.shake = 0.3; tone(70, 1.4, 'sawtooth', 0.05, 220); tone(1800, 0.18, 'square', 0.03, 500, 0.25); tone(2600, 0.12, 'square', 0.02, 900, 0.5); }}, {wait: 1.8},
+    {do: () => { P.face = 1; }},
+    {say:1, who:'mishti', bn:'পুপু! শূন্য থেকে একটা দরজা!', en:'Pupu! A door, out of nowhere!', mood: 'scared'},
+    {say:1, who:'jhumpa', bn:'নীল ফুলকি ছড়াচ্ছে! এটা আবার কী?', en:'It\'s spitting blue sparks! What IS that?', mood: 'surprised'},
+    {say:1, who:'anko', bn:'আমি কিছু দেখিনি। আমার এখন ঘুম দরকার।', en:'I didn\'t see anything. I need some sleep.'},
+    {say:1, who:'pupu', bn:'ভেতরে কী আছে, দেখতেই হবে!', en:'I have to see what\'s inside!', mood: 'grin'},
+    {say:1, who:'mishti', bn:'তাহলে একসাথে! তুমি আগে, আমি ঠিক তোমার পেছনে।', en:'Together, then! You first, I\'m right behind you.', mood: 'happy'},
+    {say:1, who:'jhumpa', bn:'আমি স্যারের সঙ্গে এখানেই থাকি। সাবধানে, পুপু!', en:'I\'ll wait here with Sir. Be careful, Pupu!', mood: 'happy'},
+    {do: () => { C.stage = 'door'; G.state = 'aplay'; G.goalT = 0; }},
   ]);
 }
 // ---- Anko Sir, side view (from the user's character sheet): bald with black hair round the back, bold black glasses with orange
@@ -5808,6 +5814,7 @@ function drawCourt() {
       ctx.save(); ctx.translate(hx, hy); ctx.rotate(-0.25); box(-14, -10, 28, 20, '#2E4A7A', 1.8, 2); box(-12, -8, 24, 4, '#ECE6D4', 0, 0); ctx.restore(); }
   }
   ydBench(CT_BENCH, false);
+  if (G.ver.ch && G.ver.ch.end && G.ver.ch.end.portal) drawPortal(G.ver.ch.end.portal.x, G.ver.ch.end.portal);
   // the big mango tree's trunk (its leaves are drawn in front)
   ydTrunk(CT_TREE, 600, 78, true);
   if (C && C.slam && !C.slam.hit) { const k = Math.min(1, C.slam.t / 0.85); ctx.fillStyle = 'rgba(0,0,0,' + (0.15 + 0.4 * k) + ')'; ctx.beginPath(); ctx.ellipse(C.slam.x, VF + 4, 20 + 30 * k, 7, 0, 0, 7); ctx.fill(); }
@@ -5825,6 +5832,7 @@ function drawCourtFront() {
   ydCanopy(CT_TREE + 30, 470, 290, 120, 11, 1);   // the big yard tree's leaves, lit from the lamp beside it
   ydFront();
   ctPowerCut();
+  { const pt = C && C.end && C.end.portal; if (pt) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(pt.x, VF - 120, 10, pt.x, VF - 120, 420); g.addColorStop(0, 'rgba(110,200,255,' + (0.2 * Math.min(1, pt.open)) + ')'); g.addColorStop(1, 'rgba(110,200,255,0)'); ctx.fillStyle = g; ctx.fillRect(pt.x - 420, VF - 540, 840, 640); ctx.restore(); } }
   // Anko Sir, seen from the side, striding after them (he shrinks to a normal man in the ending)
   if (C && C.sx > -2000) {
     let sc = 3.45; if (C.end && C.end.shrink) { C.end.shrink = Math.min(1, C.end.shrink + 0.012); const u = C.end.shrink; sc = 3.45 - 1.75 * u * u * (3 - 2 * u); }   // (v252) giant, but his head always stays on screen
@@ -5861,6 +5869,12 @@ function drawVerFront() {
   if (V.phase !== 'court') { const v = akView(); for (let x = Math.floor(v.L / 780) * 780 + 130; x < v.R + 200; x += 780) { if (Math.abs(x - VER_DOOR2) < 260) continue;   /* no pillar in front of the door he bursts out of: he must be seen clearly */ ctx.fillStyle = '#0E1116'; ctx.fillRect(x - 22, v.T, 44, VF + 260 - v.T); ctx.fillStyle = 'rgba(255,255,255,.04)'; ctx.fillRect(x - 22, v.T, 6, VF + 260 - v.T); } }
 }
 function drawVerChars() {
+  const V = G.ver, C = V.ch, pe = C && C.end && C.end.portal ? C.end.portal.enter : 0, ar = V.phase === 'lab' && V.lab ? V.lab.arrive : 1;
+  const al = pe > 0 ? Math.max(0, 1 - pe * 1.6) : Math.min(1, ar);
+  if (al < 1) { if (al <= 0) return; ctx.save(); ctx.globalAlpha = al; drawVerChars0(); ctx.restore(); return; }
+  drawVerChars0();
+}
+function drawVerChars0() {
   const V = G.ver, C = V.ch;
   if (V.phase === 'stairs') return drawStairChars();
   if (V.phase === 'lab' && V.lab && V.lab.radioTaken && !(P.lie > 0)) { drawMishti(G.mx, G.my, true, {face: G.mface, walk: G.mwalk ? G.manim : null, talk: G.dialog && G.dialog.who === 'mishti'}); drawPupu(P.x, P.y, P.face, {anim: 0, holdCup: {k: 2, t: 0}, expr: 'grin', look: 0.3, talk: G.dialog && G.dialog.who === 'pupu'}); return; }
@@ -5878,7 +5892,7 @@ function drawVerChars() {
     return;
   }
   if (C && C.fallBack && G.state === 'acut') { drawPupu(P.x, P.y, P.face, {hug: -1, lieBack: 0.35, expr: G.dialog && G.dialog.who === 'pupu' ? 'sad' : 'scared', blink: false, look: 0, talk: G.dialog && G.dialog.who === 'pupu'}); return; }   // fallen back on the ground, looking up at him
-  if (C && C.end && C.end.cupTaken) { drawPupu(P.x, P.y, P.face, C.pupuWalkTo ? {anim: P.anim, vx: P.vx, expr: 'happy', look: 0.3} : {anim: 0, holdCup: {k: 0, t: 0}, expr: G.dialog && G.dialog.who === 'pupu' ? talkExpr('grin') : 'grin', look: 0.5, talk: G.dialog && G.dialog.who === 'pupu'}); return; }
+  if (C && C.end && C.end.cupTaken && G.state !== 'aplay') { drawPupu(P.x, P.y, P.face, C.pupuWalkTo ? {anim: P.anim, vx: P.vx, expr: 'happy', look: 0.3} : {anim: 0, holdCup: {k: 0, t: 0}, expr: G.dialog && G.dialog.who === 'pupu' ? talkExpr('grin') : 'grin', look: 0.5, talk: G.dialog && G.dialog.who === 'pupu'}); return; }
   if (C && C.end && G.state === 'acut' && !(P.lie > 0) && !(P.pickT > 0)) { drawPupu(P.x, P.y, P.face, {anim: P.anim, vx: C.pupuWalkTo ? P.vx : 0, expr: 'happy', look: 0.4, talk: G.dialog && G.dialog.who === 'pupu'}); return; }   // walking over to the cup
   drawAnkoPupu();
 }
@@ -5934,24 +5948,30 @@ function startLab() {
   const V = G.ver; V.phase = 'lab'; V.jshow = false; V.say = null; V.ch = null; V.w = {mode: 'idle', t: 0, wait: 99, win: 0, bx: 0};
   SURF = LAB_SURF; WW = LW; G.cups = 2;
   V.lab = {chk: 0, parts: [false, false, false], board: null, solved: false, why: '', door: 0, lights: 0, fly: null, radioTaken: false, zapT: 0, crackT: 0,
+    arrive: 0, kshow: 0, kmood: 'smug', khold: 0,
     bugs: LAB_BUGS0.map((b, i) => ({a: b.a, b: b.b, x: b.a + (b.b - b.a) * (i === 1 ? 0.2 : 0.6), dir: i % 2 ? -1 : 1, anim: 0, pop: 0})), walkTo: 0, entry: 0};
   labPlace(0); P.x = 96; G.mx = 60;
   Object.assign(G, {state: 'acut', fade: 1, fadeTarget: 0, fadeSpeed: 0.8, noise: 0, camX: -200});
   const L = V.lab;
   play([
-    {wait: 0.8},
-    {do: () => { tone(1300, 0.06, 'square', 0.04); tone(900, 0.08, 'square', 0.04, 0, 0.12); }}, {wait: 0.5},   // the key turns
-    {do: () => { L.entry = 0.001; tone(180, 0.9, 'sawtooth', 0.025, 120); }}, {wait: 0.9},   // the door creaks open
-    {do: () => { L.walkTo = 250; }}, {until: () => !L.walkTo},
-    {say:1, who:'narr', bn:'বিজ্ঞানাগার। কারেন্ট নেই… তবু সবকিছু গুনগুন করছে।', en:'The science lab. No power… and yet everything is humming.', auto: 3.2},
+    {wait: 0.6},
+    {do: () => { L.arrive = 0.001; G.flash = 0.4; tone(1200, 0.6, 'sine', 0.04, 300); }}, {wait: 1.0},   // out of the door they come
+    {do: () => { L.walkTo = 260; }}, {until: () => !L.walkTo},
+    {say:1, who:'narr', bn:'দরজার ওপাশে… ঝিকমিক আর গুনগুন করা এক গবেষণাগার।', en:'Beyond the door… a laboratory, crackling and humming.', auto: 3.2},
     {say:1, who:'mishti', bn:'(ফিসফিস) পুপু… তারগুলো নিজে নিজেই ফুলকি ছড়াচ্ছে!', en:'(whispering) Pupu… the wires are sparking all by themselves!', mood: 'scared'},
-    {say:1, who:'pupu', bn:'মেঝেতেও! ছোট্ট ছোট্ট ফুলকি তারের ওপর দৌড়াচ্ছে!', en:'On the floor too! Little sparks running along the cables!', mood: 'surprised'},
-    {say:1, who:'mishti', bn:'স্যার বলেছিলেন, খোলা তারে হাত না দিতে। মনে আছে?', en:'Sir said not to touch any loose wires. Remember?'},
-    {say:1, who:'pupu', bn:'ওই যে… ওই তাকের ওপর কী যেন জ্বলছে!', en:'Look… something\'s glowing up on that shelf!', mood: 'surprised'},
-    {say:1, who:'mishti', bn:'চশমাটার মতো আলো! চলো, দেখি!', en:'Glowing like the glasses! Let\'s go and see!', mood: 'happy'},
+    {say:1, who:'pupu', bn:'দাঁড়াও… এই জায়গাটা আমি চিনি! এটা প্রফেসর কালো-বিজলির ল্যাব! থান্ডার বয়ের সেই ভিলেন!', en:'Wait… I know this place! It\'s Professor Kalo-Bijli\'s lab, the villain from Thunder Boy!', mood: 'surprised'},
+    {say:1, who:'mishti', bn:'তোমার কার্টুনের ভিলেন? সত্যি?', en:'The villain from your cartoon? Really?', mood: 'surprised'},
+    {say:1, who:'pupu', bn:'প্রতি পর্বে ও থান্ডার বয়ের বিজলি চুরি করতে চায়। কতদিন ভেবেছি, ওকে একটা উচিত শিক্ষা দেব!', en:'Every episode he tries to steal Thunder Boy\'s lightning. I\'ve always wanted to teach him a lesson!', mood: 'grin'},
+    {do: () => { tone(220, 0.3, 'square', 0.03, 440); }},
+    {say:1, who:'kalo', bn:'হা হা হা হা! কে ঢুকেছে আমার গবেষণাগারে?', en:'Ha ha ha haa! Who dares to walk into MY laboratory?', mood: 'laugh'},
+    {say:1, who:'pupu', bn:'আমি, পুপু! আর মিষ্টি!', en:'Me, Pupu! And Mishti!'},
+    {say:1, who:'kalo', bn:'এক পুঁচকে ছেলে আর একটা বেড়াল? আমার বিজলি-পোকারা তোমাদের তাড়িয়ে দেবে! আর আমার জ্বলজ্বলে জিনিসে একদম হাত দেবে না!', en:'A little boy and a cat? My spark-bugs will chase you out! And keep your hands off my glowing treasures!', mood: 'angry'},
+    {say:1, who:'mishti', bn:'জ্বলজ্বলে জিনিস? …চশমাটার মতো?', en:'Glowing treasures? …like the glasses?'},
+    {say:1, who:'pupu', bn:'তাহলে আমরাই আগে খুঁজে নেব! ওই দেখো, তাকের ওপর কী যেন জ্বলছে!', en:'Then we\'ll find them first! Look, something\'s glowing up on that shelf!', mood: 'grin'},
   ], () => { G.state = 'aplay'; G.goalT = 0; });
 }
 function labPlace(chk) {
+  if (G.ver && G.ver.lab) G.ver.lab.arrive = 1;
   const cx = LAB_CHECKS[chk || 0];
   Object.assign(P, {x: cx, y: VF, surf: SURF[0], ground: true, face: 1, vx: 0, vy: 0, crouchOn: false, sneak: false, lie: 0, hidden: null, pickT: 0, anim: 0});
   G.mx = cx - 50; G.my = VF; G.mwalk = false; G.camX = Math.max(-200, cx - 420);
@@ -5981,6 +6001,8 @@ function labLow(z, cable) {
 function updateLab(dt) {
   const V = G.ver, L = V.lab; if (!L) return;
   L.zapT -= dt; L.crackT -= dt;
+  if (L.arrive > 0 && L.arrive < 1) L.arrive = Math.min(1, L.arrive + dt * 1.2);
+  { const kt = G.dialog && G.dialog.who === 'kalo'; if (kt) { L.kmood = (G.dialog.src && G.dialog.src.mood) || 'smug'; L.khold = 0.9; } else L.khold -= dt; const want = kt || L.khold > 0 ? 1 : 0; L.kshow += (want - L.kshow) * Math.min(1, dt * 6); if (L.kshow < 0.02 && !want) L.kshow = 0; }
   if (L.entry > 0 && L.entry < 1) L.entry = Math.min(1, L.entry + dt * 1.4);
   if (L.solved) { L.lights = Math.min(1, L.lights + dt * 0.8); L.door = Math.min(1, L.door + dt * 0.6); }
   for (const b of L.bugs) { if (L.solved) { b.pop = Math.min(1, b.pop + dt * 2.5); continue; } b.x += b.dir * 95 * dt; if (b.x > b.b) { b.x = b.b; b.dir = -1; } if (b.x < b.a) { b.x = b.a; b.dir = 1; } b.anim += dt * 14; }
@@ -6017,12 +6039,15 @@ function labUse() {
 }
 const LAB_PICK_LINES = [
   [{say:1, who:'pupu', bn:'একটা ব্যাটারি… আর চশমাটার মতো জ্বলছে!', en:'A battery… and it\'s glowing, just like the glasses!', mood: 'surprised'},
-   {say:1, who:'mishti', bn:'ব্যাটারি এখানে কী করছে? রেখে দাও, কাজে লাগতে পারে!', en:'What\'s a battery doing up here? Keep it, it might be useful!'}],
+   {say:1, who:'mishti', bn:'ব্যাটারি এখানে কী করছে? রেখে দাও, কাজে লাগতে পারে!', en:'What\'s a battery doing up here? Keep it, it might be useful!'},
+   {say:1, who:'kalo', bn:'আমার ব্যাটারি! বিজলি-পোকারা, ধরো ওকে!', en:'My battery! Spark-bugs, get him!', mood: 'angry'}],
   [{say:1, who:'pupu', bn:'একটা ছোট্ট গোল নব। এটাও জ্বলছে!', en:'A little round knob. This one\'s glowing too!', mood: 'surprised'},
    {say:1, who:'mishti', bn:'আরেকটা! আরও আছে নাকি?', en:'Another one! Are there more?', mood: 'happy'}],
   [{say:1, who:'pupu', bn:'একটা সরু ধাতুর কাঠি… টানলে লম্বা হয়!', en:'A thin metal rod… it slides out longer!', mood: 'grin'},
+   {say:1, who:'kalo', bn:'এই! ওটা রাখো! ওগুলো সব আমার!', en:'Hey! Put that down! Those are all MINE!', mood: 'angry'},
+   {say:1, who:'pupu', bn:'আপনার না, প্রফেসর!', en:'They\'re not yours, Professor!', mood: 'grin'},
    {say:1, who:'mishti', bn:'তিনটে জ্বলজ্বলে জিনিস… কিন্তু এগুলো কীসের?', en:'Three glowing things… but what are they all for?'},
-   {say:1, who:'pupu', bn:'জানি না। আগে ওই দরজাটা খুলতে হবে, বিদ্যুৎ বোর্ডটা দিয়ে।', en:'I don\'t know. First let\'s open that door, with the power board.'}],
+   {say:1, who:'pupu', bn:'জানি না। আগে ওই দরজাটা খুলতে হবে, ওর বিদ্যুতের বোর্ড দিয়ে।', en:'I don\'t know. First let\'s open that door, with his power board.'}],
 ];
 function labPick(i) {
   const L = G.ver.lab; G.state = 'acut'; P.vx = 0; P.pickT = 0.55;
@@ -6031,11 +6056,12 @@ function labPick(i) {
 function labBoard() {
   const L = G.ver.lab; G.state = 'acut'; P.vx = 0; P.face = 1;
   play([
-    {say:1, who:'pupu', bn:'বিদ্যুতের বোর্ড! তারগুলো ঠিকঠাক জুড়লে বাতিটা জ্বলবে।', en:'The power board! If I join the wires up right, the bulb should light.'},
+    {say:1, who:'pupu', bn:'ওর বিদ্যুতের বোর্ড! তারগুলো বাতির দিকে জুড়ে দিলে ওর যন্ত্রগুলো আর বিদ্যুৎ পাবে না!', en:'His power board! If I join the wires to the bulb instead, his machines won\'t get any power!', mood: 'grin'},
     {say:1, who:'mishti', bn:'বাতি জ্বললে হয়তো দরজাটাও খুলবে!', en:'And when the bulb lights, maybe the door will open!', mood: 'happy'},
     {do: () => { L.board = makeWirePuzzle(); }}, {until: () => L.board.done},
     {wait: 0.9}, {do: () => { L.board = null; L.solved = true; tone(523, 0.2, 'triangle', 0.05); tone(659, 0.2, 'triangle', 0.05, 0, 0.15); tone(784, 0.4, 'triangle', 0.05, 0, 0.3); tone(240, 1.2, 'sine', 0.04, 160, 0.4); }},
-    {wait: 1.4},
+    {wait: 1.2},
+    {say:1, who:'kalo', bn:'না না না! আমার বিদ্যুৎ! কী করলে তুমি?!', en:'No, no, NO! My power! What have you done?!', mood: 'shock'},
     {say:1, who:'mishti', bn:'আলো জ্বলেছে! ফুলকিগুলোও থেমে গেছে!', en:'The lights are on! And the sparks have stopped!', mood: 'happy'},
     {say:1, who:'pupu', bn:'দরজাটা খুলে গেছে! আর ভেতরে… কিছু একটা জ্বলছে!', en:'The door\'s open! And inside… something\'s glowing!', mood: 'grin'},
   ], () => { G.state = 'aplay'; G.goalT = 0; });
@@ -6048,7 +6074,13 @@ function labRadio() {
     {do: () => { L.fly = {t: 0}; }}, {wait: 2.4},
     {say:1, who:'pupu', bn:'লেগে গেছে! এটা… এটা তো দাদুর রেডিও!', en:'They fit! This is… this is Dadu\'s radio!', mood: 'grin'},
     {say:1, who:'mishti', bn:'আলো ছড়াচ্ছে… ঠিক পাথর আর চশমাটার মতো!', en:'It\'s glowing… just like the stone and the glasses!', mood: 'surprised'},
-    {do: () => { P.pickT = 0.55; }}, {wait: 0.35}, {do: () => { L.radioTaken = true; }}, {wait: 0.8},
+    {say:1, who:'kalo', bn:'ওই রেডিওর আলোতেই আমার পুরো ল্যাব চলে! ফেরত দাও!', en:'That radio\'s glow powers my whole lab! Give it back!', mood: 'angry'},
+    {say:1, who:'pupu', bn:'এটা আপনার না। এটা আমার দাদুর!', en:'It\'s not yours. It\'s my Dadu\'s!', mood: 'angry'},
+    {do: () => { P.pickT = 0.55; }}, {wait: 0.35}, {do: () => { L.radioTaken = true; L.kmood = 'zapped'; L.khold = 3; G.flash = 0.5; G.shake = 0.3; tone(1800, 0.3, 'square', 0.05, 200); tone(90, 0.5, 'sawtooth', 0.05, 50, 0.1); }}, {wait: 0.9},
+    {say:1, who:'kalo', bn:'ঝিঁইইইৎ! আউউউ! আমার নিজের বিজলি…!', en:'Bzzzzzt! Owww! My own lightning…!', mood: 'zapped'},
+    {say:1, who:'pupu', bn:'এটাই আপনার উচিত শিক্ষা, প্রফেসর!', en:'That\'s your lesson, Professor!', mood: 'grin'},
+    {say:1, who:'kalo', bn:'এর শোধ আমি নেব, পুপু… নেবই!', en:'I\'ll get you for this, Pupu… I will!', mood: 'zapped'},
+    {wait: 0.8},
     // Dadu's memory 3: the radio — an evening on the verandah, fixing it together
     {do: () => { sfx.memory(); G.fadeTarget = 1; G.fadeSpeed = 1.2; }}, {wait: 1},
     {do: () => { G.fb = {kind: 'radio', t: 0}; G.fadeTarget = 0; G.fadeSpeed = 1; }}, {wait: 1.2},
@@ -6341,6 +6373,7 @@ function drawLabEnd() {
 }
 function drawLabHUD() {
   const L = G.ver.lab; if (!L || G.fb) return;
+  drawKaloScreen();
   if (L.board) return drawWirePuzzle();
   if (L.solved) return;
   panel(10, 8, 150, 30, 'rgba(243,230,200,.92)', 2); text('FOUND', 21, 28, 10, INK, 700);
@@ -6381,7 +6414,7 @@ function labPosters() {
   // a safety sign and a plant-cell chart
   { const px = 2700, py = VF - 470; box(px, py, 150, 64, '#E3A92B', 3, 2.4); text(L2('সাবধান!', 'CAUTION!'), px + 75, py + 26, 16, INK, 700, 'center'); text(L2('খোলা তারে হাত দিও না', 'Don\'t touch loose wires'), px + 75, py + 48, 11, INK, 700, 'center');
     ctx.beginPath(); ctx.moveTo(px + 18, py + 44); ctx.lineTo(px + 26, py + 30); ctx.lineTo(px + 22, py + 30); ctx.lineTo(px + 28, py + 18); ctx.stroke(); }
-  { const px = 560, py = VF - 520; box(px, py, 150, 120, '#E8E2D0', 2, 2); text(L2('উদ্ভিদ কোষ', 'PLANT CELL'), px + 75, py + 18, 11, INK, 700, 'center'); ctx.beginPath(); ctx.ellipse(px + 75, py + 68, 56, 36, 0, 0, 7); fs('#BEE0A8', 2); circ(px + 92, py + 62, 12, '#A87AC8', 1.4); for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.ellipse(px + 50 + k * 14, py + 82 - (k % 2) * 16, 7, 4, 0.4, 0, 7); fs('#5AAA4A', 1); } }
+  labPostersVillain();
 }
 function labBench(b) {   // a lab bench: a black top with a lit edge, a wooden cabinet with drawers; a sink and tap, or a microscope, or a globe
   const top = VF - b.h, w = b.x1 - b.x0;
@@ -6476,10 +6509,11 @@ function labBoardWall() {   // the power board on the wall, a big bulb on top
 }
 function labDoors() {
   const L = G.ver.lab;
-  // the way in on the left (ajar once they are in)
-  box(30, VF - 300, 150, 300, '#2A2420', 2, 2.4); ctx.fillStyle = '#0C0E14'; ctx.fillRect(40, VF - 290, 130, 290);
-  { const o = Math.min(1, L.entry || 0) * 0.75; ctx.save(); ctx.translate(40, 0); ctx.scale(1 - o, 1); box(0, VF - 290, 130, 290, '#5A4232', 2, 2); box(14, VF - 270, 102, 110, '#664C3A', 2, 1.4); box(14, VF - 140, 102, 120, '#664C3A', 2, 1.4); ctx.restore(); circ(40 + 112 * (1 - o), VF - 150, 5, '#C8B080', 1.4); }
-  box(56, VF - 340, 100, 26, '#2E6A3A', 3, 2); text(L2('বিজ্ঞানাগার', 'SCIENCE LAB'), 106, VF - 322, 12, CREAM, 700, 'center');
+  // the magic door they came in by, and his plaque
+  drawPortal(130, {open: 1});
+  box(20, VF - 360, 220, 40, '#3A2A5A', 4, 2.4); box(26, VF - 354, 208, 28, '#4A3470', 3, 1.2);
+  ctx.beginPath(); ctx.moveTo(44, VF - 352); ctx.lineTo(36, VF - 338); ctx.lineTo(42, VF - 338); ctx.lineTo(37, VF - 326); ctx.lineTo(50, VF - 342); ctx.lineTo(44, VF - 342); ctx.lineTo(49, VF - 352); ctx.closePath(); fs('#FFD23A', 1.2);
+  text(L2('কালো-বিজলির গবেষণাগার', 'KALO-BIJLI LABORATORY'), 136, VF - 334, 12, '#FFD23A', 700, 'center');
   // the partition and the prep-room door on the right (it slides open into the wall when the power comes back)
   const dx = LAB_DOOR_X;
   { const k = L.lights, g = ctx.createLinearGradient(0, VF - 640, 0, VF); g.addColorStop(0, 'rgb(' + Math.round(22 + 40 * k) + ',' + Math.round(20 + 30 * k) + ',' + Math.round(18 + 20 * k) + ')'); g.addColorStop(1, 'rgb(' + Math.round(30 + 70 * k) + ',' + Math.round(26 + 52 * k) + ',' + Math.round(22 + 34 * k) + ')');
@@ -6544,12 +6578,126 @@ function drawLabFront() {
   for (let x = Math.floor(v.L / 900) * 900 + 300; x < v.R + 200; x += 900) for (let k = 0; k < 5; k++) { ctx.save(); ctx.translate(x + k * 24 - 50, VF + 150); ctx.rotate(-1.0 + k * 0.45); ctx.beginPath(); ctx.ellipse(0, -60, 16, 60, 0, 0, 7); ctx.fillStyle = k % 2 ? '#081210' : '#0C1A16'; ctx.fill(); ctx.restore(); }   // a potted fern in front of us
 }
 
+// ---- (v259) the magic sci-fi door: a riveted steel arch with cyan light strips, a swirl of blue energy, crackling sparks ----
+function drawPortal(x, o) {
+  const op = Math.min(1, o.open === undefined ? 1 : o.open), e = op * op * (3 - 2 * op); if (e <= 0) return;
+  const w = 150, h = 262, y0 = VF - h, t = G.t;
+  ctx.save(); ctx.translate(x, VF); ctx.scale(0.2 + 0.8 * e, 0.5 + 0.5 * e); ctx.translate(-x, -VF);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  { const g = ctx.createRadialGradient(x, VF - 120, 10, x, VF - 120, 260); g.addColorStop(0, 'rgba(120,210,255,' + (0.35 * e) + ')'); g.addColorStop(1, 'rgba(120,210,255,0)'); ctx.fillStyle = g; ctx.fillRect(x - 260, VF - 380, 520, 420); }
+  { ctx.beginPath(); ctx.ellipse(x, VF + 4, 130, 16, 0, 0, 7); ctx.fillStyle = 'rgba(120,220,255,.35)'; ctx.fill(); }
+  ctx.restore();
+  const arch = (inset) => { const r = w / 2 - inset; ctx.beginPath(); ctx.moveTo(x - r, VF); ctx.lineTo(x - r, y0 + w / 2); ctx.arc(x, y0 + w / 2, r, Math.PI, 0); ctx.lineTo(x + r, VF); ctx.closePath(); };
+  // the swirl inside
+  ctx.save(); arch(16); ctx.clip();
+  { const g = ctx.createRadialGradient(x, VF - 120, 6, x, VF - 120, 160); g.addColorStop(0, '#F2FCFF'); g.addColorStop(0.25, '#8FE2FF'); g.addColorStop(0.6, '#2A7AD8'); g.addColorStop(1, '#0A1E5A'); ctx.fillStyle = g; ctx.fillRect(x - w / 2, y0, w, h); }
+  ctx.globalCompositeOperation = 'lighter';
+  for (let k = 0; k < 7; k++) { ctx.save(); ctx.translate(x, VF - 120); ctx.rotate(t * (1.2 + k * 0.15) + k * 0.9); ctx.beginPath(); ctx.ellipse(0, 0, 18 + k * 13, 9 + k * 9, 0, 0, 5.2); ctx.strokeStyle = 'rgba(190,240,255,' + (0.5 - k * 0.05) + ')'; ctx.lineWidth = 3; ctx.stroke(); ctx.restore(); }
+  for (let k = 0; k < 14; k++) { const a = t * 2 + k * 0.45, r = (k * 37 + t * 60) % 110; circ(x + Math.cos(a) * r, VF - 120 + Math.sin(a) * r * 0.9, 1.8, 'rgba(230,250,255,.9)', 0); }
+  ctx.restore();
+  // the frame: thick riveted steel, a cyan light strip, a little plate at the top
+  arch(0); ctx.lineWidth = 0; arch(8); ctx.strokeStyle = '#3A4250'; ctx.lineWidth = 18; ctx.stroke(); ctx.strokeStyle = INK; ctx.lineWidth = 2; arch(-1); ctx.stroke(); arch(17); ctx.stroke();
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; arch(8); ctx.strokeStyle = 'rgba(110,230,255,' + (0.55 + 0.35 * Math.sin(t * 6)) + ')'; ctx.lineWidth = 3; ctx.stroke(); ctx.restore();
+  for (let k = 0; k <= 8; k++) { const a = Math.PI + k * Math.PI / 8; circ(x + Math.cos(a) * (w / 2 - 8), y0 + w / 2 + Math.sin(a) * (w / 2 - 8), 2.4, '#8A94A4', 1); }
+  for (const sx of [-1, 1]) for (let yy = y0 + w / 2 + 20; yy < VF - 10; yy += 34) circ(x + sx * (w / 2 - 8), yy, 2.4, '#8A94A4', 1);
+  box(x - 14, y0 - 8, 28, 14, '#5A6474', 3, 1.6); circ(x, y0 - 1, 3.4, '#9AF0FF', 0);
+  box(x - w / 2 - 10, VF - 10, 30, 10, '#2A303A', 2, 1.6); box(x + w / 2 - 20, VF - 10, 30, 10, '#2A303A', 2, 1.6);
+  // crackling sparks round the frame
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (let s = 0; s < 4; s++) { if (Math.sin(t * 23 + s * 2.1) < 0.1) continue; const a = Math.PI + (hash2(Math.floor(t * 12), s) * Math.PI), sx = x + Math.cos(a) * w / 2, sy = y0 + w / 2 + Math.sin(a) * w / 2;
+    ctx.beginPath(); ctx.moveTo(sx, sy); let px = sx, py = sy; for (let j = 0; j < 4; j++) { px += Math.cos(a) * 9 + (hash2(Math.floor(t * 18) + s, j) - 0.5) * 14; py += Math.sin(a) * 9 + (hash2(j, Math.floor(t * 18) + s) - 0.5) * 14; ctx.lineTo(px, py); } ctx.strokeStyle = 'rgba(210,245,255,.95)'; ctx.lineWidth = 1.8; ctx.stroke(); }
+  ctx.restore();
+  ctx.restore();
+}
+
+// ---- (v259) Professor Kalo-Bijli (প্রফেসর কালো-বিজলি), the villain of Pupu's favourite cartoon, Thunder Boy ----
+// a long face with a sharp nose and a pointed goatee, a thin curled moustache, wild black hair with white streaks standing up like
+// lightning, brass goggles pushed up on his forehead, a black high-collared lab coat with purple lining and a yellow lightning badge.
+// He shows his mood when he talks: smug, laugh, angry, shock, zapped (eyes crossed out, hair smoking, soot on his face).
+function drawKaloBust(x, y, s, mood, talk) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s); const ls0 = LS; LS = 1 / s;
+  const t = G.t, SK = '#C8996E', zap = mood === 'zapped', mo = talk ? Math.abs(Math.sin(t * 13)) : 0;
+  // the coat and the high collar
+  ctx.beginPath(); ctx.moveTo(-74, 70); ctx.quadraticCurveTo(-70, 18, -30, 8); ctx.lineTo(30, 8); ctx.quadraticCurveTo(72, 18, 76, 70); ctx.closePath(); fs('#1E1A2A', 2.4);
+  ctx.beginPath(); ctx.moveTo(-26, 8); ctx.lineTo(-40, -22); ctx.lineTo(-10, 2); ctx.closePath(); fs('#6A3A9A', 2); ctx.beginPath(); ctx.moveTo(26, 8); ctx.lineTo(38, -24); ctx.lineTo(10, 2); ctx.closePath(); fs('#6A3A9A', 2);
+  ctx.beginPath(); ctx.moveTo(-8, 8); ctx.lineTo(0, 48); ctx.lineTo(8, 8); ctx.closePath(); fs('#EDE6F0', 1.6);
+  ctx.beginPath(); ctx.moveTo(30, 26); ctx.lineTo(22, 42); ctx.lineTo(29, 42); ctx.lineTo(24, 56); ctx.lineTo(38, 36); ctx.lineTo(31, 36); ctx.lineTo(36, 26); ctx.closePath(); fs('#FFD23A', 1.6);   // the lightning badge
+  // neck and head (in profile, facing left)
+  box(-10, -22, 20, 34, SK, 3, 2);
+  ctx.beginPath(); ctx.moveTo(-26, -88); ctx.quadraticCurveTo(14, -104, 30, -70); ctx.quadraticCurveTo(34, -40, 16, -22); ctx.lineTo(-6, -14); ctx.lineTo(-16, -26); ctx.quadraticCurveTo(-30, -40, -28, -58); ctx.closePath(); fs(SK, 2.4);
+  ctx.beginPath(); ctx.moveTo(-26, -66); ctx.lineTo(-50, -52); ctx.lineTo(-28, -48); ctx.closePath(); fs(SK, 2.2);   // the long sharp nose
+  ctx.beginPath(); ctx.ellipse(20, -60, 6, 9, 0, 0, 7); fs('#B8865C', 1.8);   // ear
+  ctx.beginPath(); ctx.moveTo(-16, -26); ctx.lineTo(-24, -6); ctx.lineTo(-4, -20); ctx.closePath(); fs('#1A1420', 1.6);   // pointed goatee
+  if (zap) { ctx.fillStyle = 'rgba(40,30,30,.45)'; for (const [sx, sy, r] of [[-6, -74, 8], [10, -48, 7], [-20, -40, 5]]) { ctx.beginPath(); ctx.arc(sx, sy, r, 0, 7); ctx.fill(); } }
+  // eye and brow
+  const ex = -12, ey = -68;
+  if (zap) { line(ex - 6, ey - 5, ex + 6, ey + 5, INK, 2.4); line(ex - 6, ey + 5, ex + 6, ey - 5, INK, 2.4); }
+  else { const wide = mood === 'shock'; ctx.beginPath(); ctx.ellipse(ex, ey, 9, wide ? 7 : 4.6, -0.12, 0, 7); fs('#FFFFFF', 1.8);
+    circ(ex - 2, ey, wide ? 3.6 : 3.2, mood === 'angry' || mood === 'laugh' ? '#FFC21A' : '#3A2A1A', 0); circ(ex - 2.6, ey, 1.6, INK, 0);
+    line(ex - 2, ey + 7, ex + 8, ey + 6, 'rgba(80,50,60,.5)', 1.6); }   // tired dark circle under the eye
+  { const by = mood === 'shock' ? -84 : -78, slope = mood === 'angry' || mood === 'laugh' ? 7 : mood === 'shock' ? -3 : 3; ctx.beginPath(); ctx.moveTo(ex - 13, by + slope); ctx.quadraticCurveTo(ex - 2, by - 4, ex + 12, by - 2); ctx.strokeStyle = INK; ctx.lineWidth = 4.4; ctx.lineCap = 'round'; ctx.stroke(); }
+  // the mouth
+  const mx = -24, my = -38;
+  if (mood === 'laugh') { ctx.beginPath(); ctx.moveTo(mx - 2, my - 3); ctx.quadraticCurveTo(mx + 8, my + 12 + mo * 3, mx + 16, my - 2); ctx.closePath(); fs('#4A1A1A', 1.8); box(mx + 1, my - 3, 12, 4, '#FFFFFF', 1, 0); }
+  else if (mood === 'shock' || zap) { ctx.beginPath(); ctx.ellipse(mx + 6, my + 2, 5, 6 + mo * 2, 0, 0, 7); fs('#4A1A1A', 1.8); }
+  else if (mood === 'angry') { box(mx - 1, my - 2, 16, 6 + mo * 4, '#4A1A1A', 2, 1.8); line(mx, my + 1, mx + 14, my + 1, '#FFFFFF', 1.6); }
+  else if (talk) { ctx.beginPath(); ctx.ellipse(mx + 6, my, 7, 2 + mo * 4, 0, 0, 7); fs('#4A1A1A', 1.6); }
+  else { ctx.beginPath(); ctx.moveTo(mx - 2, my); ctx.quadraticCurveTo(mx + 6, my + 3, mx + 14, my - 4); ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.stroke(); }   // a smug little smirk
+  // the curled moustache
+  ctx.beginPath(); ctx.moveTo(-26, -46); ctx.quadraticCurveTo(-36, -40, -44, -46); ctx.quadraticCurveTo(-48, -52, -42, -54); ctx.strokeStyle = '#1A1420'; ctx.lineWidth = 3.2; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-24, -46); ctx.quadraticCurveTo(-14, -40, -8, -44); ctx.quadraticCurveTo(-4, -50, -10, -52); ctx.stroke();
+  // goggles pushed up on the forehead
+  line(-26, -88, 28, -80, '#5A3A22', 5);
+  circ(-14, -92, 9, '#B8862A', 2); circ(-14, -92, 5.6, '#6AE0FF', 1.2); circ(4, -92, 8, '#B8862A', 2); circ(4, -92, 4.8, '#6AE0FF', 1.2);
+  // wild hair, standing up like lightning, with white streaks
+  { const fz = zap ? 1.35 : 1, sp = [[-24, -96], [-30, -126], [-12, -104], [-6, -140], [6, -106], [20, -132], [22, -100], [42, -114], [32, -84], [46, -74], [30, -62]];
+    ctx.beginPath(); ctx.moveTo(-26, -90); for (const [hx, hy] of sp) ctx.lineTo(hx * (zap ? 1.12 : 1) + Math.sin(t * 9 + hx) * (zap ? 2 : 0.6), -96 + (hy + 96) * fz); ctx.lineTo(24, -70); ctx.quadraticCurveTo(10, -98, -26, -90); ctx.closePath(); fs('#1A1420', 2.4);
+    for (const [ax, ay, bx2, by2] of [[-8, -102, -4, -128], [12, -104, 16, -124], [26, -92, 38, -106]]) line(ax, -96 + (ay + 96) * fz, bx2, -96 + (by2 + 96) * fz, '#E8E8F2', 2.2); }
+  // little sparks crackle in his hair; when zapped, smoke curls up
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (let k = 0; k < 2; k++) if (Math.sin(t * 17 + k * 3) > 0.3) { const sx = -10 + k * 30, sy = -128 + k * 14; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx + 5, sy - 6); ctx.lineTo(sx + 1, sy - 9); ctx.lineTo(sx + 7, sy - 16); ctx.strokeStyle = 'rgba(160,230,255,.95)'; ctx.lineWidth = 1.6; ctx.stroke(); }
+  ctx.restore();
+  if (zap) for (let k = 0; k < 4; k++) { const u = (t * 0.5 + k * 0.25) % 1; ctx.save(); ctx.globalAlpha = (1 - u) * 0.6; circ(-4 + k * 12 + Math.sin(u * 8 + k) * 6, -130 - u * 60, 7 + u * 10, '#9A9AA4', 0); ctx.restore(); }
+  LS = ls0; ctx.restore();
+}
+// his live video screen, top right, whenever he talks (static as it switches on and off; sparks when he gets zapped)
+function drawKaloScreen() {
+  const L = G.ver && G.ver.lab; if (!L || !(L.kshow > 0)) return;
+  const a = L.kshow, x0 = W - 266, y0 = 60, w = 240, h = 176, sx = x0 + 12, sy = y0 + 12, sw = w - 24, sh = h - 44;
+  ctx.save(); ctx.globalAlpha = Math.min(1, a * 1.4);
+  ctx.fillStyle = 'rgba(0,0,0,.3)'; rr(x0 + 5, y0 + 6, w, h, 12); ctx.fill();
+  line(x0 + 40, y0, x0 + 20, y0 - 26, '#2A2E3A', 3); line(x0 + w - 40, y0, x0 + w - 16, y0 - 22, '#2A2E3A', 3); circ(x0 + 20, y0 - 27, 3, SINDOOR, 1);
+  box(x0, y0, w, h, '#2A2E3A', 12, 2.6); box(sx, sy, sw, sh, '#0E2A3A', 6, 1.8);
+  ctx.save(); rr(sx, sy, sw, sh, 6); ctx.clip();
+  { const g = ctx.createRadialGradient(sx + sw / 2, sy + sh / 2, 10, sx + sw / 2, sy + sh / 2, 160); g.addColorStop(0, '#2A6A7A'); g.addColorStop(1, '#0A1E2A'); ctx.fillStyle = g; ctx.fillRect(sx, sy, sw, sh); }
+  const talk = !!(G.dialog && G.dialog.who === 'kalo');
+  drawKaloBust(sx + sw / 2 + 6, sy + sh + 10, 0.92, L.kmood || 'smug', talk);
+  for (let yy = sy; yy < sy + sh; yy += 3) { ctx.fillStyle = 'rgba(0,0,0,.14)'; ctx.fillRect(sx, yy, sw, 1.2); }
+  if (a < 1 || L.kmood === 'zapped') { for (let k = 0; k < 18; k++) { ctx.fillStyle = 'rgba(220,240,255,' + (0.15 + Math.random() * 0.25) * (L.kmood === 'zapped' ? 0.8 : 1 - a) + ')'; ctx.fillRect(sx + Math.random() * sw, sy + Math.random() * sh, 10 + Math.random() * 40, 2); } }
+  if (L.kmood === 'zapped' && Math.sin(G.t * 21) > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.beginPath(); let px = sx + 20, py = sy + 10; ctx.moveTo(px, py); for (let j = 0; j < 6; j++) { px += 30; py += (Math.random() - 0.5) * 40 + 8; ctx.lineTo(px, py); } ctx.strokeStyle = 'rgba(220,245,255,.9)'; ctx.lineWidth = 2; ctx.stroke(); }
+  ctx.restore();
+  circ(x0 + 22, y0 + h - 16, 4, Math.sin(G.t * 5) > 0 ? '#E83A2A' : '#6A1A12', 0); text('LIVE', x0 + 32, y0 + h - 11, 11, '#E8C8C0', 700);
+  text(L2('কালো-বিজলি', 'KALO-BIJLI'), x0 + w - 16, y0 + h - 11, 11, '#FFD23A', 700, 'right');
+  ctx.restore();
+}
+function labPostersVillain() {   // in his lab: his blueprint, and a Thunder Boy poster he has crossed out
+  { const px = 560, py = VF - 530; box(px, py, 170, 130, '#1E4A8A', 2, 2); ctx.strokeStyle = 'rgba(220,235,255,.25)'; ctx.lineWidth = 1; for (let k = 1; k < 10; k++) { ctx.beginPath(); ctx.moveTo(px + k * 17, py); ctx.lineTo(px + k * 17, py + 130); ctx.stroke(); } for (let k = 1; k < 8; k++) { ctx.beginPath(); ctx.moveTo(px, py + k * 16); ctx.lineTo(px + 170, py + k * 16); ctx.stroke(); }
+    text(L2('বিজলি-চোর যন্ত্র', 'LIGHTNING STEALER'), px + 85, py + 18, 11, '#E8F0FF', 700, 'center');
+    ctx.strokeStyle = '#E8F0FF'; ctx.lineWidth = 1.6; ctx.strokeRect(px + 50, py + 46, 70, 50); ctx.beginPath(); ctx.moveTo(px + 85, py + 46); ctx.lineTo(px + 85, py + 30); ctx.moveTo(px + 70, py + 30); ctx.lineTo(px + 100, py + 30); ctx.stroke(); ctx.beginPath(); ctx.arc(px + 85, py + 71, 14, 0, 7); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(px + 30, py + 106); ctx.lineTo(px + 140, py + 106); ctx.stroke(); text('K-B', px + 150, py + 122, 10, '#FFD23A', 700, 'right'); }
+  { const px = 2960, py = VF - 540; box(px, py, 120, 160, '#F0D060', 2, 2); box(px + 8, py + 8, 104, 118, '#2C3E8C', 1, 1.4);
+    ctx.save(); ctx.translate(px + 60, py + 70); circ(0, -26, 14, '#E8B888', 1.6); ctx.beginPath(); ctx.moveTo(-20, -8); ctx.lineTo(20, -8); ctx.lineTo(14, 40); ctx.lineTo(-14, 40); ctx.closePath(); fs('#E8402A', 1.6);
+    ctx.beginPath(); ctx.moveTo(4, -4); ctx.lineTo(-6, 14); ctx.lineTo(2, 14); ctx.lineTo(-4, 30); ctx.lineTo(10, 8); ctx.lineTo(2, 8); ctx.lineTo(8, -4); ctx.closePath(); fs('#FFD23A', 1.2); ctx.restore();
+    text('THUNDER BOY', px + 60, py + 146, 11, INK, 700, 'center');
+    line(px + 14, py + 16, px + 106, py + 120, 'rgba(200,30,30,.85)', 6); line(px + 106, py + 16, px + 14, py + 120, 'rgba(200,30,30,.85)', 6); }
+}
+
 function drawVerEnd() {
   const a = Math.min(1, G.endT * 1.2); ctx.fillStyle = 'rgba(5,6,15,' + a + ')'; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = a;
   text('CHAPTER 2 COMPLETE  ·  দ্বিতীয় অধ্যায় শেষ', W / 2, 140, 15, TURMERIC, 600, 'center');
   text('A gift. For trying.', W / 2, 206, 50, CREAM, 400, 'center', dispFont);
   text('Dadu\'s things: 2 of 10  ·  his reading glasses', W / 2, 256, 18, PAPER, 600, 'center');
-  text('Next: Chapter 3 · The Science Lab', W / 2, 340, 18, CREAM, 700, 'center');
+  text('Next: Chapter 3 · Kalo-Bijli\'s Lab', W / 2, 340, 18, CREAM, 700, 'center');
   if (G.endT > 1) { ctx.globalAlpha = 0.6 + Math.sin(G.t * 3) * 0.4; text(isTouch ? 'Tap to continue to Chapter 3' : 'Press Enter to continue to Chapter 3', W / 2, 420, 19, TURMERIC, 700, 'center'); }
   ctx.globalAlpha = 1;
 }

@@ -21,10 +21,14 @@ Pupu and Mishti wake up tiny on the floor of a giant maths classroom, ruled by *
 
 At the chained gate he catches them, and finds Pupu's crumpled homework: the last sum crossed out five times and tried again. The giant shrinks to an ordinary teacher. "For trying… here, this is your gift." It is **Dadu's reading glasses**, and **memory 2** opens: Dadu's room at night, little Pupu stuck on a sum, and Dadu saying "আবার চেষ্টা করো" ("Try again"). The player solves the puzzles with Dadu, a sum step by step, a number pattern and a riddle, different every time.
 
-**The bridge to Chapter 3:** back at the gate, the power goes off (load-shedding): the lamps and every window go dark, only the moon. Then a window of the school block flickers with blue sparks, and something inside glows "just like the glasses". Anko Sir: "That's the science lab! But there's no power…" He gives Pupu the lab key ("don't touch any loose wires"). Jhumpa waits with Sir; Pupu and Mishti go.
+**The bridge to Chapter 3:** back at the gate, a magic sci-fi door crackles out of nowhere, spitting blue sparks. Anko Sir decides he saw nothing and needs some sleep; Jhumpa waits with him; the player walks Pupu into the door, and Mishti follows.
 
-## Chapter 3 · The Science Lab
-The key turns, the door creaks, and the dark lab is humming with no power at all. Little spark-bugs run along the floor cables, the bench burners flare from a small blue flame to a tall hot one, and loose cables hang from the ceiling spitting sparks. Jumping, waiting for the flames, and crouching under the cables and the big table, Pupu finds three glowing things: a battery, a tuning knob and an antenna, without knowing what they are for. On the power board he joins the wires so the power reaches the bulb (a new puzzle every time); the lights come on, the sparks stop, and the prep-room door opens. Inside, an old radio glows on a little table, with an empty battery box, no knob and no antenna. The three things fit: it is **Dadu's pocket radio**, and **memory 3** opens: an evening on Dadu's verandah, the radio "broken", and the two of them fixing it together: what goes in first, then turning the dial slowly through the hiss until a song comes through. "Fix things with care and patience, and even broken things sing again." Back in the lab, the radio still plays: "Mm… it still sings."
+## Chapter 3 · Kalo-Bijli's Lab
+Through the door, Pupu and Mishti step into a crackling, humming laboratory, and Pupu knows it at once: it belongs to **Professor Kalo-Bijli**, the villain of his favourite cartoon *Thunder Boy*, who tries to steal Thunder Boy's lightning in every episode. Pupu has always wanted to teach him a lesson. The professor appears on his live screen, laughing: who dares to enter his laboratory? His spark-bugs will chase them out, and they are not to touch his "glowing treasures".
+
+Jumping his spark-bugs, waiting for the bench burners to drop from a tall hot flame to a small blue one, and crouching under live cables and the big table, Pupu finds three glowing things: a battery, a tuning knob and an antenna ("Those are all MINE!"). He reroutes the professor's power board to a bulb (a new puzzle every time): "No, no, NO! My power!" The lights come on, the sparks stop, and the back door opens on an old glowing radio with an empty battery box, no knob and no antenna. The three things fit: it is **Dadu's pocket radio**. "That radio's glow powers my whole lab! Give it back!" "It's not yours. It's my Dadu's!" As Pupu takes it, the professor is zapped by his own lightning: "That's your lesson, Professor!" "I'll get you for this, Pupu…"
+
+**Memory 3** opens: an evening on Dadu's verandah, the radio "broken", and the two of them fixing it together: what goes in first, then turning the dial slowly through the hiss until a song comes through. "Fix things with care and patience, and even broken things sing again." Back in the lab, the radio still plays: "Mm… it still sings."
 
 ## Dadu's ten things
 
@@ -32,7 +36,7 @@ The key turns, the door creaks, and the dark lab is humming with no power at all
 |---|---|---|---|
 | 1 | The Ghat | a flat skipping stone | skipping stones at sunset ✔ |
 | 2 | Anko Sir's class | his reading glasses | doing sums together: "Try again" ✔ |
-| 3 | Science lab | his old pocket radio | fixing the radio together on the verandah ✔ |
+| 3 | Kalo-Bijli's lab | his old pocket radio | fixing the radio together on the verandah ✔ |
 | 4 | Library | a storybook with his handwriting | bedtime folk tales with all the voices |
 | 5 | Rooftop kite war | his kite spool (নাটাই) | flying kites on the roof |
 | 6 | Paper-boat flood | his big black umbrella | finding Mishti as a tiny wet kitten in the rain |
