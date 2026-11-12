@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.4-demo · 2026-11-13
+- Main menu mentions the Chapter 4 first look.
+- itch.io packages: a browser zip and an offline download zip, with the fonts built in.
+
 ## 1.5.3-demo · 2026-11-13
 - The open storybook's cover is wider on both sides.
 

@@ -481,3 +481,7 @@ The user sent a full design document (saved as `claude/chapter4-library-design.m
 
 ## v282 (user)
 - The open book's cover is wider on both sides (left and right), with a slightly bigger gold star.
+
+## v283
+- Main menu line now reads "Demo: the Prologue, Chapters 1 to 3 and a first look at Chapter 4" (Bangla too).
+- itch.io builds: `PupusWorld_Browser.zip` (index.html at the root) and `PupusWorld_Download.zip` (PupusWorld/Play Pupus World.html + README.txt). Both have the fonts built in as data URLs (Rozha One, Hind Siliguri latin + bengali 400/600/700), so they work offline and inside itch.io frames. Cover 630x500 and five 1920x1080 screenshots made for the page.

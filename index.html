@@ -218,7 +218,7 @@ const TR = {
   "Zap! Cross when the electric gate is off.": "ঝিঁৎ! বিজলি-গেট নিভলে পার হও।", "You fell! Ride the moving platform across.": "পড়ে গেলে! চলন্ত তক্তায় চড়ে পার হও।",
   "lift": "লিফট", "switch": "সুইচ", "open": "খোলো", "put in": "বসাও",
   "Chapter 3 · Kalo-Bijli's Lab": "তৃতীয় অধ্যায় · কালো-বিজলির ল্যাব", "The villain's lab: find the glowing things, light the bulb": "ভিলেনের ল্যাব: জ্বলজ্বলে জিনিস খোঁজো, বাতি জ্বালাও", "go in": "ঢোকো",
-  "Demo version: the Prologue and Chapters 1 to 3": "ডেমো সংস্করণ: প্রস্তাবনা আর ১ থেকে ৩ অধ্যায়",
+  "Demo: the Prologue, Chapters 1 to 3 and a first look at Chapter 4": "ডেমো: প্রস্তাবনা, ১ থেকে ৩ অধ্যায় আর চতুর্থ অধ্যায়ের এক ঝলক",
   "Too hot! Cross when the flame is low and blue.": "খুব গরম! শিখা নীল আর নিচু হলে পার হও।", "Zap! Jump over the little sparks.": "ঝিঁৎ! ছোট্ট ফুলকিগুলো লাফিয়ে পার হও।",
   "Dadu's things 3 of 10: his pocket radio": "দাদুর জিনিস ১০টির ৩টি: তাঁর পকেট রেডিও", "It still sings.": "এখনো গান গায়।", "Dadu's things: 3 of 10  ·  his pocket radio": "দাদুর জিনিস: ১০টির ৩টি  ·  তাঁর পকেট রেডিও",
   "FOUND": "পেয়েছি", "Next: Chapter 3 · Kalo-Bijli's Lab": "এরপর: তৃতীয় অধ্যায় · কালো-বিজলির ল্যাব", "Press Enter to continue to Chapter 3": "তৃতীয় অধ্যায়ে যেতে Enter চাপো", "Tap to continue to Chapter 3": "তৃতীয় অধ্যায়ে যেতে চাপ দাও",
@@ -3298,7 +3298,7 @@ function drawTitle() {
     text('A RONGPAT GAME  ·  রংপট', W / 2, 96, 14, TURMERIC, 600, 'center');
     if (LANG === 'bn') text('পুপুর জগৎ', W / 2, 200, 72, CREAM, 700, 'center'); else text('Pupu\'s World', W / 2, 190, 78, CREAM, 400, 'center', dispFont);
     demoBadge(W / 2 + 248, 118, 0.12, 20);
-    text('Demo version: the Prologue and Chapters 1 to 3', W / 2, 260, 15, 'rgba(243,230,200,.85)', 600, 'center');
+    text('Demo: the Prologue, Chapters 1 to 3 and a first look at Chapter 4', W / 2, 260, 15, 'rgba(243,230,200,.85)', 600, 'center');
     [['▶  Start Game', 'Begin with the Prologue'], ['Select Mission', 'Play any part of the demo'], [L2('ভাষা: বাংলা', 'Language: English'), L2('ইংরেজিতে বদলাতে চাপো', 'Press to switch to বাংলা')]].forEach(([t, sub], i) => {
       const r = rs[i], on = i === sel, b = on ? bob : 0;
       panelV1(r.x, r.y + b, r.w, r.h, on ? TURMERIC : 'rgba(243,230,200,.95)');
