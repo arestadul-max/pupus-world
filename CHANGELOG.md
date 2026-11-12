@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.2-demo · 2026-11-12
+- **TV scene:** Pupu now really stands straight to use the remote (a half-started jump could freeze him in a crouch during cutscenes).
+
 ## 1.2.1-demo · 2026-11-12
 - **Fixed:** Chapter 2 Part 1 could freeze while playing (a key-hint drawing error).
 - **Prologue:** W / ↑ (joystick up on phones) takes Pupu up the stairs, taught with a chip over his head.

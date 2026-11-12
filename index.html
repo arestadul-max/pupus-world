@@ -947,7 +947,7 @@ function arrive() {
 }
 
 // ================= cutscenes =================
-function play(steps, after) { G.cs = {steps, i:0, t:0, after}; G.keyHint = null; G.infoHint = null; }   // a new scene: old button hints go away
+function play(steps, after) { if (typeof P !== 'undefined' && P && P.ground) { P.prep = 0; P.buffer = 0; } G.cs = {steps, i:0, t:0, after}; G.keyHint = null; G.infoHint = null; }   // a new scene: old button hints go away
 function runCS(dt) {
   const cs = G.cs;
   for (let guard = 0; guard < 20; guard++) {
@@ -978,7 +978,7 @@ function startGame() {
   ], () => { G.state = 'play'; G.goalT = 0; });
 }
 function startTV() {
-  G.state = 'cut'; P.vx = 0; P.face = -1; P.hidden = null; MA.say = null; P.sit = null; P.crouchOn = false; P.sneak = false; P.landAmt = 0; P.landT = 0; P.sprint = false;   // he stands up straight to use the remote
+  G.state = 'cut'; P.vx = 0; P.face = -1; P.hidden = null; MA.say = null; P.sit = null; P.crouchOn = false; P.sneak = false; P.landAmt = 0; P.landT = 0; P.sprint = false; P.prep = 0; P.buffer = 0; P.vy = 0;   // he stands up straight (no half-started jump left frozen in a crouch) to use the remote
   P.x = Math.max(P.x, 300);   // stand back from the TV to use the remote
   play([
     {say:1, who:'pupu', bn:'ইয়েস! শুধু পাঁচ মিনিট…', en:'Yes! Just five minutes…'},
@@ -3473,7 +3473,7 @@ function render() {
       // sitting on the banister, tilted with the stairs
       ctx.save(); ctx.translate(P.x, P.y); ctx.rotate(0.588);
       drawPupu(0, 0, 1, {anim: 0, crouch: true, expr: 'grin', blink: false, look: 1}); ctx.restore();
-    } else drawPupu(P.x, P.y, P.face, {...jumpPose(), anim: P.anim, vx: P.vx, run: P.sprint && P.ground, crouch: !G.remote && P.sneak || !!(G.feed && G.state === 'cut' && !G.catFed) || !!(G.feed && G.state === 'cut' && G.feed.eat > 0), expr: G.feed && G.state === 'cut' ? 'happy' : pupuExpr(), blink: P.blink > 0, look: P.look, talk: G.dialog && G.dialog.who === 'pupu', glow: G.thunder > 0, drink: P.drinkT > 0, sitFront: P.sit && P.sit.front ? (P.y - P.sit.y) / SP + 1 : 0, remote: G.remote ? Math.max(0.01, G.remote.up) : 0, pouch: G.feed && G.feed.pour > 0 ? Math.min(1, G.feed.pour / 0.4) * 1.9 : undefined, sit: proSitH() || (P.sit && !P.sit.front ? (P.y - P.sit.y) / SP + 1 : 0)});
+    } else drawPupu(P.x, P.y, P.face, {...(G.remote ? {} : jumpPose()), anim: G.remote ? 0 : P.anim, vx: P.vx, run: P.sprint && P.ground, crouch: !G.remote && P.sneak || !!(G.feed && G.state === 'cut' && !G.catFed) || !!(G.feed && G.state === 'cut' && G.feed.eat > 0), expr: G.feed && G.state === 'cut' ? 'happy' : pupuExpr(), blink: P.blink > 0, look: P.look, talk: G.dialog && G.dialog.who === 'pupu', glow: G.thunder > 0, drink: P.drinkT > 0, sitFront: P.sit && P.sit.front ? (P.y - P.sit.y) / SP + 1 : 0, remote: G.remote ? Math.max(0.01, G.remote.up) : 0, pouch: G.feed && G.feed.pour > 0 ? Math.min(1, G.feed.pour / 0.4) * 1.9 : undefined, sit: proSitH() || (P.sit && !P.sit.front ? (P.y - P.sit.y) / SP + 1 : 0)});
     if (G.feed && G.feed.pour > 0) drawFeedPouch();
     if (G.remote && G.remote.beam >= 0 && G.remote.beam < 0.6) {
       // little signal waves from the remote to the TV
