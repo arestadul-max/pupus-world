@@ -485,3 +485,11 @@ The user sent a full design document (saved as `claude/chapter4-library-design.m
 ## v283
 - Main menu line now reads "Demo: the Prologue, Chapters 1 to 3 and a first look at Chapter 4" (Bangla too).
 - itch.io builds: `PupusWorld_Browser.zip` (index.html at the root) and `PupusWorld_Download.zip` (PupusWorld/Play Pupus World.html + README.txt). Both have the fonts built in as data URLs (Rozha One, Hind Siliguri latin + bengali 400/600/700), so they work offline and inside itch.io frames. Cover 630x500 and five 1920x1080 screenshots made for the page.
+
+## itch.io build (user, Nov 2026)
+- **The development game stays as it is** (Chapter 4 first look, Select Mission with every part). The itch.io version is made from it by `tools/build_itch.py <game html> <out dir>`, which changes only the copy:
+  - no Chapter 4 yet: Chapter 3's card says "This is the end of the demo" and returns to the menu; menu line "Demo version: the Prologue and Chapters 1 to 3";
+  - main menu: **Continue** (only when there is a save, showing the chapter) · **New Game** · **Language**; no Select Mission, no hidden chapter shortcut keys;
+  - **saving** (localStorage `pupusworld.itch.save.v1`): the chapter reached: pro / ch1 / ch2 (Chapter 2's three parts count as one chapter) / ch3; Continue starts that chapter again;
+  - fonts built in (data URLs), a full standalone page: works offline and in itch.io's frame.
+  - Outputs: `browser/index.html` (zip it as PupusWorld_Browser.zip, "played in the browser") and `download/PupusWorld/Play Pupus World.html` + README.txt (zip as PupusWorld_Download.zip).
