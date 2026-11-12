@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.1-demo · 2026-11-12
+- **Fixed:** Chapter 2 Part 1 could freeze while playing (a key-hint drawing error).
+- **Prologue:** W / ↑ (joystick up on phones) takes Pupu up the stairs, taught with a chip over his head.
+- **TV scene:** Pupu stands to use the remote and lowers it, still in hand, when Ma scolds him.
+- **Chapter 1:** the boat goal clears once aboard; a jump chip when the crab appears; the ending drops Pupu and Mishti onto the classroom floor exactly where Chapter 2 begins.
+- **Schoolyard:** no more light beams from Anko Sir's glasses.
+- **Chapter 3:** crates hide Pupu and Mishti properly; trolley push pose; puzzles are no longer spelled out (only indirect hints in Pupu's thoughts); Mishti rides the lift; ladders climbed from behind with a pull-up at the top; no more heads through the ceilings; the radio carried in both hands.
+- **Memory 3:** turn the knob by drawing circles (mouse or finger, no buttons); the memory now takes place at Pupu and Dadu's village house.
+
 ## 1.2.0-demo · 2026-11-12
 - **Chapter 3 rebuilt** as a tall laboratory on four floors in four acts: a security eye, a trolley to push off a loft, a battery-powered lift, a crusher, an electric gate, a moving platform over a pit, a crawl tunnel, a switch and cabinet, an elevator, platforms hanging on chains, a glass tank's compartment, and a console with three slots that powers down the Lightning Collector and opens a secret room.
 - **Ladders** with three climbing styles: side, back and front views (W/S or ↑/↓, ▲▼ on phones). Mishti leaps from floor to floor after Pupu.

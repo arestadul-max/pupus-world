@@ -28,7 +28,7 @@ Through the door, Pupu and Mishti step into a huge laboratory, floor upon floor,
 
 **Ground floor:** hiding behind crates from the eye, jumping a spark-bug, crossing a bench while the burner is low, Pupu climbs to a storage loft, pushes a trolley over the edge, climbs it and grabs a glowing **battery**, which also powers an old lift. **Machine room:** past a crusher and an electric gate, across a pit on a moving platform, through a crawl tunnel and up a machine to a switch that opens a cabinet: the glowing **knob**. **Upper hall:** up front- and side-facing ladders, an elevator and two platforms hanging on chains to the top of a tall glass tank, where a compartment holds the glowing **antenna**. **Control room:** three glowing slots on Kalo-Bijli's console; Pupu puts the right thing in each, and the professor's **Lightning Collector** powers down ("No, no, NO!"). A wall slides open on a secret room: an old radio with an empty battery box, no knob and no antenna. The three things fit: it is **Dadu's pocket radio**. "That radio's glow powered my whole lab! Give it back!" "It's not yours. It's my Dadu's!" The professor is zapped by his own lightning: "That's your lesson, Professor!" "I'll get you for this, Pupu…"
 
-**Memory 3** opens: an evening on Dadu's verandah, the radio "broken", and little Pupu putting it back together with his own hands while Dadu shows him how: the battery pushed in, the knob screwed on, the antenna pulled out long, then the dial turned slowly through the hiss until a song comes through. "Fix things with care and patience, and even broken things sing again." Back in the lab, the radio still plays: "Mm… it still sings."
+**Memory 3** opens: an evening at their village house, on the raised mud verandah (dawa) with Dadu, the radio "broken", and little Pupu putting it back together with his own hands while Dadu shows him how: the battery pushed in, the knob screwed on, the antenna pulled out long, then the dial turned slowly through the hiss until a song comes through. "Fix things with care and patience, and even broken things sing again." Back in the lab, the radio still plays: "Mm… it still sings."
 
 ## Dadu's ten things
 
@@ -36,7 +36,7 @@ Through the door, Pupu and Mishti step into a huge laboratory, floor upon floor,
 |---|---|---|---|
 | 1 | The Ghat | a flat skipping stone | skipping stones at sunset ✔ |
 | 2 | Anko Sir's class | his reading glasses | doing sums together: "Try again" ✔ |
-| 3 | Kalo-Bijli's lab | his old pocket radio | fixing the radio together on the verandah ✔ |
+| 3 | Kalo-Bijli's lab | his old pocket radio | fixing the radio together at the village house ✔ |
 | 4 | Library | a storybook with his handwriting | bedtime folk tales with all the voices |
 | 5 | Rooftop kite war | his kite spool (নাটাই) | flying kites on the roof |
 | 6 | Paper-boat flood | his big black umbrella | finding Mishti as a tiny wet kitten in the rain |

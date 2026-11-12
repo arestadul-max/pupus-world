@@ -394,3 +394,20 @@ A cut-away building on four floors (ground 1600, machine room 1270, upper hall 9
 - **Act 4, control room:** three glowing slots on the console (a lightning bolt, a round dial, a wave), one at a time, left to right; at each, pick which glowing thing fits (wrong = a spark, "That one doesn't fit here!"). Then the Lightning Collector powers down ("No, no, NO! My Lightning Collector!"), every spark and spark-bug stops, the lights come on and a wall panel slides up: the **secret room** with Dadu's radio. The parts fly into it; Kalo-Bijli is zapped as Pupu takes it back.
 - **Memory 3 is hands-on:** push the battery in (E / Space or taps), fit and screw the knob (◀ ▶ in turn), pull the antenna out (▲ / W or taps), then tune the dial to find a song.
 - Retry tips: spotted / too hot / squashed / zap (gate, spark-bug) / you fell. Old flat lab, wire-tile puzzle and parts quiz are retired.
+
+## v262 (user fix list)
+- **Prologue stairs:** W / ↑ (joystick up on phones) steps onto the stairs at the bottom and climbs; S / ↓ walks down. At the foot of the stairs, when his way is up, a chip over his head teaches it ([C/Shift crouch] + [W / ↑ go up the stairs]); the goal line also shows the Up key there.
+- **TV:** Pupu stands straight to switch the TV on (the remote arm points up at the screen); when Ma arrives his arm drops to his side, the remote still in his hand.
+- **Chapter 1:** the paper-boat goal clears once he is on the boat; when the crab comes into view a [Space: jump on the crab] chip appears over his head. The ending: out of the maths tunnel they drop into Anko Sir's classroom and land flat on the floor exactly where Chapter 2 opens (Pupu x 250, Mishti x 175), then the chapter card; Chapter 2 fades in on that same spot.
+- **Freeze fix:** a typo (`ctx.measureTexttr`) from the language patch threw an error whenever a key chip was drawn, freezing Chapter 2 Part 1. Fixed.
+- **Schoolyard:** no light beams or glow from Anko Sir's glasses in the court chase.
+- **Chapter 3:**
+  - Crates are tall enough (150) to hide him crouched; Mishti tucks in behind the same crate.
+  - Pushing the trolley: a push pose, leaning in with both hands flat on it.
+  - **Puzzles are never spelled out.** Goals only say what he wants ("Get past the watching eye", "Find a way to reach the glow", "Find a way to open the locked cabinet"…). Indirect hints come as Pupu's own thoughts, once each, after he stands in front of a puzzle for a moment (LAB_HINTS: the eye, spark, flame, hanging platform, high shelf, trolley, dead lift, crusher, gate, pit, tunnel, cabinet, wires, tank, elevator, slots). Retry tips after a mistake also only nudge ("It always pauses at the top…"). The Up chip still shows at the first ladder.
+  - Mishti hops onto the lift first, then rides it with him.
+  - Ladders: always climbed seen from behind; the last stretch is a pull-up over the edge (hands planted on the floor, knee up); climbing down from the top starts with the reverse.
+  - Heads never go through the floors: the ground floor is taller (LG 1660), the roof is higher (LROOF 220), the switch platform is lower, and his head bumps the underside of every slab (LAB_CEIL, LAB_HEAD 146).
+  - Holding the radio: carried in both hands against his chest (no more stretched arm and tea glass).
+  - Memory 3, knob: turned by drawing circles (mouse on PC, finger on the phone; the turning of the path adds up, 3 turns); every touch button is hidden during the whole radio repair.
+  - Memory 3 now takes place at their **village house** at dusk: a tin-roofed mud house with a blue door ajar and a barred window lit by a lantern, the raised mud verandah (dawa) with a cool-mat, the swept courtyard with a tube-well and clay pitcher, a haystack, banana plants, areca palms, a mango tree, Dadu's gamchha on the clothesline, fireflies.

@@ -49,6 +49,8 @@ The whole game is a single HTML file: no engine, no images, no downloads. It run
 
 <p align="center"><img src="assets/screenshots/13-chapter3-lab-map.png" width="95%" alt="The whole of Kalo-Bijli's laboratory"><br><sub>The whole laboratory: four floors joined by ladders, a lift and moving platforms</sub></p>
 
+<p align="center"><img src="assets/screenshots/14-memory3-village-house.png" width="70%" alt="Memory 3 at the village house"><br><sub>Memory 3: fixing Dadu's radio on the mud verandah of their village house (turn the knob by drawing circles)</sub></p>
+
 | ![The story intro](assets/screenshots/04-story-intro.png) | ![The start menu in Bangla](assets/screenshots/10-title-bangla.png) |
 | **Story intro** | **Start menu in বাংলা** |
 
