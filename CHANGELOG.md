@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.5-demo · 2026-11-12
+- **Dadu's chest:** the new carved wooden chest (design B, no writing) everywhere: the opening story, the tea stall, the end of every chapter and the HUD icon.
+
 ## 1.3.4-demo · 2026-11-12
 - **Chapter 3:** angrier, smaller imps; an electrocution animation for every electric hazard; the live wires now shock; more room between the tables and the imp.
 

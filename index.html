@@ -3190,7 +3190,7 @@ function wrapLines(str, font, maxW) {   // split a subtitle into lines that fit 
   for (const w of words) { const t = cur ? cur + ' ' + w : w; if (ctx.measureText(t).width > maxW && cur) { out.push(cur); cur = w; } else cur = t; }
   if (cur) out.push(cur); return out;
 }
-// (v266, user) Dadu's tin trunk (first seen at Montu-da's tea stall) appears at the end of every chapter, and Pupu lays the new memory thing inside
+// (v266, user) Dadu's chest (first seen at Montu-da's tea stall) appears at the end of every chapter, and Pupu lays the new memory thing inside
 function startTrunk(n, item) { G.trunk = {t: 0, n, item, close: 0}; sfx.memory(); }
 function trunkIcon(k, x, y, s) {
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
@@ -3200,30 +3200,17 @@ function trunkIcon(k, x, y, s) {
   ctx.restore();
 }
 function drawTrunkMoment() {
-  const T = G.trunk, t = T.t, ap = Math.min(1, t / 0.6) * (T.close ? Math.max(0, 1 - T.close / 0.9) : 1), cx = W / 2, by = 380, tw = 320, th = 120;
+  const T = G.trunk, t = T.t, ap = Math.min(1, t / 0.6) * (T.close ? Math.max(0, 1 - T.close / 0.9) : 1), cx = W / 2, by = 405, tw = 320, th = 120;
   ctx.save(); ctx.globalAlpha = ap;
   ctx.fillStyle = 'rgba(8,6,20,.62)'; ctx.fillRect(0, 0, W, H);
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(cx, by - 80, 20, cx, by - 80, 300); g.addColorStop(0, 'rgba(255,214,120,.35)'); g.addColorStop(1, 'rgba(255,214,120,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   for (let i = 0; i < 18; i++) { const a = i * 2.4 + t * 0.6, r = 120 + (i * 37) % 160; circ(cx + Math.cos(a) * r, by - 90 + Math.sin(a) * r * 0.5, 1.6 + (i % 3), 'rgba(255,230,160,' + (0.3 + 0.4 * Math.sin(t * 3 + i)) + ')', 0); } ctx.restore();
-  text(L2('দাদুর টিনের বাক্স', 'Dadu\'s tin trunk') + '  ·  ' + T.n + ' / 10', cx, 92, 22, CREAM, 700, 'center');
-  const open = Math.min(1, Math.max(0, (t - 0.5) / 0.6)) * (T.close ? Math.max(0, 1 - T.close / 0.5) : 1);
-  // the inside: a red cloth lining with ten little places
-  const x0 = cx - tw / 2, y0 = by - th;
-  box(x0, y0, tw, th, '#2A3A8A', 6, 2.6);
-  if (open > 0.05) { box(x0 + 10, y0 + 8, tw - 20, 58, '#8A2A2A', 4, 1.6);
-    const items = ['stone', 'glasses', 'radio'];
-    for (let i = 0; i < 10; i++) { const sx = x0 + 34 + i * ((tw - 68) / 9), sy = y0 + 36; ctx.beginPath(); ctx.ellipse(sx, sy, 12, 9, 0, 0, 7); ctx.fillStyle = 'rgba(40,10,10,.5)'; ctx.fill();
-      if (i < T.n - 1 && items[i]) trunkIcon(items[i], sx, sy, 0.55);
-      if (i === T.n - 1) { const u = Math.min(1, Math.max(0, (t - 1.2) / 0.9)), e = u * u * (3 - 2 * u), fx = 170 + (sx - 170) * e, fy = 430 + (sy - 430) * e - Math.sin(u * Math.PI) * 140;
-        if (u >= 1) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(sx, sy, 2, sx, sy, 40); gg.addColorStop(0, 'rgba(255,220,120,' + (0.4 + 0.3 * Math.sin(t * 5)) + ')'); gg.addColorStop(1, 'rgba(255,220,120,0)'); ctx.fillStyle = gg; ctx.fillRect(sx - 40, sy - 40, 80, 80); ctx.restore(); }
-        if (u > 0) trunkIcon(T.item, fx, fy, 0.55 + (1 - e) * 0.6); } } }
-  // the painted front: flowers and brass corners
-  box(x0, y0 + 64, tw, th - 64, '#24347A', 4, 2.6); for (let k = 0; k < 5; k++) { const fx = x0 + 40 + k * 60, fy = y0 + 92; for (let p = 0; p < 6; p++) { const a = p * 1.047; circ(fx + Math.cos(a) * 7, fy + Math.sin(a) * 7, 5, k % 2 ? '#E3A92B' : '#E8603A', 0); } circ(fx, fy, 4, '#FFE08A', 0); }
-  for (const [qx, qy] of [[x0, y0 + 64], [x0 + tw - 16, y0 + 64], [x0, by - 16], [x0 + tw - 16, by - 16]]) box(qx, qy, 16, 16, '#C8A040', 2, 1.6);
-  box(cx - 12, y0 + 60, 24, 20, '#C8A040', 3, 1.6);
-  // the lid, hinged at the back, swinging up
-  ctx.save(); ctx.translate(cx, y0); const lh = 70 * Math.cos(open * Math.PI * 0.46); ctx.beginPath(); ctx.moveTo(-tw / 2, 0); ctx.lineTo(tw / 2, 0); ctx.lineTo(tw / 2 - 10 * open, -lh - 40 * open); ctx.lineTo(-tw / 2 + 10 * open, -lh - 40 * open); ctx.closePath(); fs(open > 0.5 ? '#1E2C6A' : '#2A3A8A', 2.6);
-  if (open < 0.5) for (let k = 0; k < 4; k++) circ(-110 + k * 73, -lh / 2, 6, '#E3A92B', 0); ctx.restore();
+  text(L2('দাদুর বাক্স', 'Dadu\'s chest') + '  ·  ' + T.n + ' / 10', cx, 92, 22, CREAM, 700, 'center');
+  const open = Math.min(1, Math.max(0, (t - 0.5) / 0.6)) * (T.close ? Math.max(0, 1 - T.close / 0.5) : 1), sc = 1.0;
+  drawChestB(cx, by, sc, open, open > 0.04 ? T.n - 1 : 0);   // (v271) Dadu's carved chest
+  if (open > 0.04) { const [hx, hy] = chestSlot(T.n - 1), sx = cx + hx * sc, sy = by + hy * sc, u = Math.min(1, Math.max(0, (t - 1.2) / 0.9)), e = u * u * (3 - 2 * u), fx = 170 + (sx - 170) * e, fy = 430 + (sy - 430) * e - Math.sin(u * Math.PI) * 140;
+    if (u >= 1) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(sx, sy, 2, sx, sy, 46); gg.addColorStop(0, 'rgba(255,220,120,' + (0.45 + 0.3 * Math.sin(t * 5)) + ')'); gg.addColorStop(1, 'rgba(255,220,120,0)'); ctx.fillStyle = gg; ctx.fillRect(sx - 46, sy - 46, 92, 92); ctx.restore(); }
+    if (u > 0) thingIcon(T.n - 1, fx, fy, 0.95 + (1 - e) * 0.7); }
   ctx.restore();
 }
 function drawDialog() {
@@ -3767,11 +3754,7 @@ function storyTrunk(S, k) {   // scene 2: the locked trunk of memories (ground: 
   ctx.save(); ctx.translate(cx + shake, 0);
   // rope halo: only now, at the turning point
   if (op > 0) { ctx.globalAlpha = op; rr(-140, cy - 86, 280, 182, 18); ctx.strokeStyle = INK; ctx.lineWidth = 16; ctx.stroke(); ctx.strokeStyle = '#FBF5E9'; ctx.lineWidth = 10; ctx.stroke(); ctx.setLineDash([2, 7]); ctx.strokeStyle = INK; ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1; }
-  box(-120, cy - 60, 240, 140, '#2C3E8C', 6, 4);
-  for (const [fx, fy, c] of [[-70, cy + 10, '#E07A2E'], [0, cy + 22, '#E58BA0'], [70, cy + 10, '#E07A2E']]) { for (let a = 0; a < 6; a++) { ctx.beginPath(); ctx.ellipse(fx + Math.cos(a) * 11, fy + Math.sin(a) * 11, 8, 5, a, 0, 7); fs(c, 2); } circ(fx, fy, 5, '#E3A92B', 2); }
-  for (const [x, y] of [[-120, cy - 60], [104, cy - 60], [-120, cy + 64], [104, cy + 64]]) box(x, y, 16, 16, '#E3A92B', 2, 2.5);
-  // the lid, swinging open
-  ctx.save(); ctx.translate(-120, cy - 60); ctx.rotate(-op * 1.15); box(0, -34, 240, 36, '#24347A', 8, 4); line(14, -16, 226, -16, '#E3A92B', 3); ctx.restore();
+  drawChestB(0, cy + 80, 0.82, op, 0);   // (v271) Dadu's carved chest, its lid lifting as the memories unlock
   // the chains and the padlock: they fall away when the memories unlock
   const fall = op * 120;
   ctx.globalAlpha = 1 - op;
@@ -3883,7 +3866,7 @@ function startTeaStall() {
     {do: () => { G.trayCups = 1; G.cupHand.placed = true; G.cupHand.go = -1; G.trayGlow = 1; sfx.memory(); }},
     {wait: 0.7},
     {do: () => { G.cupHand = null; }},
-    {say:1, who:'narr', bn:'পুপু পাথরটা দাদুর পুরোনো টিনের বাক্সে রাখল। দশটা জায়গার একটা ভরল।', en:'Pupu laid the stone in Dadu\'s old tin trunk. One of its ten places is filled.', auto:3.8},
+    {say:1, who:'narr', bn:'পুপু পাথরটা দাদুর পুরোনো কাঠের বাক্সে রাখল। দশটা জায়গার একটা ভরল।', en:'Pupu laid the stone in Dadu\'s old wooden chest. One of its ten places is filled.', auto:3.8},
     {say:1, who:'montu', bn:'বাক্সটা ভরে দাও, পুপু বাবু। কে জানে… হয়তো কেউ আবার এসে তোমার সাথে চা খাবে।', en:'Fill the trunk, Pupu babu. Who knows… maybe someone will come back to have tea with you.'},
     {say:1, who:'mishti', bn:'চলো, সামনে এগোই।', en:'Come on, let\'s keep going.'},   // no hints about what comes next: in a dream, nobody knows where the road leads
   ], () => startMathFall());   // walk on… and the ground opens
@@ -5573,7 +5556,7 @@ function startGateEnding() {
     {say:1, who:'pupu', bn:'হুঁ… সবচেয়ে ভালো।', en:'Mm… the very best.', mood: 'sad'},
     {say:1, who:'jhumpa', bn:'পুপু, দেখলে? চেষ্টাটাই আসল।', en:'See, Pupu? Trying is what counts.', mood: 'happy'},
     {do: () => startTrunk(2, 'glasses')}, {wait: 2.4},
-    {say:1, who:'narr', bn:'দাদুর পুরোনো টিনের বাক্সটা আলোয় ভেসে উঠল। পুপু চশমাটা ভেতরে রাখল। দশটার দুটো জায়গা ভরল।', en:'Dadu\'s old tin trunk shimmered into view. Pupu laid the glasses inside. Two of ten places filled.'},
+    {say:1, who:'narr', bn:'দাদুর পুরোনো কাঠের বাক্সটা আলোয় ভেসে উঠল। পুপু চশমাটা ভেতরে রাখল। দশটার দুটো জায়গা ভরল।', en:'Dadu\'s old wooden chest shimmered into view. Pupu laid the glasses inside. Two of ten places filled.'},
     {do: () => { if (G.trunk) G.trunk.close = 0.001; }}, {until: () => !G.trunk},
     // (v259, user) the bridge into Chapter 3: a magic sci-fi door crackles into the yard; the player walks Pupu in
     {do: () => { C.end.portal = {x: CT_GATE - 108, t: 0, open: 0.001, enter: 0}; G.ver.jgoal = P.x + 54; G.flash = 0.45; G.shake = 0.3; tone(70, 1.4, 'sawtooth', 0.05, 220); tone(1800, 0.18, 'square', 0.03, 500, 0.25); tone(2600, 0.12, 'square', 0.02, 900, 0.5); }}, {wait: 1.8},
@@ -6695,7 +6678,7 @@ function labRadio() {
     {do: () => { radioSong(2, 0.02); }}, {wait: 1.2},
     {say:1, who:'pupu', bn:'হুঁ… এখনো গান গায়।', en:'Mm… it still sings.', mood: 'happy'},
     {do: () => startTrunk(3, 'radio')}, {wait: 2.4},
-    {say:1, who:'narr', bn:'দাদুর টিনের বাক্সটা আবার এল। পুপু রেডিওটা ভেতরে রাখল। দশটার তিনটে জায়গা ভরল।', en:'Dadu\'s tin trunk came again. Pupu laid the radio inside. Three of ten places filled.'},
+    {say:1, who:'narr', bn:'দাদুর কাঠের বাক্সটা আবার এল। পুপু রেডিওটা ভেতরে রাখল। দশটার তিনটে জায়গা ভরল।', en:'Dadu\'s chest came again. Pupu laid the radio inside. Three of ten places filled.'},
     {do: () => { if (G.trunk) G.trunk.close = 0.001; }}, {until: () => !G.trunk},
     {do: () => { G.fadeTarget = 1; G.fadeSpeed = 0.7; }}, {wait: 1.8},
     {do: () => { G.state = 'l3end'; G.endT = 0; G.fade = 0; G.fadeTarget = 0; }},
@@ -8061,14 +8044,37 @@ function daduBench(x) {
   box(x, y - 52, 150, 12, '#8A5A34', 3, 3);
   for (const dx of [10, 130]) limb(x + dx, y - 40, x + dx, y, '#6E3C1E', 6);
   kolshi(x + 126, y - 52, 0.7);   // Dadu's little water pot
-  // Dadu's old painted tin trunk on his bench (v238, instead of the tray): lid open, ten little places inside, one for each of his things
+  // (v271) Dadu's carved wooden chest on his bench, lid open, ten hollows inside (one for each of his things)
   if (G.trayGlow > 0) { const g2 = ctx.createRadialGradient(x + 50, y - 70, 0, x + 50, y - 70, 70); g2.addColorStop(0, 'rgba(255,220,120,' + (0.7 * G.trayGlow) + ')'); g2.addColorStop(1, 'rgba(255,220,120,0)'); ctx.fillStyle = g2; ctx.fillRect(x - 30, y - 140, 160, 140); }
-  ctx.beginPath(); ctx.moveTo(x + 4, y - 82); ctx.lineTo(x + 96, y - 82); ctx.lineTo(x + 104, y - 110); ctx.lineTo(x + 14, y - 112); ctx.closePath(); fs('#24347A', 2.2); line(x + 12, y - 96, x + 98, y - 95, '#E3A92B', 2);   // the lid, open and leaning back
-  ctx.fillStyle = 'rgba(255,214,120,.35)'; ctx.fillRect(x + 8, y - 84, 84, 3);
-  box(x + 4, y - 82, 92, 30, '#2C3E8C', 3, 2.5); for (const [cx2, c] of [[x + 22, '#E07A2E'], [x + 50, '#E58BA0'], [x + 78, '#E07A2E']]) circ(cx2, y - 64, 4, c, 1.2);
-  box(x + 4, y - 82, 8, 8, '#E3A92B', 1, 1.5); box(x + 88, y - 82, 8, 8, '#E3A92B', 1, 1.5);
-  box(x + 8, y - 86, 84, 6, '#1A2448', 1, 1.5);   // the dark inside, seen over the front
-  for (let i = 0; i < 10; i++) { const hx = x + 12 + i * 8.2; if (i < G.trayCups) thingIcon(i, hx + 2, y - 86, 0.28); else circ(hx + 2, y - 84, 1.6, 'rgba(243,230,200,.25)', 0); }
+  drawChestB(x + 50, y - 52, 0.31, 1, G.trayCups || 0);
+}
+// (v271, user's choice "B") Dadu's chest: carved teak with iron bands and studs and a carved rosette; inside, deep red velvet with a hollow
+// shaped for each of his ten things and a quilted lining in the lid. No writing on it. Drawn standing on (cx, by); s = scale (1 = 300 px wide).
+const CHEST_HOLES = [[15, 8], [22, 9], [18, 13], [14, 14], [20, 10], [16, 16], [12, 18], [22, 8], [18, 12], [10, 20]];
+function chestSlot(i) { return [-112 + (i % 5) * 56, -84 + Math.floor(i / 5) * 48]; }
+function drawChestB(cx, by, s, open, n, o) {
+  o = o || {}; ctx.save(); ctx.translate(cx, by); ctx.scale(s, s);
+  const plank = () => { box(-150, -118, 300, 118, '#8A5A32', 4, 3); for (let k = 1; k < 4; k++) line(-148, -118 + k * 30, 148, -118 + k * 30, 'rgba(60,30,10,.4)', 2); for (let k = 0; k < 6; k++) line(-140 + k * 52, -112 + (k % 3) * 30, -110 + k * 52, -112 + (k % 3) * 30, 'rgba(255,220,170,.12)', 2); };
+  const bands = (top) => { for (const x of [-110, 96]) { box(x, top, 14, -top, '#3A3A40', 2, 2); for (let y = top + 12; y < -4; y += 22) circ(x + 7, y, 2.2, '#9A9AA0', 0); } };
+  if (open < 0.04) {
+    plank();
+    ctx.beginPath(); ctx.moveTo(-156, -118); ctx.lineTo(156, -118); ctx.lineTo(156, -150); ctx.quadraticCurveTo(0, -200, -156, -150); ctx.closePath(); fs('#9A6A3C', 3);   // the domed lid
+    for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.moveTo(-150, -128 - k * 9); ctx.quadraticCurveTo(0, -160 - k * 12, 150, -128 - k * 9); ctx.strokeStyle = 'rgba(60,30,10,.3)'; ctx.lineWidth = 2; ctx.stroke(); }
+    bands(-176);
+    circ(0, -62, 28, '#7A4A26', 2); for (let p = 0; p < 8; p++) { const a = p * 0.785; ctx.beginPath(); ctx.ellipse(Math.cos(a) * 14, -62 + Math.sin(a) * 14, 9, 4, a, 0, 7); ctx.fillStyle = '#A8743E'; ctx.fill(); } circ(0, -62, 6, '#C89A50', 1.4);   // the carved rosette
+    box(-12, -132, 24, 30, '#4A4A52', 3, 2); circ(0, -114, 3.5, '#C8A040', 0);   // the iron hasp
+  } else {
+    const lh = 128 * Math.min(1, open);
+    ctx.beginPath(); ctx.moveTo(-150, -118); ctx.lineTo(150, -118); ctx.lineTo(146, -118 - lh); ctx.quadraticCurveTo(0, -118 - lh - 22 * open, -146, -118 - lh); ctx.closePath(); fs('#7A1E2A', 3);   // the lid, open: its quilted velvet lining
+    for (let k = 0; k < 5; k++) { const x = -120 + k * 60; ctx.beginPath(); ctx.moveTo(x, -118 - lh + 12); ctx.quadraticCurveTo(x + 30, -118 - lh + 40 * open, x + 60, -118 - lh + 12); ctx.strokeStyle = 'rgba(255,200,180,.2)'; ctx.lineWidth = 2; ctx.stroke(); }
+    for (let r = 1; r < 3; r++) for (let k = 0; k < 6; k++) circ(-125 + k * 50, -118 - lh + r * lh / 3, 2.2, 'rgba(40,0,10,.5)', 0);   // quilting buttons
+    plank(); bands(-118);
+    box(-140, -112, 280, 104, '#7A1E2A', 6, 2);
+    { const g = ctx.createLinearGradient(0, -112, 0, -8); g.addColorStop(0, 'rgba(0,0,0,.25)'); g.addColorStop(1, 'rgba(255,255,255,.05)'); ctx.fillStyle = g; ctx.fillRect(-138, -110, 276, 100); }
+    for (let i = 0; i < 10; i++) { const [hx, hy] = chestSlot(i); ctx.beginPath(); ctx.ellipse(hx, hy, CHEST_HOLES[i][0] + 6, CHEST_HOLES[i][1] + 6, 0, 0, 7); ctx.fillStyle = '#4A0E16'; ctx.fill(); ctx.strokeStyle = 'rgba(255,190,170,.12)'; ctx.lineWidth = 1.5; ctx.stroke();
+      if (i < n) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(hx, hy, 2, hx, hy, 30); g.addColorStop(0, 'rgba(255,214,120,' + (o.glow !== undefined ? o.glow : 0.4) + ')'); g.addColorStop(1, 'rgba(255,214,120,0)'); ctx.fillStyle = g; ctx.fillRect(hx - 30, hy - 30, 60, 60); ctx.restore(); thingIcon(i, hx, hy, 1.05); } }
+  }
+  ctx.restore();
 }
 // Dadu's 10 things (v238): each chapter gives back one of Dadu's belongings, and with it a memory.
 const DADU_THINGS = ['the skipping stone', 'reading glasses', 'pocket radio', 'storybook', 'kite spool', 'black umbrella', 'wristwatch', 'hurricane lantern', 'white tupi', 'lathi'];
@@ -8923,7 +8929,7 @@ function stoneGameUI(g) {
 function drawGhatHUD() {
   // compact, so it never hides the scenery: a small pill for the memory cups, and one for the goal
   panel(10, 8, 172, 28, 'rgba(243,230,200,.92)', 2);
-  box(17, 16, 20, 13, '#2C3E8C', 2, 1.6); box(16, 12, 22, 5, '#24347A', 1.5, 1.4); circ(27, 22, 1.8, '#E3A92B', 0);   // Dadu's trunk
+  box(17, 16, 20, 13, '#8A5A32', 2, 1.6); ctx.beginPath(); ctx.moveTo(16, 17); ctx.quadraticCurveTo(27, 8, 38, 17); ctx.closePath(); fs('#9A6A3C', 1.4); line(20.5, 11, 20.5, 29, '#3A3A40', 2); line(33.5, 11, 33.5, 29, '#3A3A40', 2); circ(27, 22, 2, '#C89A50', 0);   // (v271) Dadu's carved chest
   for (let i = 0; i < 10; i++) circ(46 + i * 13.4, 22, 4.2, i < G.cups ? TURMERIC : '#D9C9A6', 1.4);
   if (G.hint && G.hintT > 0) { ctx.globalAlpha = Math.min(1, G.hintT * 2); banner(G.hint, 44, 'rgba(28,20,16,.85)', CREAM, 13); ctx.globalAlpha = 1; }
   if (G.toast && G.toastT > 0) { ctx.globalAlpha = Math.min(1, G.toastT * 2); ctx.font = '700 13px ' + bodyFont; const w = ctx.measureText(G.toast).width + 28; panelV1(W / 2 - w / 2, 84, w, 30, TURMERIC); text(G.toast, W / 2, 104, 13, INK, 700, 'center'); ctx.globalAlpha = 1; }
