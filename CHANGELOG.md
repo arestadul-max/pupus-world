@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.5-demo · 2026-11-12
+- **Chapter 3 art:** the lab redrawn in a richer style: stone-block walls, dome lamps with light cones, ivy and plants, neon tubes, jungle outside, a desk with computers, a satellite dish on the tank. New full level map.
+
 ## 1.2.3-demo · 2026-11-12
 - **TV scene:** fixed for real. After feeding Mishti, her feeding pose kept Pupu crouched in later cutscenes; now he stands straight to turn the TV on and while Ma scolds him.
 
