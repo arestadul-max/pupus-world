@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.7-demo · 2026-11-12
+- **Dadu's chest:** now a 3-D chest seen from the side; its lid swings up on a back hinge when it opens, everywhere it appears.
+
 ## 1.3.6-demo · 2026-11-12
 - **Chapter 1:** Dadu's chest at the tea stall stays closed until Pupu comes to put the stone in; it opens, takes the stone, and closes again.
 

@@ -3208,7 +3208,7 @@ function drawTrunkMoment() {
   text(L2('দাদুর বাক্স', 'Dadu\'s chest') + '  ·  ' + T.n + ' / 10', cx, 92, 22, CREAM, 700, 'center');
   const open = Math.min(1, Math.max(0, (t - 0.5) / 0.6)) * (T.close ? Math.max(0, 1 - T.close / 0.5) : 1), sc = 1.0;
   drawChestB(cx, by, sc, open, open > 0.04 ? T.n - 1 : 0);   // (v271) Dadu's carved chest
-  if (open > 0.04) { const [hx, hy] = chestSlot(T.n - 1), sx = cx + hx * sc, sy = by + hy * sc, u = Math.min(1, Math.max(0, (t - 1.2) / 0.9)), e = u * u * (3 - 2 * u), fx = 170 + (sx - 170) * e, fy = 430 + (sy - 430) * e - Math.sin(u * Math.PI) * 140;
+  if (open > 0.04) { const [hx, hy] = chestSlot(T.n - 1), sx = cx - CH_D * CH_KX * 0.5 * sc + hx * sc, sy = by + hy * sc, u = Math.min(1, Math.max(0, (t - 1.2) / 0.9)), e = u * u * (3 - 2 * u), fx = 170 + (sx - 170) * e, fy = 430 + (sy - 430) * e - Math.sin(u * Math.PI) * 140;
     if (u >= 1) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(sx, sy, 2, sx, sy, 46); gg.addColorStop(0, 'rgba(255,220,120,' + (0.45 + 0.3 * Math.sin(t * 5)) + ')'); gg.addColorStop(1, 'rgba(255,220,120,0)'); ctx.fillStyle = gg; ctx.fillRect(sx - 46, sy - 46, 92, 92); ctx.restore(); }
     if (u > 0) thingIcon(T.n - 1, fx, fy, 0.95 + (1 - e) * 0.7); }
   ctx.restore();
@@ -3753,7 +3753,7 @@ function storyTrunk(S, k) {   // scene 2: the locked trunk of memories (ground: 
   const shake = i === 4 ? Math.sin(tt * 26) * 2.2 * Math.min(1, S.t) : 0;
   ctx.save(); ctx.translate(cx + shake, 0);
   // rope halo: only now, at the turning point
-  if (op > 0) { ctx.globalAlpha = op; rr(-140, cy - 86, 280, 182, 18); ctx.strokeStyle = INK; ctx.lineWidth = 16; ctx.stroke(); ctx.strokeStyle = '#FBF5E9'; ctx.lineWidth = 10; ctx.stroke(); ctx.setLineDash([2, 7]); ctx.strokeStyle = INK; ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1; }
+  if (op > 0) { ctx.globalAlpha = op; rr(-150, cy - 92, 296, 186, 18); ctx.strokeStyle = INK; ctx.lineWidth = 16; ctx.stroke(); ctx.strokeStyle = '#FBF5E9'; ctx.lineWidth = 10; ctx.stroke(); ctx.setLineDash([2, 7]); ctx.strokeStyle = INK; ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1; }
   drawChestB(0, cy + 80, 0.82, op, 0);   // (v271) Dadu's carved chest, its lid lifting as the memories unlock
   // the chains and the padlock: they fall away when the memories unlock
   const fall = op * 120;
@@ -8051,32 +8051,45 @@ function daduBench(x) {
   if (G.trayGlow > 0) { const g2 = ctx.createRadialGradient(x + 50, y - 70, 0, x + 50, y - 70, 70); g2.addColorStop(0, 'rgba(255,220,120,' + (0.7 * G.trayGlow) + ')'); g2.addColorStop(1, 'rgba(255,220,120,0)'); ctx.fillStyle = g2; ctx.fillRect(x - 30, y - 140, 160, 140); }
   drawChestB(x + 50, y - 52, 0.31, G.chestOpen || 0, G.trayCups || 0);   // (v272) closed until Pupu comes to put the stone in
 }
-// (v271, user's choice "B") Dadu's chest: carved teak with iron bands and studs and a carved rosette; inside, deep red velvet with a hollow
-// shaped for each of his ten things and a quilted lining in the lid. No writing on it. Drawn standing on (cx, by); s = scale (1 = 300 px wide).
+// (v273, user's sketch) Dadu's chest drawn as a solid box seen a little from the right and above: the front, the right side and,
+// when open, the top. The flat lid is hinged along the back edge and swings up and back in 3-D (open 0 → 1 = 0° → 105°).
+// Carved teak, iron bands and studs, a carved rosette, an iron hasp; inside red velvet with a hollow for each of the ten things; no writing.
 const CHEST_HOLES = [[15, 8], [22, 9], [18, 13], [14, 14], [20, 10], [16, 16], [12, 18], [22, 8], [18, 12], [10, 20]];
-function chestSlot(i) { return [-112 + (i % 5) * 56, -84 + Math.floor(i / 5) * 48]; }
+const CH_W = 300, CH_H = 118, CH_D = 110, CH_T = 26, CH_KX = 0.34, CH_KY = 0.5;
+const chP = (x, y, z) => [x + z * CH_KX, -y - z * CH_KY];   // (x right, y up, z back) → screen
+function chestSlot(i) { const x = -112 + (i % 5) * 56, z = Math.floor(i / 5) ? CH_D * 0.3 : CH_D * 0.72; return chP(x, CH_H, z); }
 function drawChestB(cx, by, s, open, n, o) {
-  o = o || {}; ctx.save(); ctx.translate(cx, by); ctx.scale(s, s);
-  const plank = () => { box(-150, -118, 300, 118, '#8A5A32', 4, 3); for (let k = 1; k < 4; k++) line(-148, -118 + k * 30, 148, -118 + k * 30, 'rgba(60,30,10,.4)', 2); for (let k = 0; k < 6; k++) line(-140 + k * 52, -112 + (k % 3) * 30, -110 + k * 52, -112 + (k % 3) * 30, 'rgba(255,220,170,.12)', 2); };
-  const bands = (top) => { for (const x of [-110, 96]) { box(x, top, 14, -top, '#3A3A40', 2, 2); for (let y = top + 12; y < -4; y += 22) circ(x + 7, y, 2.2, '#9A9AA0', 0); } };
-  if (open < 0.04) {
-    plank();
-    ctx.beginPath(); ctx.moveTo(-156, -118); ctx.lineTo(156, -118); ctx.lineTo(156, -150); ctx.quadraticCurveTo(0, -200, -156, -150); ctx.closePath(); fs('#9A6A3C', 3);   // the domed lid
-    for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.moveTo(-150, -128 - k * 9); ctx.quadraticCurveTo(0, -160 - k * 12, 150, -128 - k * 9); ctx.strokeStyle = 'rgba(60,30,10,.3)'; ctx.lineWidth = 2; ctx.stroke(); }
-    bands(-176);
-    circ(0, -62, 28, '#7A4A26', 2); for (let p = 0; p < 8; p++) { const a = p * 0.785; ctx.beginPath(); ctx.ellipse(Math.cos(a) * 14, -62 + Math.sin(a) * 14, 9, 4, a, 0, 7); ctx.fillStyle = '#A8743E'; ctx.fill(); } circ(0, -62, 6, '#C89A50', 1.4);   // the carved rosette
-    box(-12, -132, 24, 30, '#4A4A52', 3, 2); circ(0, -114, 3.5, '#C8A040', 0);   // the iron hasp
-  } else {
-    const lh = 128 * Math.min(1, open);
-    ctx.beginPath(); ctx.moveTo(-150, -118); ctx.lineTo(150, -118); ctx.lineTo(146, -118 - lh); ctx.quadraticCurveTo(0, -118 - lh - 22 * open, -146, -118 - lh); ctx.closePath(); fs('#7A1E2A', 3);   // the lid, open: its quilted velvet lining
-    for (let k = 0; k < 5; k++) { const x = -120 + k * 60; ctx.beginPath(); ctx.moveTo(x, -118 - lh + 12); ctx.quadraticCurveTo(x + 30, -118 - lh + 40 * open, x + 60, -118 - lh + 12); ctx.strokeStyle = 'rgba(255,200,180,.2)'; ctx.lineWidth = 2; ctx.stroke(); }
-    for (let r = 1; r < 3; r++) for (let k = 0; k < 6; k++) circ(-125 + k * 50, -118 - lh + r * lh / 3, 2.2, 'rgba(40,0,10,.5)', 0);   // quilting buttons
-    plank(); bands(-118);
-    box(-140, -112, 280, 104, '#7A1E2A', 6, 2);
-    { const g = ctx.createLinearGradient(0, -112, 0, -8); g.addColorStop(0, 'rgba(0,0,0,.25)'); g.addColorStop(1, 'rgba(255,255,255,.05)'); ctx.fillStyle = g; ctx.fillRect(-138, -110, 276, 100); }
-    for (let i = 0; i < 10; i++) { const [hx, hy] = chestSlot(i); ctx.beginPath(); ctx.ellipse(hx, hy, CHEST_HOLES[i][0] + 6, CHEST_HOLES[i][1] + 6, 0, 0, 7); ctx.fillStyle = '#4A0E16'; ctx.fill(); ctx.strokeStyle = 'rgba(255,190,170,.12)'; ctx.lineWidth = 1.5; ctx.stroke();
-      if (i < n) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(hx, hy, 2, hx, hy, 30); g.addColorStop(0, 'rgba(255,214,120,' + (o.glow !== undefined ? o.glow : 0.4) + ')'); g.addColorStop(1, 'rgba(255,214,120,0)'); ctx.fillStyle = g; ctx.fillRect(hx - 30, hy - 30, 60, 60); ctx.restore(); thingIcon(i, hx, hy, 1.05); } }
-  }
+  o = o || {}; ctx.save(); ctx.translate(cx - CH_D * CH_KX * 0.5 * s, by); ctx.scale(s, s);
+  const hw = CH_W / 2, quad = (pts, fill, lw) => { ctx.beginPath(); pts.forEach((p, k) => k ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath(); ctx.fillStyle = fill; ctx.fill(); if (lw !== 0) { ctx.strokeStyle = INK; ctx.lineWidth = lw || 2.6; ctx.lineJoin = 'round'; ctx.stroke(); } };
+  const th = Math.min(1, Math.max(0, open)) * 1.83, c = Math.cos(th), sn = Math.sin(th);
+  // a lid point: (x, dy above the body top, dz from the back hinge, negative = toward the front)
+  const L = (x, dy, dz) => chP(x, CH_H + dy * c - dz * sn, CH_D + dz * c + dy * sn);
+  // --- the body: right side, front, and (when the lid is up) the velvet inside
+  quad([chP(hw, 0, 0), chP(hw, 0, CH_D), chP(hw, CH_H, CH_D), chP(hw, CH_H, 0)], '#6A4224');   // right side
+  for (let k = 1; k < 4; k++) { const a = chP(hw, k * 30, 0), b = chP(hw, k * 30, CH_D); line(a[0], a[1], b[0], b[1], 'rgba(40,20,5,.4)', 2); }
+  box(-hw, -CH_H, CH_W, CH_H, '#8A5A32', 2, 2.6); for (let k = 1; k < 4; k++) line(-hw + 2, -CH_H + k * 30, hw - 2, -CH_H + k * 30, 'rgba(60,30,10,.4)', 2);   // the front, in planks
+  for (let k = 0; k < 6; k++) line(-140 + k * 52, -112 + (k % 3) * 30, -110 + k * 52, -112 + (k % 3) * 30, 'rgba(255,220,170,.12)', 2);
+  for (const x of [-110, 96]) { box(x, -CH_H, 14, CH_H, '#3A3A40', 2, 2); for (let y = -CH_H + 12; y < -4; y += 22) circ(x + 7, y, 2.2, '#9A9AA0', 0); }   // iron bands with studs
+  { const a = chP(hw - 4, 0, 0), b = chP(hw - 4, CH_H, 0); box(a[0] - 2, b[1], 12, CH_H, '#3A3A40', 2, 1.6); }
+  circ(0, -58, 26, '#7A4A26', 2); for (let p = 0; p < 8; p++) { const a = p * 0.785; ctx.beginPath(); ctx.ellipse(Math.cos(a) * 13, -58 + Math.sin(a) * 13, 8.5, 3.8, a, 0, 7); ctx.fillStyle = '#A8743E'; ctx.fill(); } circ(0, -58, 5.5, '#C89A50', 1.4);   // the carved rosette
+  box(-11, -CH_H, 22, 18, '#4A4A52', 3, 2); circ(0, -CH_H + 9, 3.2, '#C8A040', 0);   // the hasp's staple
+  if (open > 0.02) {   // the opening: red velvet seen from above, with the ten hollows
+    quad([chP(-hw, CH_H, 0), chP(hw, CH_H, 0), chP(hw, CH_H, CH_D), chP(-hw, CH_H, CH_D)], '#5A3220', 2.4);
+    quad([chP(-hw + 8, CH_H, 8), chP(hw - 8, CH_H, 8), chP(hw - 8, CH_H, CH_D - 8), chP(-hw + 8, CH_H, CH_D - 8)], '#7A1E2A', 1.6);
+    for (let i = 0; i < 10; i++) { const [hx, hy] = chestSlot(i); ctx.beginPath(); ctx.ellipse(hx, hy, CHEST_HOLES[i][0] + 5, (CHEST_HOLES[i][1] + 5) * 0.62, 0, 0, 7); ctx.fillStyle = '#4A0E16'; ctx.fill(); ctx.strokeStyle = 'rgba(255,190,170,.14)'; ctx.lineWidth = 1.4; ctx.stroke();
+      if (i < n) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(hx, hy, 2, hx, hy, 30); g.addColorStop(0, 'rgba(255,214,120,' + (o.glow !== undefined ? o.glow : 0.4) + ')'); g.addColorStop(1, 'rgba(255,214,120,0)'); ctx.fillStyle = g; ctx.fillRect(hx - 30, hy - 30, 60, 60); ctx.restore(); thingIcon(i, hx, hy - 3, 1.0); } } }
+  // --- the lid, hinged at the back
+  const fr = [L(-hw - 3, 0, -CH_D - 3), L(hw + 3, 0, -CH_D - 3), L(hw + 3, CH_T, -CH_D - 3), L(-hw - 3, CH_T, -CH_D - 3)];   // its front edge
+  const side = [L(hw + 3, 0, -CH_D - 3), L(hw + 3, 0, 0), L(hw + 3, CH_T, 0), L(hw + 3, CH_T, -CH_D - 3)];
+  const top = [L(-hw - 3, CH_T, -CH_D - 3), L(hw + 3, CH_T, -CH_D - 3), L(hw + 3, CH_T, 0), L(-hw - 3, CH_T, 0)];
+  const inner = [L(-hw - 3, 0, -CH_D - 3), L(hw + 3, 0, -CH_D - 3), L(hw + 3, 0, 0), L(-hw - 3, 0, 0)];
+  const showInner = -CH_KY * c + sn > 0;   // past ~25° the inside of the lid turns toward us
+  quad(side, '#6A4224');
+  if (showInner) { quad(inner, '#7A1E2A'); for (let r = 1; r < 3; r++) for (let k = 0; k < 6; k++) { const p = L(-125 + k * 50, 0, -CH_D * r / 3); circ(p[0], p[1], 2.2, 'rgba(40,0,10,.5)', 0); }
+    for (let k = 0; k < 4; k++) { const a = L(-140 + k * 70, 0, -CH_D + 10), m = L(-105 + k * 70, 0, -CH_D + 26), b = L(-70 + k * 70, 0, -CH_D + 10); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.quadraticCurveTo(m[0], m[1], b[0], b[1]); ctx.strokeStyle = 'rgba(255,200,180,.22)'; ctx.lineWidth = 2; ctx.stroke(); } }
+  else { quad(top, '#9A6A3C'); for (let k = 1; k < 4; k++) { const a = L(-hw, CH_T, -CH_D * k / 4), b = L(hw, CH_T, -CH_D * k / 4); line(a[0], a[1], b[0], b[1], 'rgba(60,30,10,.3)', 2); } for (const x of [-110, 96]) { const a = L(x + 7, CH_T, -CH_D - 3), b = L(x + 7, CH_T, 0); line(a[0], a[1], b[0], b[1], '#3A3A40', 12); } }
+  quad(fr, '#9A6A3C'); for (const x of [-110, 96]) { const a = L(x, 0, -CH_D - 3), b = L(x + 14, CH_T, -CH_D - 3); quad([a, L(x + 14, 0, -CH_D - 3), b, L(x, CH_T, -CH_D - 3)], '#3A3A40', 1.6); }
+  { const a = L(-11, -14, -CH_D - 4), b = L(11, -14, -CH_D - 4), d = L(11, CH_T * 0.6, -CH_D - 4), e = L(-11, CH_T * 0.6, -CH_D - 4); quad([a, b, d, e], '#4A4A52', 1.8); }   // the hasp on the lid's front edge
   ctx.restore();
 }
 // Dadu's 10 things (v238): each chapter gives back one of Dadu's belongings, and with it a memory.
