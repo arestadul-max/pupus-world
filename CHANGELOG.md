@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.4-demo · 2026-11-13
+- Reading pose: Pupu holds the open storybook at his chest, cover and gold star facing us, pages fanned up towards him.
+
 ## 1.4.3-demo · 2026-11-13
 - Dadu's storybook redesigned: brown leather, a darker border and a gold four-pointed star.
 - New book poses: held against the chest, held out open to read (head tipped down), and both arms forward to place it.

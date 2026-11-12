@@ -1834,7 +1834,7 @@ function drawPupu(x, y, face1, o) {
     if (o.push) return front ? [sx, sy, sx + 9, sy + 8, sx + 18, sy + 11] : [sx, sy, sx + 8, sy + 9, sx + 16, sy + 12];   // (v262) pushing: both hands flat on the trolley
     if (o.book) { const u = Math.min(1, o.book.open || 0), pl = o.book.place || 0;   // (v277, user's reference sheet) hold: against his chest · read: open in front at chest height · place: both arms reach forward
       if (pl > 0) return front ? [sx, sy, sx + 6 + 4 * pl, sy + 8 - 3 * pl, sx + 11 + 9 * pl, sy + 7 - 3 * pl] : [sx, sy, sx + 5 + 4 * pl, sy + 9 - 3 * pl, sx + 8 + 8 * pl, sy + 8 - 3 * pl];
-      return front ? [sx, sy, sx + 4 + 2 * u, sy + 10 - u, sx + 9 + 6 * u, sy + 8 - u] : [sx, sy, sx + 3 + 2 * u, sy + 10 - u, sx + 6 + 2 * u, sy + 8 - u]; }   // (v274) holding the storybook in front of him, open or shut
+      return front ? [sx, sy, sx + 4 + 2 * u, sy + 10, sx + 9 + 3 * u, sy + 8] : [sx, sy, sx + 3 + 2 * u, sy + 10, sx + 6 + 3 * u, sy + 8]; }   // (v274) holding the storybook in front of him, open or shut
     if (o.carry) return front ? [sx, sy, sx + 5, sy + 9, sx + 11, sy + 6] : [sx, sy, sx + 4, sy + 9, sx + 10, sy + 6];   // carrying the radio in both hands
     if (o.remote && front) { const u = o.remote; return [sx, sy, sx + 2 + 9 * u, sy + 10 - 9 * u, sx + 3 + 17 * u, sy + 20 - 25 * u]; }
     if (o.pouch !== undefined && front) return [sx, sy, sx + 6, sy + 8, sx + 13, sy + 9];   // arm out over the bowl, holding the treat pouch
@@ -1859,14 +1859,13 @@ function drawPupu(x, y, face1, o) {
     if (tq && front && o.throwT < THROW_REL) circ(hx2 + 1, hy2, 2.4, '#6A5A4A', 1.2);   // the stone in his hand
     if (o.holdStone && front && !tq) circ(hx2 + 1, hy2 - 1, 2.8, '#8A8478', 1.3);
     if (o.plane && front && !(tq && o.throwT >= THROW_REL)) akPlane(hx2 + 2, hy2 - 3, 0.5, tq ? -0.5 : -0.2, 1);
-    if (o.book && front) { const u = Math.min(1, o.book.open || 0), pl = o.book.place || 0;
-      if (u < 0.5 || pl > 0) { const k = pl > 0 ? 1 : 1 - u * 2, bx = hx2 - 1, by = hy2 - 4; ctx.save(); ctx.translate(bx, by); ctx.rotate(pl > 0 ? 0 : -0.18); ctx.scale(Math.max(0.35, k), 1);   // shut: an upright cloth-bound book, its cover towards us
-        box(4, -6.4, 2, 11.8, '#F1E6C8', 0.3, 0.7); box(-5.5, -7.4, 10.5, 13.8, '#7A4A26', 1, 1.2); ctx.strokeStyle = '#4A2A16'; ctx.lineWidth = 1.1; ctx.strokeRect(-3.4, -5.3, 6.6, 9.6); line(-5.5, -7.4, -5.5, 6.4, '#4A2A16', 2); star4(-0.1, -0.5, 2.6, '#E8B53A'); ctx.restore(); G.bookW = {x: x + face1 * SP * bx, y: y + SP * by}; }
-      else { const k = (u - 0.5) * 2, bx = hx2 - 3, by = hy2 - 1; ctx.save(); ctx.translate(bx, by); ctx.rotate(-0.3); ctx.scale((0.4 + 0.6 * k) * 1.15, 1.15);   // open: held out flat to read, the pages dipping into the gutter
-        ctx.beginPath(); ctx.moveTo(-11, 0); ctx.quadraticCurveTo(0, 2.6, 11, 0); ctx.lineTo(11, 1.6); ctx.quadraticCurveTo(0, 4.2, -11, 1.6); ctx.closePath(); fs('#7A4A26', 0.9);
-        ctx.beginPath(); ctx.moveTo(-10.5, -2.2); ctx.quadraticCurveTo(-4, -3.4, 0, 1.4); ctx.quadraticCurveTo(4, -3.4, 10.5, -2.2); ctx.lineTo(10.5, 0.4); ctx.quadraticCurveTo(0, 2.6, -10.5, 0.4); ctx.closePath(); fs('#F4ECD8', 0.9);
-        line(0, -0.6, 0, 1.6, 'rgba(60,40,30,.45)', 0.6); for (const sd of [-1, 1]) line(sd * 3, -1.4, sd * 8.5, -2, 'rgba(60,40,30,.28)', 0.5);
-        ctx.restore(); G.bookW = {x: x + face1 * SP * bx, y: y + SP * (by - 2)}; } }
+    if (o.book && front) { const u = Math.min(1, o.book.open || 0), pl = o.book.place || 0, k = pl > 0 ? 0 : u, bx = hx2 + 1 + 2 * k, by = hy2 - 4;   // (v278, user's reference) open or shut, the brown cover with its gold star faces us; open, the cream pages fan up towards his face
+      ctx.save(); ctx.translate(bx, by); ctx.rotate(pl > 0 ? 0 : -0.18 - 0.12 * k); ctx.scale(1 + 0.1 * k, 1 + 0.1 * k);
+      if (k > 0.02) { ctx.beginPath(); ctx.moveTo(-5.5, 6.4); ctx.lineTo(-5.5 - 3 * k, -8 - 2.2 * k); ctx.lineTo(-4 - 3 * k, -9.5 - 2.2 * k); ctx.lineTo(-5.5, -7.4); ctx.closePath(); fs('#7A4A26', 0.8);   // the other half's cover, swung back
+        ctx.beginPath(); ctx.moveTo(-5.5, -7.4); ctx.lineTo(-4 - 3 * k, -9.5 - 2.2 * k); ctx.quadraticCurveTo(0, -9 - 3 * k, 5.5 + 1 * k, -8.5 - 2 * k); ctx.lineTo(5, -7.4); ctx.closePath(); fs('#F4ECD8', 0.8);   // the pages, fanned open
+        for (let j = 1; j < 4; j++) { const f = j / 4; line(-5.5 + 10.5 * f, -7.4, -4 - 3 * k + (9.5 + 4 * k) * f, -9.5 - 2.2 * k + f, 'rgba(60,40,30,.3)', 0.5); } }
+      box(4, -6.4, 2, 11.8, '#F1E6C8', 0.3, 0.7); box(-5.5, -7.4, 10.5, 13.8, '#7A4A26', 1, 1.2); ctx.strokeStyle = '#4A2A16'; ctx.lineWidth = 1.1; ctx.strokeRect(-3.4, -5.3, 6.6, 9.6); line(-5.5, -7.4, -5.5, 6.4, '#4A2A16', 2); star4(-0.1, -0.5, 2.6, '#E8B53A');
+      ctx.restore(); G.bookW = {x: x + face1 * SP * (bx - 1), y: y + SP * (by - 9 - 2 * k)}; }
     if (o.carry && front) drawRadioBox(hx2 - 1, hy2 + 14, 0.3, ['battery', 'knob', 'antenna'], false);   // (v266) hanging from his hands by its strap handle   // (v262) Dadu's radio, held against his chest
     if (o.remote && front) { ctx.save(); ctx.translate(hx2, hy2); ctx.rotate(Math.atan2(hy2 - ey2, hx2 - ex2)); box(-2, -2.2, 10, 4.4, '#222228', 1.5, 1.2); circ(7, 0, 0.9, '#E04A3A', 0); ctx.restore(); }
     ctx.beginPath(); ctx.ellipse(hx2 + (hx2 - ex2) * 0.12, hy2 + (hy2 - ey2) * 0.12, 2.7, 3.1, Math.atan2(hy2 - ey2, hx2 - ex2) - Math.PI / 2, 0, Math.PI * 2); fs(SKIN, 1.7); // hand
@@ -1879,7 +1878,7 @@ function drawPupu(x, y, face1, o) {
   ctx.restore();
   ctx.restore();
   limb(shX + 1, shY + 1, headX, headY + 8, SKIN, 4);
-  if (o.book && (o.book.open || 0) > 0.4 && !(o.book.place > 0)) { const r = 0.3 * Math.min(1, (o.book.open - 0.4) / 0.6); ctx.save(); ctx.translate(headX, headY + 9); ctx.rotate(r); ctx.translate(-headX, -(headY + 9)); pupuHead(headX, headY, o, ex); ctx.restore(); }   // (v277) reading: his head tips down to the pages
+  if (o.book && (o.book.open || 0) > 0.4 && !(o.book.place > 0)) { const r = 0.22 * Math.min(1, (o.book.open - 0.4) / 0.6); ctx.save(); ctx.translate(headX, headY + 9); ctx.rotate(r); ctx.translate(-headX, -(headY + 9)); pupuHead(headX, headY, o, ex); ctx.restore(); }   // (v277) reading: his head tips down to the pages
   else pupuHead(headX, headY, o, ex);
   drawArm(true);
   if (o.drink) { const mx = headX + 7, my = headY + 9; ctx.save(); ctx.translate(mx + 1, my - 2); ctx.rotate(-0.5); box(-3, -5, 6, 11, 'rgba(190,225,240,.95)', 1.5, 1.6); ctx.restore(); }

@@ -61,4 +61,4 @@
 
 
 ## Dadu's storybook (v277)
-Brown leather cover (#7A4A26) with a darker inset border (#4A2A16), a gold four-pointed star in the middle (#E8B53A), cream page edges. Held against the chest when carried; held out flat at chest height to read, head tipped down; both arms forward to place it.
+Brown leather cover (#7A4A26) with a darker inset border (#4A2A16), a gold four-pointed star in the middle (#E8B53A), cream page edges. Held against the chest when carried; held open at chest height to read (cover and star still facing us, the pages fanned up towards him, never over his face), head tipped down; both arms forward to place it.
