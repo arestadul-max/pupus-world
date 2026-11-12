@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.1-demo · 2026-11-13
+- Fixed: in Chapter 3, jumping near the slope to the burner bench could drop Pupu below the floor.
+- Pupu now holds the old storybook up in front of his face, and it opens into a V.
+- The book is already lying on the secret room's floor when Pupu finds the radio.
+
 ## 1.4.0-demo · 2026-11-13
 - **Chapter 3 now ends with a mystery:** an old cloth-bound book under the radio's table. Its pages are blank, a beam of golden light bursts out and pulls Pupu and Mishti inside.
 - **Chapter 4 · The Library of Unfinished Stories (first look):** the old Nandanpur Union Library at night. Push the rolling ladder along its rail to climb to the gallery, push the book trolley under the locked cabinet, and find the three glowing books leaking Dadu's handwriting. The three story-worlds come next.
