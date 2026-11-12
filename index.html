@@ -3859,6 +3859,7 @@ function startTeaStall() {
     {say:1, who:'montu', bn:'হ্যাঁ। দাদু রোজ এখানে বসতেন, তোমাকে নিয়ে চা আর পাউরুটি খেতেন।', en:'Yes. Your Dadu sat here every day, having tea and bread with you.'},
     {do: () => { G.cutWalk = 4866; P.face = 1; }},                       // Pupu walks up to Dadu's bench
     {until: () => !G.cutWalk},
+    {do: () => { G.chestTo = 1; tone(220, 0.5, 'triangle', 0.03, 300); }}, {wait: 0.8},   // (v272) Dadu's chest creaks open as he comes to it
     {do: () => { G.cupHand = {k: 0, t: 0}; }},                             // takes out the glowing cup…
     {wait: 0.5},
     {do: () => { G.cupHand.go = 1; }},                                      // …reaches over and sets it in the first hole
@@ -3868,6 +3869,7 @@ function startTeaStall() {
     {do: () => { G.cupHand = null; }},
     {say:1, who:'narr', bn:'পুপু পাথরটা দাদুর পুরোনো কাঠের বাক্সে রাখল। দশটা জায়গার একটা ভরল।', en:'Pupu laid the stone in Dadu\'s old wooden chest. One of its ten places is filled.', auto:3.8},
     {say:1, who:'montu', bn:'বাক্সটা ভরে দাও, পুপু বাবু। কে জানে… হয়তো কেউ আবার এসে তোমার সাথে চা খাবে।', en:'Fill the trunk, Pupu babu. Who knows… maybe someone will come back to have tea with you.'},
+    {do: () => { G.chestTo = 0; tone(160, 0.3, 'triangle', 0.03, 110); }}, {wait: 0.6},   // and closes again, the stone safe inside
     {say:1, who:'mishti', bn:'চলো, সামনে এগোই।', en:'Come on, let\'s keep going.'},   // no hints about what comes next: in a dream, nobody knows where the road leads
   ], () => startMathFall());   // walk on… and the ground opens
 }
@@ -7617,6 +7619,7 @@ function updateGhatWorld(dt) {
 }
 function updateGhat(dt) {
   if (G.cutWalk) { const d = G.cutWalk - P.x; if (Math.abs(d) < 3) { P.x = G.cutWalk; G.cutWalk = 0; } else { P.x += Math.sign(d) * Math.min(Math.abs(d), 150 * dt); P.anim += dt * 150 / 18.6; P.face = Math.sign(d); } }
+  if (G.chestTo !== undefined) { const d = G.chestTo - (G.chestOpen || 0); G.chestOpen = (G.chestOpen || 0) + Math.sign(d) * Math.min(Math.abs(d), dt * 1.6); }
   if (G.cupHand) { G.cupHand.t += dt; if (G.cupHand.go) G.cupHand.k = Math.max(0, Math.min(1, G.cupHand.k + G.cupHand.go * dt * 1.4)); }
   if (G.trayGlow > 0) G.trayGlow -= dt * 0.6;
   if (G.bloomT > 0 && G.bloomT < 3) G.bloomT += dt;
@@ -8046,7 +8049,7 @@ function daduBench(x) {
   kolshi(x + 126, y - 52, 0.7);   // Dadu's little water pot
   // (v271) Dadu's carved wooden chest on his bench, lid open, ten hollows inside (one for each of his things)
   if (G.trayGlow > 0) { const g2 = ctx.createRadialGradient(x + 50, y - 70, 0, x + 50, y - 70, 70); g2.addColorStop(0, 'rgba(255,220,120,' + (0.7 * G.trayGlow) + ')'); g2.addColorStop(1, 'rgba(255,220,120,0)'); ctx.fillStyle = g2; ctx.fillRect(x - 30, y - 140, 160, 140); }
-  drawChestB(x + 50, y - 52, 0.31, 1, G.trayCups || 0);
+  drawChestB(x + 50, y - 52, 0.31, G.chestOpen || 0, G.trayCups || 0);   // (v272) closed until Pupu comes to put the stone in
 }
 // (v271, user's choice "B") Dadu's chest: carved teak with iron bands and studs and a carved rosette; inside, deep red velvet with a hollow
 // shaped for each of his ten things and a quilted lining in the lid. No writing on it. Drawn standing on (cx, by); s = scale (1 = 300 px wide).

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.6-demo · 2026-11-12
+- **Chapter 1:** Dadu's chest at the tea stall stays closed until Pupu comes to put the stone in; it opens, takes the stone, and closes again.
+
 ## 1.3.5-demo · 2026-11-12
 - **Dadu's chest:** the new carved wooden chest (design B, no writing) everywhere: the opening story, the tea stall, the end of every chapter and the HUD icon.
 
