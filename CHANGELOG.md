@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.3-demo · 2026-11-12
+- **TV scene:** fixed for real. After feeding Mishti, her feeding pose kept Pupu crouched in later cutscenes; now he stands straight to turn the TV on and while Ma scolds him.
+
 ## 1.2.2-demo · 2026-11-12
 - **TV scene:** Pupu now really stands straight to use the remote (a half-started jump could freeze him in a crouch during cutscenes).
 

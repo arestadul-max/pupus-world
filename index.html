@@ -1205,7 +1205,7 @@ function proFeed() {
     {do: () => { G.feed.pour = 0; G.feed.wake = 0.001; sfx.meow(); }}, {wait: 1.0},
     {do: () => { G.feed.wake = 0; G.feed.eat = 0.001; G.catFed = true; G.hasTreats = false; }}, {wait: 1.2},
     {say:1, who:'pupu', bn:'(ফিসফিস) খা, মিষ্টি। চুপচাপ খা, কেমন?', en:'(whispering) Eat up, Mishti. Nice and quiet, okay?', mood:'happy'},
-  ], () => { G.state = 'play'; P.crouchOn = true; G.goalT = 0; });
+  ], () => { G.state = 'play'; P.crouchOn = true; G.goalT = 0; G.feed.done = true; });   // (v263) the feeding pose ends here; it used to linger into every later cutscene (the TV!) and keep him crouched
 }
 function proSitH() {
   const R = G.rainSeat; if (!R || G.level !== 'prologue') return 0;
@@ -3473,7 +3473,7 @@ function render() {
       // sitting on the banister, tilted with the stairs
       ctx.save(); ctx.translate(P.x, P.y); ctx.rotate(0.588);
       drawPupu(0, 0, 1, {anim: 0, crouch: true, expr: 'grin', blink: false, look: 1}); ctx.restore();
-    } else drawPupu(P.x, P.y, P.face, {...(G.remote ? {} : jumpPose()), anim: G.remote ? 0 : P.anim, vx: P.vx, run: P.sprint && P.ground, crouch: !G.remote && P.sneak || !!(G.feed && G.state === 'cut' && !G.catFed) || !!(G.feed && G.state === 'cut' && G.feed.eat > 0), expr: G.feed && G.state === 'cut' ? 'happy' : pupuExpr(), blink: P.blink > 0, look: P.look, talk: G.dialog && G.dialog.who === 'pupu', glow: G.thunder > 0, drink: P.drinkT > 0, sitFront: P.sit && P.sit.front ? (P.y - P.sit.y) / SP + 1 : 0, remote: G.remote ? Math.max(0.01, G.remote.up) : 0, pouch: G.feed && G.feed.pour > 0 ? Math.min(1, G.feed.pour / 0.4) * 1.9 : undefined, sit: proSitH() || (P.sit && !P.sit.front ? (P.y - P.sit.y) / SP + 1 : 0)});
+    } else drawPupu(P.x, P.y, P.face, {...(G.remote ? {} : jumpPose()), anim: G.remote ? 0 : P.anim, vx: P.vx, run: P.sprint && P.ground, crouch: !G.remote && P.sneak || !!(G.feed && !G.feed.done && G.state === 'cut' && !G.catFed) || !!(G.feed && !G.feed.done && G.state === 'cut' && G.feed.eat > 0), expr: G.feed && !G.feed.done && G.state === 'cut' ? 'happy' : pupuExpr(), blink: P.blink > 0, look: P.look, talk: G.dialog && G.dialog.who === 'pupu', glow: G.thunder > 0, drink: P.drinkT > 0, sitFront: P.sit && P.sit.front ? (P.y - P.sit.y) / SP + 1 : 0, remote: G.remote ? Math.max(0.01, G.remote.up) : 0, pouch: G.feed && G.feed.pour > 0 ? Math.min(1, G.feed.pour / 0.4) * 1.9 : undefined, sit: proSitH() || (P.sit && !P.sit.front ? (P.y - P.sit.y) / SP + 1 : 0)});
     if (G.feed && G.feed.pour > 0) drawFeedPouch();
     if (G.remote && G.remote.beam >= 0 && G.remote.beam < 0.6) {
       // little signal waves from the remote to the TV
