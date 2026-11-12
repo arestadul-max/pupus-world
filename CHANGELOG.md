@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.3-demo · 2026-11-13
+- The open storybook's cover is wider on both sides.
+
 ## 1.5.2-demo · 2026-11-13
 - The storybook is a little wider in Pupu's hands, with a wider cover when it is open.
 

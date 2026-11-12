@@ -1870,8 +1870,8 @@ function drawPupu(x, y, face1, o) {
         ctx.beginPath(); ctx.moveTo(-th / 2 - 0.4, -hh / 2 - 1.2 * k); ctx.quadraticCurveTo(0, -hh / 2 - 2.4 * k, th / 2, -hh / 2); ctx.lineTo(th / 2, hh / 2); ctx.lineTo(-th / 2 - 0.4, hh / 2 - 0.6); ctx.closePath(); fs('#F4ECD8', 0.8);
         for (let j = 1; j < 3; j++) line(-th / 2 + j * 1.1, -hh / 2 + 0.3, -th / 2 + j * 1.1, hh / 2 - 0.8, 'rgba(60,40,30,.22)', 0.45);
         if (B.flip > 0 && B.flip < 1) { const a = B.flip * Math.PI; ctx.beginPath(); ctx.moveTo(th / 2, -hh / 2 + 1); ctx.quadraticCurveTo(th / 2 - 1 - 2 * Math.sin(a), -hh / 2 - 2 * Math.sin(a), th / 2 - th * B.flip, -hh / 2 - 0.5 - 2.5 * Math.sin(a)); ctx.strokeStyle = '#FBF5E9'; ctx.lineWidth = 1.6; ctx.stroke(); ctx.strokeStyle = 'rgba(28,20,16,.6)'; ctx.lineWidth = 0.45; ctx.stroke(); }
-        box(th / 2 - 3.6 * k, -hh / 2 - 0.4, 1.8 + 2.8 * k, hh + 0.8, '#7A4A26', 0.8, 1);   // the near cover, seen edge-on-ish (v281: wider)
-        line(th / 2 - 3.6 * k + 1.2, -hh / 2 + 2, th / 2 - 3.6 * k + 1.2, hh / 2 - 2, '#4A2A16', 0.6); star4(th / 2 - 1.8 * k + 0.4, 0, 1.2 * k, '#E8B53A'); }
+        box(th / 2 - 5 * k, -hh / 2 - 0.4, 1.8 + 5.4 * k, hh + 0.8, '#7A4A26', 0.8, 1);   // the near cover, seen edge-on-ish (v282: wider on both sides)
+        line(th / 2 - 5 * k + 1.3, -hh / 2 + 2, th / 2 - 5 * k + 1.3, hh / 2 - 2, '#4A2A16', 0.6); star4(th / 2 - 2.3 * k + 0.9, 0, 1.5 * k, '#E8B53A'); }
       else {   // shut: the spine towards us
         box(-th / 2, -hh / 2, th, hh, '#7A4A26', 0.9, 1.1); box(-th / 2 - 0.3, -hh / 2 + 0.6, 1, hh - 1.2, '#F1E6C8', 0.25, 0.4);
         for (const yy of [-hh / 2 + 2.3, hh / 2 - 2.3]) line(-th / 2 + 0.6, yy, th / 2 - 0.4, yy, '#E8B53A', 0.9); star4(0.2, 0, 1.3, '#E8B53A'); }

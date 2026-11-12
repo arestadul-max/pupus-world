@@ -478,3 +478,6 @@ The user sent a full design document (saved as `claude/chapter4-library-design.m
 
 ## v281 (user)
 - The side-view book is a little wider (thickness 5 shut → 8.2 open), and the near cover of the open book is wider with a small gold star on it.
+
+## v282 (user)
+- The open book's cover is wider on both sides (left and right), with a slightly bigger gold star.
