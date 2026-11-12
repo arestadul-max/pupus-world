@@ -4830,7 +4830,8 @@ function drawAnkoPupu() {
   if (P.hidden) { peekEyes(AK_TIFFIN.x + 18, AK_FL - 70); return; }
   const pk = P.pickT > 0 ? Math.sin(Math.PI * (1 - P.pickT / 0.55)) : 0, thr = P.throwT >= 0 ? P.throwT : undefined;
   if (pk > 0 || thr !== undefined) { drawPupu(P.x, P.y, P.face, {anim: 0, reach: pk, throwT: thr, plane: P.plane, expr: 'sneaky', look: P.look}); return; }   // picking up / throwing the paper plane
-  drawPupu(P.x, P.y, P.face, {...jumpPose(), anim: P.anim, plane: P.plane, walkFB: P.zWalk && P.ground ? (P.zDir > 0 ? 'back' : 'front') : undefined, vx: P.zWalk ? P.face * 126 : P.vx, run: P.sprint && P.ground && !P.zWalk, crouch: P.sneak || !!P.crouchOn, push: inLab() && G.ver.lab.pushT > 0 && P.ground, press: inLab() && G.ver.lab.press ? Math.sin(Math.min(1, G.ver.lab.press.t / 0.6) * Math.PI) : 0,   // stays crouched in cutscenes and while someone talks (never stands up under a bench)
+  const zj = inLab() && G.state === 'acaught' && G.ko && G.ko.t < 0.95 && ['bug', 'wire', 'gate', 'eye'].includes(G.ver.lab.why) ? (hash2(Math.floor(G.t * 40), 3) - 0.5) * 6 : 0;   // (v270) shaking with the current
+  drawPupu(P.x + zj, P.y - Math.abs(zj) * 0.5, P.face, {...jumpPose(), anim: P.anim, plane: P.plane, armTh: zj ? 2.6 + zj * 0.1 : undefined, walkFB: P.zWalk && P.ground ? (P.zDir > 0 ? 'back' : 'front') : undefined, vx: P.zWalk ? P.face * 126 : P.vx, run: P.sprint && P.ground && !P.zWalk, crouch: P.sneak || !!P.crouchOn, push: inLab() && G.ver.lab.pushT > 0 && P.ground, press: inLab() && G.ver.lab.press ? Math.sin(Math.min(1, G.ver.lab.press.t / 0.6) * Math.PI) : 0,   // stays crouched in cutscenes and while someone talks (never stands up under a bench)
  expr: G.state === 'acaught' || G.state === 'abook' ? 'scared' : (G.ak && Math.abs(G.ak.bx - P.x) < 240) ? 'scared' : 'sneaky', blink: P.blink > 0, look: P.look, talk: G.dialog && G.dialog.who === 'pupu'});
 }
 function drawAnkoHUD() {
@@ -6325,7 +6326,7 @@ function drawLabEnd() {
 //   powers down, the secret room opens: Dadu's radio.
 const LG = 1660, LF1 = 1270, LF2 = 980, LF3 = 560, LROOF = 220, LW = 3420, LSL = 22;
 const LAB_SECRET_X = 300, LAB_RADIO_X = 150, LAB_LIFT = {x0: 2150, x1: 2280}, LAB_EYE = {x: 530, y: LF1 + LSL};
-const LAB_CRATES = [470, 690],   // (v266) these are now tall lab worktables he crawls under (like the schoolyard bench)
+const LAB_CRATES = [445, 640],   // (v266) these are now tall lab worktables he crawls under (like the schoolyard bench)
       LAB_SOCKETS = [760, 900, 1040], LAB_SOCK_PART = ['battery', 'knob', 'antenna'];
 const LAB_PRESS_X = 2380, LAB_GATE_X = 2500, LAB_PIT = [2580, 2820], LAB_CAB_X = 3150, LAB_SWITCH_X = 3320, LAB_CAP_X = 2060;
 const LAB_TUNNEL = {x0: 2880, x1: 3060, y: LF1}, LAB_WIRES = {x0: 3150, x1: 3250, y: LF2};
@@ -6346,7 +6347,7 @@ const LAB_LADDERS = [
   {id: 's3', x: 3392, y0: LF1, y1: LF2, kind: 'back'},
   {id: 'bv', x: 2990, y0: LF2, y1: LF2 - 180, kind: 'front'}, {id: 's4', x: 2915, y0: LF2 - 180, y1: LF2 - 340, kind: 'side'},
 ];
-const LAB_BUGS0 = [{a: 860, b: 950, y: LG}, {a: 2720, b: 2850, y: LF2 - 340}];   // (v266) no spark-bug by the cabinet any more; room on both sides of the first one
+const LAB_BUGS0 = [{a: 885, b: 960, y: LG}, {a: 2720, b: 2850, y: LF2 - 340}];   // (v266) no spark-bug by the cabinet any more; room on both sides of the first one
 function inLab() { return typeof G !== 'undefined' && G && G.level === 'anko2' && G.ver && G.ver.phase === 'lab'; }
 function labFlame(bn) { const L = G.ver && G.ver.lab; if (L && L.done) return 0; const t = (G.t + bn.ph) % 3.2; return t < 1.5 ? 0 : t < 1.9 ? 1 : 2; }
 function labCyc(t, per, a, b, c) {   // 0 at rest, rising to 1 and back: a = hold at 0, b = move, c = hold at 1 (the rest moves back)
@@ -6415,11 +6416,11 @@ function labHurt(why) {
   if (G.state !== 'aplay') return;
   const L = G.ver.lab; L.why = why; P.ladder = null; P.mantle = null;
   if (why === 'fall') { G.state = 'acaught'; L.fall = {t: 0}; G.fadeTarget = 1; G.fadeSpeed = 2.4; tone(400, 0.5, 'sine', 0.04, 120); return; }
-  G.state = 'acaught'; P.vx = 0; P.hidden = null; G.ko = {kind: 'zap', t: 0.9, hit: false}; G.flash = 0.35; G.shake = 0.2;
+  G.state = 'acaught'; P.vx = 0; P.hidden = null; G.ko = {kind: 'zap', t: ['bug', 'wire', 'gate', 'eye'].includes(why) ? 0 : 0.9, hit: false}; G.flash = 0.35; G.shake = ['bug', 'wire', 'gate', 'eye'].includes(why) ? 0.9 : 0.2;   // (v270) an electric shock: about a second of crackling before he drops
   if (why === 'fire') { tone(300, 0.35, 'sawtooth', 0.06, 120); G.pSay = {bn: 'উহ্‌! গরম!', en: 'Ow! Hot!', t: 1}; }
   else if (why === 'crush') { tone(80, 0.3, 'square', 0.07, 40); G.pSay = {bn: 'ধপাস!', en: 'Thud!', t: 1}; }
   else if (why === 'eye') { tone(900, 0.4, 'square', 0.05, 300); G.pSay = {bn: 'ধরা পড়ে গেছি!', en: 'Spotted!', t: 1}; }
-  else { tone(1800, 0.25, 'square', 0.05, 300); tone(90, 0.3, 'sawtooth', 0.05, 60, 0.05); G.pSay = {bn: 'ঝিঁইইৎ!', en: 'Zzzzt!', t: 1}; }
+  else { tone(1800, 0.25, 'square', 0.05, 300); tone(90, 0.3, 'sawtooth', 0.05, 60, 0.05); tone(2400, 0.6, 'square', 0.03, 600, 0.05); G.pSay = {bn: 'ঝিঁইইইৎ!', en: 'Zzzzzt!', t: 1}; }
 }
 function labRetryTip() { const w = G.ver.lab.why;
   retryTip({eye: 'Spotted!', fire: 'Too hot!', crush: 'Squashed!', gate: 'Zap!', fall: 'You fell!'}[w] || 'Zap!'); }   // (v266) just what happened, no answers
@@ -6429,10 +6430,11 @@ function labLow(z, wire) {
   if (!(P.x > z.x0 - 8 && P.x < z.x1 + 8) || P.y < z.y - 200 || P.y > z.y + 2) return;
   const ox = P.px0 ?? P.x, wasIn = ox > z.x0 - 8 && ox < z.x1 + 8, under = P.ground && Math.abs(P.y - z.y) < 4 && (P.sneak || P.crouchOn);
   if (under || (wasIn && P.ground && Math.abs(P.y - z.y) < 4)) { P.crouchOn = true; return; }
+  if (wire && G.state === 'aplay') return labHurt('wire');   // (v270) standing (or jumping) into the live wires: a full electric shock
   const side = ox <= z.x0 ? -1 : ox >= z.x1 ? 1 : (P.vx >= 0 ? -1 : 1);
   P.x = side < 0 ? z.x0 - (wire ? 30 : 8) : z.x1 + (wire ? 30 : 8); P.vx = 0;
   if (!(L.zapT > 0)) { L.zapT = 1.6; G.shake = 0.12;
-    if (wire) { G.flash = 0.18; tone(1600, 0.18, 'square', 0.04, 400); G.pSay = {bn: 'ঝিঁৎ! তারের নিচে বসে বসে যাও!', en: 'Zzt! Crouch under the wires!', t: 1.5}; }
+    if (wire) { return labHurt('wire'); }
     else { tone(140, 0.12, 'square', 0.06, 90); G.pSay = {bn: 'উফ্‌! বসে সুড়ঙ্গে ঢোকো!', en: 'Ouch! Crouch to get into the tunnel!', t: 1.5}; } }
 }
 // ---- ladders ----
@@ -6994,7 +6996,7 @@ function labBug3(b) {   // (v269, user reference) a little red robot imp: a blac
   if (b.pop >= 1) return;
   line(b.a - 30, b.y - 3, b.b + 30, b.y - 3, '#121418', 6);
   const s = 1 - b.pop, hop = Math.abs(Math.sin(b.anim)) * 3, t = G.t, d = b.dir;
-  ctx.save(); ctx.translate(b.x, b.y - hop); ctx.scale(s * d * 1.35, s * 1.35);
+  ctx.save(); ctx.translate(b.x, b.y - hop); ctx.scale(s * d * 1.08, s * 1.08);
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(0, -26, 4, 0, -26, 54); g.addColorStop(0, 'rgba(255,40,40,.65)'); g.addColorStop(1, 'rgba(255,40,40,0)'); ctx.fillStyle = g; ctx.fillRect(-54, -80, 108, 108);
   for (let k = 0; k < 9; k++) { const ph = (t * 0.7 + k * 0.37) % 1, px = Math.sin(k * 2.3 + t) * 26 + (k % 2 ? 10 : -10), py = -10 - ph * 60, sz = 3 + (k % 3) * 1.6; ctx.globalAlpha = Math.sin(ph * Math.PI); ctx.fillStyle = '#FF3A3A'; ctx.fillRect(px - sz / 2, py - sz / 2, sz, sz); } ctx.restore();
   const R = '#E8282C', RD = '#9A1418', K = '#14161C';
@@ -7011,9 +7013,12 @@ function labBug3(b) {   // (v269, user reference) a little red robot imp: a blac
   line(4, -60, 6, -50, 'rgba(255,200,200,.6)', 1.4);
   // the TV-screen head: red casing, black screen, slanted angry red eyes and a jagged grin
   box(-17, -48, 34, 26, R, 5, 2); box(-13, -45, 26, 20, K, 4, 1.4); box(15, -40, 4, 8, RD, 1, 1.2);
-  ctx.save(); ctx.shadowColor = '#FF2A2A'; ctx.shadowBlur = 8;
-  for (const ex of [-6, 6]) { ctx.beginPath(); ctx.moveTo(ex - 4 * Math.sign(ex), -40); ctx.lineTo(ex + 4 * Math.sign(ex), -37); ctx.lineTo(ex - 3 * Math.sign(ex), -35); ctx.closePath(); ctx.fillStyle = '#FF3A3A'; ctx.fill(); }
-  ctx.beginPath(); ctx.moveTo(-6, -31); ctx.lineTo(-3, -29); ctx.lineTo(0, -31); ctx.lineTo(3, -29); ctx.lineTo(6, -31); ctx.lineTo(3, -28); ctx.lineTo(0, -29.5); ctx.lineTo(-3, -28); ctx.closePath(); ctx.fillStyle = '#FF3A3A'; ctx.fill(); ctx.restore();
+  ctx.save(); ctx.shadowColor = '#FF2A2A'; ctx.shadowBlur = 8; ctx.fillStyle = '#FF3A3A'; ctx.strokeStyle = '#FF3A3A'; ctx.lineCap = 'round';   // (v270) a furious face: brows slammed down into a V, glaring slit eyes, a snarl with fangs
+  ctx.lineWidth = 2.6; ctx.beginPath(); ctx.moveTo(-11, -43); ctx.lineTo(-2, -38.5); ctx.moveTo(11, -43); ctx.lineTo(2, -38.5); ctx.stroke();
+  for (const sg of [-1, 1]) { ctx.beginPath(); ctx.moveTo(sg * 10, -38.5); ctx.lineTo(sg * 3, -36); ctx.lineTo(sg * 9, -34.5); ctx.closePath(); ctx.fill(); }
+  ctx.beginPath(); ctx.moveTo(-8, -28); ctx.lineTo(-5, -31); ctx.lineTo(-2.5, -28.5); ctx.lineTo(0, -31); ctx.lineTo(2.5, -28.5); ctx.lineTo(5, -31); ctx.lineTo(8, -28); ctx.lineTo(5, -27); ctx.lineTo(0, -28.2); ctx.lineTo(-5, -27); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-4, -28.5); ctx.lineTo(-3, -25.5); ctx.lineTo(-2, -28.5); ctx.moveTo(2, -28.5); ctx.lineTo(3, -25.5); ctx.lineTo(4, -28.5); ctx.fill();
+  ctx.restore();
   ctx.restore();
 }
 function drawLabFront() {
@@ -7024,6 +7029,12 @@ function drawLabFront() {
   // sparks on the live wires
   if (on) { const z = LAB_WIRES, mx = (z.x0 + z.x1) / 2, y = LF2 - 146, fl = Math.sin(G.t * 31) * Math.sin(G.t * 13); ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(mx, y, 4, mx, y, 120); g.addColorStop(0, 'rgba(120,200,255,' + (0.18 + Math.max(0, fl) * 0.25) + ')'); g.addColorStop(1, 'rgba(120,200,255,0)'); ctx.fillStyle = g; ctx.fillRect(mx - 120, y - 120, 240, 240);
     if (fl > -0.2) for (let s = 0; s < 3; s++) { const sx = z.x0 + 14 + ((G.t * 300 + s * 47) % (z.x1 - z.x0 - 28)); ctx.beginPath(); ctx.moveTo(sx, y - 4); for (let j = 1; j < 6; j++) ctx.lineTo(sx + (hash2(Math.floor(G.t * 20) + s, j) - 0.5) * 18, y + j * 5); ctx.strokeStyle = 'rgba(200,240,255,.9)'; ctx.lineWidth = 1.6; ctx.stroke(); } ctx.restore(); }
+  if (G.state === 'acaught' && ['bug', 'wire', 'gate', 'eye'].includes(L.why) && G.ko && G.ko.t < 0.95 && !G.ko.back) {   // (v270) electrocuted: arcs crackle all round him
+    const cx = P.x, cy = P.y - 64, fl = Math.floor(G.t * 28); ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createRadialGradient(cx, cy, 6, cx, cy, 110); g.addColorStop(0, 'rgba(150,220,255,' + (0.35 + 0.25 * (fl % 2)) + ')'); g.addColorStop(1, 'rgba(150,220,255,0)'); ctx.fillStyle = g; ctx.fillRect(cx - 110, cy - 110, 220, 220);
+    for (let k = 0; k < 6; k++) { const a0 = hash2(fl, k) * 6.28; ctx.beginPath(); let x = cx + Math.cos(a0) * 14, y = cy + Math.sin(a0) * 40; ctx.moveTo(x, y); for (let j = 0; j < 5; j++) { x += Math.cos(a0) * 11 + (hash2(fl + j, k) - 0.5) * 20; y += Math.sin(a0) * 16 + (hash2(fl, k + j) - 0.5) * 20; ctx.lineTo(x, y); } ctx.strokeStyle = k % 2 ? 'rgba(255,255,255,.95)' : 'rgba(140,210,255,.9)'; ctx.lineWidth = k % 2 ? 2.4 : 1.6; ctx.stroke(); }
+    if (fl % 3 === 0) { ctx.fillStyle = 'rgba(220,240,255,.25)'; ctx.beginPath(); ctx.ellipse(cx, cy, 34, 72, 0, 0, 7); ctx.fill(); }
+    ctx.restore(); }
   if (G.state === 'acaught' && L.why === 'eye' && G.ko && G.ko.t > 0.1 && G.ko.t < 1.0 && !G.ko.back) {   // (v267) only the moment he's hit, never after the respawn   // (v266) the eye shoots a crackling bolt of current down at him
     const ex = LAB_EYE.x, ey = LAB_EYE.y + 48, tx = P.x, ty = P.y - 70; ctx.save(); ctx.globalCompositeOperation = 'lighter';
     for (let s2 = 0; s2 < 3; s2++) { ctx.beginPath(); ctx.moveTo(ex, ey); const n = 9; for (let j = 1; j <= n; j++) { const u = j / n, jx = (hash2(Math.floor(G.t * 30) + s2, j) - 0.5) * (j < n ? 36 : 0); ctx.lineTo(ex + (tx - ex) * u + jx, ey + (ty - ey) * u + jx * 0.4); } ctx.strokeStyle = s2 ? 'rgba(255,120,90,.7)' : 'rgba(255,240,220,.95)'; ctx.lineWidth = s2 ? 2 : 3.4; ctx.stroke(); }

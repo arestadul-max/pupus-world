@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.4-demo · 2026-11-12
+- **Chapter 3:** angrier, smaller imps; an electrocution animation for every electric hazard; the live wires now shock; more room between the tables and the imp.
+
 ## 1.3.3-demo · 2026-11-12
 - **Chapter 3:** the switch machine is a jump-up step (no ladder); new red robot imp enemy under red warning lamps; Thunder Boy posters match Pupu's bedroom poster; console slots in any order.
 
