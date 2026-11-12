@@ -48,3 +48,13 @@
 - After a mistake, a **short tip** explains what went wrong and which button helps.
 - Controls taught in the Prologue are not taught again later; only new controls get button pop-ups.
 - One language at a time: everything in English, or everything in Bangla.
+
+## v265 · Chapter 3 lab art pass (after the user's reference picture)
+- Every room has stone-block walls in its own colour (blue-grey ground floor, warm loft, rust-brick machine room, blue upper hall, purple control room and reactor core, warm secret room), drawn only where the camera looks.
+- Hanging dome lamps with a metal shade, a warm bulb and a soft cone of light (ground floor, loft, machine room, upper hall, control room, secret room).
+- Ivy and hanging vines along ledges and the roof corners; potted plants (ground floor corners, on the bench, by the lift, reactor room corner, control room).
+- Purple neon tubes on the reactor room walls; the upper hall back wall shows the night jungle through it; the glass tank has diagonal reflections and a small satellite dish on top.
+- Kalo-Bijli's desk with two computers and a chair in the control room; the secret room cover is a plain door marked K-B.
+- Outside: jungle silhouettes behind the roof and at both sides, dark earth and bushes below, a thick dark outline around the building; rubble in the dark machinery space.
+
+- **Dadu's chest (v271):** carved teak chest with iron bands and studs and a carved rosette, red velvet inside with ten shaped hollows, quilted lid lining; never any writing on it. Drawn in 3/4 view (v273): the lid is hinged at the back and swings up and back to open, never slides or pops.
