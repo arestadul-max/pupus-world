@@ -6333,7 +6333,7 @@ const LS_ = (x0, x1, y, o) => Object.assign({x0, y0: y, x1, y1: y, floor: 1}, o 
 const LAB_S = {   // (v275) 'under': solid ground beneath the slope and the burner bench, so he can never drop below the floor there
   floorA: LS_(-400, 1040, LG), ramp: {x0: 1040, y0: LG, x1: 1130, y1: LG - 100, floor: 1}, bench: LS_(1130, 1360, LG - 100), under: LS_(1040, 1360, LG), floorB: LS_(1360, 2300, LG),
   hang: LS_(1400, 1500, LG - 172), loft: LS_(1470, 1900, LF1), shelfB: LS_(2050, 2130, LG - 150),
-  f1a: LS_(2060, 2150, LF1), f1b: LS_(2280, LAB_PIT[0], LF1), n1: LS_(2735, 2795, LF1 - 60), f1c: LS_(LAB_PIT[1], LW + 400, LF1), swTop: LS_(3225, 3350, LF1 - 70),
+  f1b: LS_(2280, LAB_PIT[0], LF1), n1: LS_(2735, 2795, LF1 - 60), f1c: LS_(LAB_PIT[1], LW + 400, LF1), swTop: LS_(3225, 3350, LF1 - 70),
   f2: LS_(1500, LW + 400, LF2), shelfA: LS_(2900, 3080, LF2 - 180), gantry: LS_(2700, 2930, LF2 - 340), sp1: LS_(2390, 2495, 460), sp2: LS_(2200, 2320, 480), cap: LS_(1995, 2125, 500),
   f3: LS_(40, 1990, LF3),
 };
@@ -6476,7 +6476,7 @@ function labMishti(dt) {
 }
 function labOn(s) { return P.ground && P.surf === s; }
 const LAB_HEAD = 146;   // (v262) how tall Pupu stands, in world px
-const LAB_CEIL = [[0, 1900, LF1 + LSL], [2060, 2150, LF1 + LSL], [2280, 2580, LF1 + LSL], [2820, LW, LF1 + LSL], [1500, 3370, LF2 + LSL], [3415, LW, LF2 + LSL], [0, 1990, LF3 + LSL], [2700, 2930, LF2 - 340 + 12], [-40, LW + 40, LROOF]];
+const LAB_CEIL = [[0, 1900, LF1 + LSL], [2280, 2580, LF1 + LSL], [2820, LW, LF1 + LSL], [1500, 3370, LF2 + LSL], [3415, LW, LF2 + LSL], [0, 1990, LF3 + LSL], [2700, 2930, LF2 - 340 + 12], [-40, LW + 40, LROOF]];
 function labCeil() {
   if (P.ground || P.vy >= 0) return;
   for (const [a, b, c] of LAB_CEIL) if (P.x > a - 10 && P.x < b + 10 && P.y > c + 8 && P.y - LAB_HEAD < c) { P.y = c + LAB_HEAD; P.vy = 0; if (!(G.ver.lab.bumpT > 0)) { G.ver.lab.bumpT = 0.4; tone(160, 0.06, 'square', 0.03, 90); } }
@@ -7209,7 +7209,7 @@ function drawLab() {
   for (const [bx, w, h] of [[1500, 60, 60], [1560, 50, 90], [1840, 46, 46]]) labCrate(bx, LF1, w, h);
   // ---- floors and walls ----
   labSlab(-20, LW + 20, LG, true, 40);
-  labSlab(0, 1900, LF1, false); labSlab(1470, 1900, LF1, true); labSlab(2060, LAB_LIFT.x0, LF1, true); labSlab(LAB_LIFT.x1, LAB_PIT[0], LF1, true); labSlab(LAB_PIT[1], LW, LF1, true);
+  labSlab(0, 1900, LF1, false); labSlab(1470, 1900, LF1, true); labSlab(LAB_LIFT.x1, LAB_PIT[0], LF1, true); labSlab(LAB_PIT[1], LW, LF1, true);
   labSlab(1500, 3370, LF2, true); labSlab(3415, LW, LF2, true);
   labSlab(0, 1500, LF3, true); labSlab(1500, 1990, LF3, true, 14); for (let x = 1510; x < 1990; x += 40) line(x, LF3 - 34, x, LF3, '#5A6474', 2); line(1500, LF3 - 34, 1990, LF3 - 34, '#6A7484', 3);
   labSlab(-20, LW + 20, LROOF - 20, false, 20);

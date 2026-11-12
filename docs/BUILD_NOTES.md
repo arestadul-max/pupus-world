@@ -456,3 +456,6 @@ The user sent a full design document (saved as `claude/chapter4-library-design.m
 - **Fell below the floor in the lab (Chapter 3, the slope up to the burner bench):** jumping near the slope could put him under its line, and there was no ground under the slope and the bench. Now `LAB_S.under` is solid ground beneath them, the slope is a solid wedge (inside it he is set on its top), and the bench side starts where the slope ends. Tested: 112 jumps (positions × timings × walk/run): 0 falls (was 62). Code note: never put a `//` comment in the middle of a line of object entries (it hid `floorB` once).
 - **Holding the book (user's sketch):** both hands hold it up in front of his face; we see its maroon cloth back with a gold border and a round emblem; opened, the cover tilts out and the pages fan up towards him in a V. The beam rises from the open pages.
 - **The book is seen first:** it lies on the floor of the secret room (left of the radio's table, `LAB_BOOK_X`) from the moment the wall slides open, with a faint glint now and then; Mishti: "what's that lying on the floor?"; Pupu walks over, squats and picks it up.
+
+## v276 (user)
+- Removed the short dead-end ledge beside the top of the lift shaft in the lab (`f1a`, 2060–2150 at LF1): its floor, its slab and the head-bump ceiling under it. The lift still arrives at the machine-room floor on its right.

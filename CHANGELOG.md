@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.2-demo · 2026-11-13
+- Removed the dead-end ledge beside the top of the lift in Chapter 3.
+
 ## 1.4.1-demo · 2026-11-13
 - Fixed: in Chapter 3, jumping near the slope to the burner bench could drop Pupu below the floor.
 - Pupu now holds the old storybook up in front of his face, and it opens into a V.
