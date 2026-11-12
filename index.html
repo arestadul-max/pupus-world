@@ -6505,7 +6505,12 @@ function updateLab(dt) {
     if (near) { P.ladder = near; P.climbPh = 0; P.vx = 0; P.vy = 0; P.ground = false; P.surf = null; P.buffer = 0; edges.jump = false; edges.sneak = false; P.mantle = null; if (Math.abs(P.y - near.y1) < 6) { P.y = near.y1; P.mantle = {u: 0, dir: -1}; } if (!G.shown.ladder) { G.shown.ladder = true; } if (near.y0 - P.y < 10) G.shown.ladderUp = true; } }
   if (P.ladder) return;
   labCeil(); L.bumpT = (L.bumpT || 0) - dt; labHints(dt);
-  if (P.ground && Math.abs(P.y - LG) < 4 && LAB_CRATES.some(c => Math.abs(P.x - c) < 80) && !P.crouchOn) P.crouchOn = true;   // (v266) under a worktable: stay crouched
+  if (P.ground && Math.abs(P.y - LG) < 4) for (const c of LAB_CRATES) {   // (v268) the Chapter 2 bench rule: standing, he bumps his head on the table's edge and stops; crouched, he creeps under; once under, he stays crouched
+    const lo = c - 92, hi = c + 92, ox = P.px0 ?? P.x, inNow = P.x > lo && P.x < hi, inBefore = ox > lo && ox < hi, low = P.sneak || P.crouchOn;
+    if (inNow && inBefore && !low) { P.crouchOn = true; P.sneak = true; }
+    if (inNow && !inBefore && !low) { P.x = ox <= lo ? lo : hi; P.vx = 0; G.shake = 0.12; if (!(L.tblBumpT > 0)) { L.tblBumpT = 1.2; tone(140, 0.12, 'square', 0.06, 90); G.pSay = {bn: 'উফ্‌! মাথা ঠুকে গেল!', en: 'Ouch! Bumped my head!', t: 1.4}; } }
+  }
+  L.tblBumpT = (L.tblBumpT || 0) - dt;
   // side walls of the building, and the secret room's sliding wall until it opens
   if (Math.abs(P.y - LF3) < 120 && P.x < LAB_SECRET_X + 30 && L.secret < 0.95) P.x = LAB_SECRET_X + 30;
   if (P.y > LF1 + 10 && P.x > 2290 && P.x < 2420) P.x = 2290;   // the ground floor ends at the lift shaft

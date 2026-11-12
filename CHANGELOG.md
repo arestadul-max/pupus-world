@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.2-demo · 2026-11-12
+- **Chapter 3:** the lab tables use the Chapter 2 bench rule: standing he bumps his head and stops; crouch to creep under.
+
 ## 1.3.1-demo · 2026-11-12
 - **Chapter 3:** after a checkpoint restart, the eye's bolt no longer appears to shock Pupu again while he gets up.
 

@@ -437,3 +437,4 @@ A cut-away building on four floors (ground 1600, machine room 1270, upper hall 9
 - **Dadu's tin trunk at the end of every chapter:** the trunk from Montu-da's tea stall shimmers into view and the chapter's memory thing flies in (Chapter 2: the glasses, 2/10; Chapter 3: the radio, 3/10).
 - **Story intro:** the "enemy" dream bubble now shows a sly masked thief's face instead of the crow.
 - **Eye bolt (v267):** the bolt of current now shows only at the moment he's hit; it used to keep drawing to his new spot while he got up at the checkpoint, which looked like a second shock.
+- **Lab tables (v268):** now work exactly like the Chapter 2 benches: walking or running in standing up, he bumps his head on the table's edge and stops ("Ouch! Bumped my head!"); crouched, he creeps under; once under he stays crouched until he comes out.
