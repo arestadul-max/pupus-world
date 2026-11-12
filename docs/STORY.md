@@ -30,6 +30,11 @@ Through the door, Pupu and Mishti step into a huge laboratory, floor upon floor,
 
 **Memory 3** opens: an evening at their village house, on the raised mud verandah (dawa) with Dadu, the radio "broken", and little Pupu putting it back together with his own hands while Dadu shows him how: the battery pushed in, the knob screwed on, the antenna pulled out long, then the dial turned slowly through the hiss until a song comes through. "Fix things with care and patience, and even broken things sing again." Back in the lab, the radio still plays: "Mm… it still sings."
 
+**The book under the table:** as they turn to go, Mishti spots an old cloth-bound book under the radio's table, its corners worn soft. Pupu feels he knows it but can't remember why. He opens it: every page is blank, a few handwritten letters fading away. A beam of golden light bursts out, the letters whirl around them like fireflies and pull Pupu and Mishti inside. "A BOOK?! Where did they go?… I'll find you, Pupu!"
+
+## Chapter 4 · The Library of Unfinished Stories
+They tumble out of the light onto the reading table of the old **Nandanpur Union Library** at night: tin roof, whitewashed brick, tall wooden almirahs, a hurricane lamp, moonlight through the skylight. The book in Pupu's hands is still blank. Three books glow on the shelves, letters leaking out of them in the same handwriting, and Pupu works out that the words have flown into them. Each book holds an unfinished folk tale whose world is incomplete (bridges stop halfway, houses miss walls, platforms are only pencil lines) until Pupu brings back its words: **the Clever Jackal and the Crocodile** (a painted-paper river), **Tuntuni and the Cat** (a paper-cut village and a giant hungry cat) and **the Tiger and the Fox** (a shadow-puppet theatre). Kalo-Bijli flickers in now and then, trying to grab the glowing pages. The last page stays empty until Pupu finishes the story himself; then the cover shows Dadu's handwritten dedication: it is the storybook Dadu read to him every night. **Memory 4:** Dadu in his armchair by the hurricane lamp doing every voice, little Pupu matching the voices, turning the pages and finishing the story; the book goes into the chest (4/10). A paper kite's tail drifts in through the skylight and pulls them up to the roof: Chapter 5.
+
 ## Dadu's ten things
 
 | # | Chapter | Thing | Memory |

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.0-demo · 2026-11-13
+- **Chapter 3 now ends with a mystery:** an old cloth-bound book under the radio's table. Its pages are blank, a beam of golden light bursts out and pulls Pupu and Mishti inside.
+- **Chapter 4 · The Library of Unfinished Stories (first look):** the old Nandanpur Union Library at night. Push the rolling ladder along its rail to climb to the gallery, push the book trolley under the locked cabinet, and find the three glowing books leaking Dadu's handwriting. The three story-worlds come next.
+- Chapter 4 added to Select Mission.
+
 ## 1.3.7-demo · 2026-11-12
 - **Dadu's chest:** now a 3-D chest seen from the side; its lid swings up on a back hinge when it opens, everywhere it appears.
 
