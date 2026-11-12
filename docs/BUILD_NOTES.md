@@ -475,3 +475,6 @@ The user sent a full design document (saved as `claude/chapter4-library-design.m
 
 ## v280 (user: "imagine a man reading a book seen from the side")
 - **RULE: draw held objects in true side view (perspective), not a 3/4 picture pasted on a profile character.** A book seen from the side is edge-on: *shut* against his chest we only see its thickness (the spine, gold bands, a tiny star); *open* to read, its halves make a V towards his face with the spine furthest from him, so from the side it is a narrow slab of brown cover tipped back towards his eyes with the top edges of the pages showing; a turning page is a thin arc over the top. He holds it out at arm's length just below his chin, head tipped down. *Place*: the book turns flat and is laid down; *use*: held out upright, edge-on, with gold rays.
+
+## v281 (user)
+- The side-view book is a little wider (thickness 5 shut → 8.2 open), and the near cover of the open book is wider with a small gold star on it.

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.2-demo · 2026-11-13
+- The storybook is a little wider in Pupu's hands, with a wider cover when it is open.
+
 ## 1.5.1-demo · 2026-11-13
 - The storybook is now drawn in true side view: edge-on when held shut, a narrow open book tipped towards Pupu's face when he reads.
 
