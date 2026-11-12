@@ -6749,7 +6749,6 @@ function drawLab() {
   // ---- the ground-floor lab ----
   for (const wx of [600, 1200]) { box(wx - 90, LF1 + 60, 180, 150, '#2A3440', 3, 2); const g = ctx.createLinearGradient(0, LF1 + 60, 0, LF1 + 210); g.addColorStop(0, '#16285A'); g.addColorStop(1, '#2C4486'); ctx.fillStyle = g; ctx.fillRect(wx - 82, LF1 + 68, 164, 134); line(wx, LF1 + 68, wx, LF1 + 202, '#2A3440', 4); line(wx - 82, LF1 + 135, wx + 82, LF1 + 135, '#2A3440', 4); }
   labTank(60, LG - 210, 70, 190, 'rgba(90,230,130,.6)'); labTank(1580, LG - 150, 54, 130, 'rgba(230,120,200,.55)');
-  { const x0 = 1880, y0 = LG - 330; box(x0 - 70, y0, 150, 10, '#5A3E28', 1, 2); }
   labPostersVillainAt(240, LF1 + 70, 880, LF1 + 60);
   // the loft: boxes and a lamp
   for (const [bx, w, h] of [[1500, 60, 60], [1560, 50, 90], [1840, 46, 46]]) labCrate(bx, LF1, w, h);
