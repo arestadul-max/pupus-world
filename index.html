@@ -164,7 +164,7 @@ const held = {}, edges = {};
 const KM = {ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',Space:'jump',KeyK:'jump',   // W/S and ↑/↓ do nothing in the flat levels; in Chapter 2 (depth) they walk into / out of the room (kmap)
  
   ShiftLeft:'sprint',ShiftRight:'sprint',KeyC:'sneak',KeyE:'use',Enter:'use',KeyR:'act',KeyJ:'use',KeyP:'pause',Escape:'pause',KeyM:'mute',KeyQ:'menu',Digit1:'ch1',Numpad1:'ch1',Digit2:'ch2',Digit3:'ch3',Numpad2:'ch2'};
-const kmap = c => (typeof G !== 'undefined' && G && (G.level === 'anko' || (G.ver && G.ver.lab && G.ver.lab.board && !G.ver.lab.board.done)) && ['KeyW', 'ArrowUp', 'KeyS', 'ArrowDown'].includes(c)) ? (c === 'KeyW' || c === 'ArrowUp' ? 'up' : 'down') : KM[c];   // Chapter 2: up/down = walk deeper / nearer
+const kmap = c => (typeof G !== 'undefined' && G && (G.level === 'anko' || inLab()) && ['KeyW', 'ArrowUp', 'KeyS', 'ArrowDown'].includes(c)) ? (c === 'KeyW' || c === 'ArrowUp' ? 'up' : 'down') : KM[c];   // Chapter 2: up/down = walk deeper / nearer
 window.addEventListener('keydown', e => { const a = kmap(e.code); if (!a) return; e.preventDefault(); if (!held[a]) edges[a] = true; held[a] = true; audioInit(); });
 window.addEventListener('keyup', e => { const a = kmap(e.code); if (a) held[a] = false; if (KM[e.code]) held[KM[e.code]] = false; });
 window.addEventListener('blur', () => { for (const k in held) held[k] = false; });
@@ -182,7 +182,7 @@ let joyRun = false;
 (() => { const el = document.getElementById('joy'), knob = document.getElementById('joyKnob'); if (!el) return; let pid = null;
   const setH = (a, v) => { if (v && !held[a]) edges[a] = true; held[a] = v; };
   const apply = (dx, dy) => {   // dx, dy in -1..1
-    const dp = typeof G !== 'undefined' && G && G.level === 'anko';
+    const dp = typeof G !== 'undefined' && G && (G.level === 'anko' || inLab());
     setH('left', dx < -0.28); setH('right', dx > 0.28);
     setH('up', dp && dy < -0.45); setH('down', dp && dy > 0.45);
     joyRun = Math.abs(dx) > 0.82;
@@ -208,6 +208,9 @@ let LANG = (() => { try { return localStorage.getItem('pupuLang') === 'bn' ? 'bn
 const L2 = (bn, en) => LANG === 'bn' ? (bn || en) : (en || bn);
 const HASBN = /[ঀ-৿]/;
 const TR = {
+  "Spotted! Crouch behind a crate when the red beam comes.": "ধরা পড়লে! লাল আলো এলে বাক্সের পেছনে বসে পড়ো।", "Squashed! Run under when the press goes up.": "চ্যাপ্টা! যন্ত্রটা ওপরে উঠলে নিচ দিয়ে দৌড়াও।",
+  "Zap! Cross when the electric gate is off.": "ঝিঁৎ! বিজলি-গেট নিভলে পার হও।", "You fell! Ride the moving platform across.": "পড়ে গেলে! চলন্ত তক্তায় চড়ে পার হও।",
+  "lift": "লিফট", "switch": "সুইচ", "open": "খোলো", "put in": "বসাও",
   "Chapter 3 · Kalo-Bijli's Lab": "তৃতীয় অধ্যায় · কালো-বিজলির ল্যাব", "The villain's lab: find the glowing things, light the bulb": "ভিলেনের ল্যাব: জ্বলজ্বলে জিনিস খোঁজো, বাতি জ্বালাও", "go in": "ঢোকো",
   "Demo version: the Prologue and Chapters 1 to 3": "ডেমো সংস্করণ: প্রস্তাবনা আর ১ থেকে ৩ অধ্যায়",
   "Too hot! Cross when the flame is low and blue.": "খুব গরম! শিখা নীল আর নিচু হলে পার হও।", "Zap! Jump over the little sparks.": "ঝিঁৎ! ছোট্ট ফুলকিগুলো লাফিয়ে পার হও।",
@@ -678,7 +681,7 @@ function goalTick(dt) {
   G.idleT = mv || !playingNow() ? 0 : (G.idleT || 0) + dt;
   { const [ddx] = g ? goalDir(g) : [0]; const wrong = ddx && playingNow() && Math.abs(P.vx) > 40 && Math.sign(P.vx) !== ddx; G.wrongT = wrong ? (G.wrongT || 0) + dt : 0; if (G.wrongT > 1.2 && G.goalT > 6) G.goalT = 0; }   // going the wrong way: the goal (with its arrow) shows again
 }
-const goalKey = k => (isTouch ? (LANG === 'bn' ? {E: 'ধরো', Space: 'লাফ', Shift: 'বসো', Run: '▶▶ দৌড়'} : {E: 'USE', Space: 'JUMP', Shift: 'SNEAK', Run: '▶▶ RUN'}) : {E: 'E', Space: 'Space', Shift: 'C', Run: 'Shift'})[k] || k;
+const goalKey = k => (isTouch ? (LANG === 'bn' ? {E: 'ধরো', Space: 'লাফ', Shift: 'বসো', Run: '▶▶ দৌড়', Up: '▲', Down: '▼'} : {E: 'USE', Space: 'JUMP', Shift: 'SNEAK', Run: '▶▶ RUN', Up: '▲', Down: '▼'}) : {E: 'E', Space: 'Space', Shift: 'C', Run: 'Shift', Up: 'W / ↑', Down: 'S / ↓'})[k] || k;
 // goal bubble colours (v245: trying looks for the user; GOAL_TH picks one)
 const GOAL_THEMES = [
   {name: 'Paper (current)', bg: 'rgba(243,230,200,.96)', line: INK, bn: SINDOOR, en: INK, arrow: TEAL},
@@ -1096,7 +1099,7 @@ function update(dt) {
     if (G.caughtT > cl && G.fadeTarget === 0) { G.fadeTarget = 1; G.fadeSpeed = 3; }
     if (G.caughtT > cl + 0.45) { respawn(); G.fadeTarget = 0; G.fadeSpeed = 2.5; }
   }
-  if (G.state === 'slide') updateSlide(dt); else if (G.level === 'ghat' && G.boatX < 0) { /* riding the boat */ } else if (G.level === 'ghat' && (G.cupArc || (G.trans && G.trans.ph !== 'walk'))) { /* falling into the maths hole */ } else if (G.level === 'anko' && P.hidden) { /* hiding behind the tiffin box */ } else if (G.level === 'anko2' && G.ver && G.ver.phase === 'stairs') { /* the stair run is scripted (updateStairs) */ } else if (G.level === 'anko2' && G.ver && G.ver.ch && G.ver.ch.autoHide) { /* hiding behind the tree by himself */ } else physics(dt, G.state === 'play' || G.state === 'gplay' || G.state === 'aplay');
+  if (G.state === 'slide') updateSlide(dt); else if (G.level === 'ghat' && G.boatX < 0) { /* riding the boat */ } else if (G.level === 'ghat' && (G.cupArc || (G.trans && G.trans.ph !== 'walk'))) { /* falling into the maths hole */ } else if (G.level === 'anko' && P.hidden) { /* hiding behind the tiffin box */ } else if (G.level === 'anko2' && G.ver && G.ver.phase === 'stairs') { /* the stair run is scripted (updateStairs) */ } else if (G.level === 'anko2' && G.ver && G.ver.ch && G.ver.ch.autoHide) { /* hiding behind the tree by himself */ } else if (inLab() && P.ladder) { labClimb(dt); } else physics(dt, G.state === 'play' || G.state === 'gplay' || G.state === 'aplay');
   if (G.state === 'play') updateMa(dt);
   if (MA.state === 'cut' && MA.cutTarget !== null) {
     const d = MA.cutTarget - MA.x, sp = 260 * dt; MA.anim += dt * 9;
@@ -1645,12 +1648,12 @@ function pupuSitFront(o, ex, shoes) {
 }
 function pupuWalkFB(o, ex, shoes, back) {
   // walking into the room (back to us) or out of it (face toward us): a front/back view with a real step cycle
-  const a = o.anim || 0, c = o.crouch ? 1 : 0, bob = Math.abs(Math.cos(a)) * 1.6;
+  const a = o.anim || 0, c = o.crouch ? 1 : 0, cl = o.climbFB !== undefined, bob = cl ? 0 : Math.abs(Math.cos(a)) * 1.6;
   const hipY = (c ? -21 : -32) + bob * (c ? 0.6 : 1), TL = c ? 18 : 20;   // tiptoeing: much lower, knees bent out
   // legs: one knee lifts as the other foot plants, in turn
   for (const sd of [-1, 1]) {
     const ph = Math.sin(a + (sd > 0 ? 0 : Math.PI)), lift = Math.max(0, ph);
-    const hx = sd * 4, fx = sd * (c ? 6.5 : 4.6), fy = -lift * (c ? 3 : 4.5), kx = sd * (c ? 9.5 + lift * 1.5 : 4.4), ky = hipY + (c ? 9 : 14) - lift * 3.5;   // crouched: knees out to the sides, small steps
+    const hx = sd * 4, fx = sd * (c ? 6.5 : 4.6), fy = -lift * (cl ? 16 : c ? 3 : 4.5), kx = sd * (c ? 9.5 + lift * 1.5 : cl ? 5.5 : 4.4), ky = hipY + (c ? 9 : 14) - lift * (cl ? 12 : 3.5);   // crouched: knees out to the sides, small steps
     limb(hx, hipY + 4, kx, ky, SKIN, 4.4); limb(kx, ky, fx, fy - 2, SKIN, 4.2);
     ctx.save(); ctx.translate(fx, fy);
     if (shoes) { ctx.beginPath(); ctx.ellipse(0, -1, 3.8, 2.8 - lift * 0.6, 0, 0, Math.PI * 2); fs('#F4F1E8', 1.6); ctx.fillStyle = '#2C3E8C'; ctx.fillRect(-3.8, 0.2, 7.6, 1.5); }
@@ -1663,7 +1666,8 @@ function pupuWalkFB(o, ex, shoes, back) {
   const sy = hipY - TL + 3;
   // arms swing opposite to the legs (seen front/back, the hands rise and fall a little)
   for (const sd of [-1, 1]) { const sw = Math.sin(a + (sd > 0 ? Math.PI : 0));
-    if (c) arm3(sd * 7, sy, sd * 12, sy + 6, sd * (10 - sw * 1.2), hipY + 4 - sw * 2, SKIN, 3.6, SKIN);   // crouched: elbows out, hands low near the knees for balance
+    if (cl) { const up = Math.max(0, Math.sin(a + (sd > 0 ? Math.PI : 0))); arm3(sd * 7, sy, sd * 12.5, sy - 6 - up * 4, sd * 13, sy - 22 - up * 10, SKIN, 3.6, SKIN); }   // climbing: hands up on the rungs, in turn
+    else if (c) arm3(sd * 7, sy, sd * 12, sy + 6, sd * (10 - sw * 1.2), hipY + 4 - sw * 2, SKIN, 3.6, SKIN);   // crouched: elbows out, hands low near the knees for balance
     else arm3(sd * 7, sy, sd * 9.5, sy + 8, sd * (9 - sw * 0.8), hipY + 1 - sw * 3, SKIN, 3.6, SKIN); }
   // sleeves
   // (sleeveless T-shirt: bare arms straight from the shoulders, no sleeves)
@@ -1741,7 +1745,8 @@ function drawPupu(x, y, face1, o) {
   const c = o.crouch ? 1 : 0, sw = Math.sin(o.anim), moving = Math.abs(o.vx || 0) > 30;
   const ex = o.expr, shoes = o.shoes !== undefined ? o.shoes : G.level !== 'prologue';
   if (o.sitFront) { pupuSitFront(o, ex, shoes); ctx.restore(); LS = 1; return; }
-  if (o.walkFB) { pupuWalkFB(o, ex, shoes, o.walkFB === 'back'); ctx.restore(); LS = 1; return; }   // walking into / out of the room
+  if (o.walkFB) { pupuWalkFB(o, ex, shoes, o.walkFB === 'back'); ctx.restore(); LS = 1; return; }
+  if (o.climb !== undefined) { pupuClimbSide(o, ex, shoes); ctx.restore(); LS = 1; return; }   // (v261) on a ladder, in profile   // walking into / out of the room
   if (o.hug !== undefined) { pupuHugKnees(o, ex, o.hug); ctx.restore(); LS = 1; return; }
   const breathe = Math.sin(G.t * 2.4) * 0.5;
   const inAir = o.air !== undefined, sq = o.squash || 0;
@@ -3110,7 +3115,7 @@ function worldPrompt() {
   } else if (G.level === 'anko2') {
     if (G.state !== 'aplay' || G.dialog) return;
     label = null; { const c = G.ver && G.ver.ch; if (G.ver && G.ver.phase === 'court' && c && c.stage === 'door' && c.end && c.end.portal && Math.abs(P.x - c.end.portal.x) < 46) label = uk + ': go in'; }
-    { const n = G.ver && G.ver.phase === 'lab' ? labNear() : null; if (n) label = uk + ': ' + (n.k === 'part' ? 'pick up' : n.k === 'board' ? 'power board' : 'look'); }
+    { const n = G.ver && G.ver.phase === 'lab' ? labNear() : null; if (n) label = uk + ': ' + ({lift: 'lift', switch: 'switch', comp: 'open', sock: 'put in', radio: 'look'})[n.k]; }
   } else if (G.level === 'ghat') {
     if (G.state !== 'gplay' || G.dialog) return;
     const st = P.sit ? null : atSeat();
@@ -4828,6 +4833,7 @@ function verMishtiSpot(tx) {
   return tx;
 }
 function verMishti(dt, fast) {
+  if (G.ver && G.ver.phase === 'lab') return;   // (v261) in the lab she follows him floor to floor (labMishti)
   if (Math.abs(P.vx) > 40) { G.mturn = (G.mturn || 0) + (Math.sign(P.vx) !== (G.mside || 1) ? dt : -G.mturn); if (G.mturn > 0.35) { G.mside = Math.sign(P.vx); G.mturn = 0; } }
   const tx = verMishtiSpot(P.x - (G.mside || 1) * 46), dm = tx - G.mx;
   if (!G.mwalk && Math.abs(dm) > 24) G.mwalk = true; if (G.mwalk && Math.abs(dm) < 3) G.mwalk = false;
@@ -5877,6 +5883,9 @@ function drawVerChars() {
 function drawVerChars0() {
   const V = G.ver, C = V.ch;
   if (V.phase === 'stairs') return drawStairChars();
+  if (V.phase === 'lab' && P.ladder && !(P.lie > 0)) { drawMishti(G.mx, G.my, true, {face: G.mface, walk: null}); const k = P.ladder.kind;
+    if (k === 'side') drawPupu(P.x - P.face * 13, P.y, P.face, {climb: P.climbPh || 0, expr: 'happy', look: 0.4}); else drawPupu(P.x, P.y, 1, {walkFB: k === 'back' ? 'back' : 'front', climbFB: P.climbPh || 0, anim: P.climbPh || 0, expr: 'happy'}); return; }
+  if (V.phase === 'lab' && G.mleap && !(P.lie > 0)) { drawMishti(G.mx, G.my, true, {face: G.mface, walk: 1.2}); drawAnkoPupu(); return; }
   if (V.phase === 'lab' && V.lab && V.lab.radioTaken && !(P.lie > 0)) { drawMishti(G.mx, G.my, true, {face: G.mface, walk: G.mwalk ? G.manim : null, talk: G.dialog && G.dialog.who === 'mishti'}); drawPupu(P.x, P.y, P.face, {anim: 0, holdCup: {k: 2, t: 0}, expr: 'grin', look: 0.3, talk: G.dialog && G.dialog.who === 'pupu'}); return; }
   drawMishti(G.mx, G.my, true, {face: G.mface, walk: G.mwalk ? G.manim : null, talk: G.dialog && G.dialog.who === 'mishti'});
   if (C && C.getUp > 0 && C.getUp < 1) {   // getting up off the ground, still facing Anko Sir
@@ -5919,200 +5928,6 @@ function drawVerHUD() {
   ctx.font = '700 12px ' + bodyFont; st2[0] = tr(st2[0]); const sw2 = ctx.measureText(st2[0]).width + 22, sx2 = 190 + ow + 8;
   panel(sx2, 8, sw2, 28, st2[1], 2); text(st2[0], sx2 + 11, 27, 12, md === 'come' ? INK : CREAM, 700);
 }
-// ================= Chapter 3 · The Science Lab (v258) =================
-// After the power cut at the school gate, Pupu and Mishti cross the dark science lab: jump the little spark-bugs running along
-// the floor cables, cross the bench burners while the flame is low and blue, crouch under the sparking hanging cables and the
-// big table, and find three glowing things. Then they join the wires on the power board to light the bulb, the prep-room door
-// opens, and an old radio is waiting there: Dadu's radio. Memory 3: fixing it together with Dadu on the verandah.
-const LW = 3900, LAB_DOOR_X = 3600, LAB_BOARD_X = 3480, LAB_RADIO_X = 3700;
-const LAB_BLOCKS = [
-  {x0: 760, x1: 806, h: 52, k: 'stool'}, {x0: 806, x1: 1180, h: 106, k: 'bench', sink: 860, scope: 1150}, {x0: 1180, x1: 1226, h: 52, k: 'stool'},
-  {x0: 2420, x1: 2466, h: 52, k: 'stool'}, {x0: 2466, x1: 2900, h: 106, k: 'bench', globe: 2510},
-  {x0: 3090, x1: 3210, h: 246, k: 'cupboard'},
-];
-const LAB_SHELVES = [{x0: 1036, x1: 1180, h: 176}, {x0: 2930, x1: 3062, h: 176}];   // the first is a wall shelf right over the bench: jump straight up onto it
-const LAB_TABLE = {x0: 2100, x1: 2330};
-const LAB_CABLES = [{x0: 1560, x1: 1670}, {x0: 1860, x1: 1970}];
-const LAB_BURNERS = [{x: 990, ph: 0}, {x: 2600, ph: 0}, {x: 2780, ph: 1.6}];
-const LAB_BUGS0 = [{a: 380, b: 640}, {a: 1720, b: 1790}, {a: 3270, b: 3400}];
-const LAB_PARTS = [{x: 1112, y: VF - 176, k: 'battery'}, {x: 2215, y: VF, k: 'knob'}, {x: 3150, y: VF - 246, k: 'antenna'}];
-const LAB_CHECKS = [240, 2380];
-const LAB_SURF = [{x0: -400, y0: VF, x1: LW + 400, y1: VF, floor: 1}, ...LAB_BLOCKS.map(b => ({x0: b.x0, y0: VF - b.h, x1: b.x1, y1: VF - b.h, floor: 1})), ...LAB_SHELVES.map(s => ({x0: s.x0, y0: VF - s.h, x1: s.x1, y1: VF - s.h, floor: 1}))];
-function labGround(x) { let h = 0; for (const b of LAB_BLOCKS) { if (x > b.x0 - 30 && x < b.x1 + 30) { const e = Math.min(1, Math.min(x - (b.x0 - 30), b.x1 + 30 - x) / 30); h = Math.max(h, b.h * Math.sin(e * Math.PI / 2) + (e < 1 ? Math.sin(e * Math.PI) * 22 : 0)); } } return VF - h; }
-function labLowAt(x) { return (x > LAB_TABLE.x0 - 10 && x < LAB_TABLE.x1 + 10) || LAB_CABLES.some(c => x > c.x0 - 10 && x < c.x1 + 10); }
-// the bench burners: low and blue (safe), then a flicker (get ready), then a tall hot flame
-function labFlame(bn) { if (G.ver && G.ver.lab && G.ver.lab.solved) return 0; const t = (G.t + bn.ph) % 3.2; return t < 1.5 ? 0 : t < 1.9 ? 1 : 2; }
-function startLab() {
-  if (G.level !== 'anko2' || !G.ver) startVer();
-  G.cs = null; G.dialog = null; G.fb = null; radioStaticOff();
-  const V = G.ver; V.phase = 'lab'; V.jshow = false; V.say = null; V.ch = null; V.w = {mode: 'idle', t: 0, wait: 99, win: 0, bx: 0};
-  SURF = LAB_SURF; WW = LW; G.cups = 2;
-  V.lab = {chk: 0, parts: [false, false, false], board: null, solved: false, why: '', door: 0, lights: 0, fly: null, radioTaken: false, zapT: 0, crackT: 0,
-    arrive: 0, kshow: 0, kmood: 'smug', khold: 0,
-    bugs: LAB_BUGS0.map((b, i) => ({a: b.a, b: b.b, x: b.a + (b.b - b.a) * (i === 1 ? 0.2 : 0.6), dir: i % 2 ? -1 : 1, anim: 0, pop: 0})), walkTo: 0, entry: 0};
-  labPlace(0); P.x = 96; G.mx = 60;
-  Object.assign(G, {state: 'acut', fade: 1, fadeTarget: 0, fadeSpeed: 0.8, noise: 0, camX: -200});
-  const L = V.lab;
-  play([
-    {wait: 0.6},
-    {do: () => { L.arrive = 0.001; G.flash = 0.4; tone(1200, 0.6, 'sine', 0.04, 300); }}, {wait: 1.0},   // out of the door they come
-    {do: () => { L.walkTo = 260; }}, {until: () => !L.walkTo},
-    {say:1, who:'narr', bn:'দরজার ওপাশে… ঝিকমিক আর গুনগুন করা এক গবেষণাগার।', en:'Beyond the door… a laboratory, crackling and humming.', auto: 3.2},
-    {say:1, who:'mishti', bn:'(ফিসফিস) পুপু… তারগুলো নিজে নিজেই ফুলকি ছড়াচ্ছে!', en:'(whispering) Pupu… the wires are sparking all by themselves!', mood: 'scared'},
-    {say:1, who:'pupu', bn:'দাঁড়াও… এই জায়গাটা আমি চিনি! এটা প্রফেসর কালো-বিজলির ল্যাব! থান্ডার বয়ের সেই ভিলেন!', en:'Wait… I know this place! It\'s Professor Kalo-Bijli\'s lab, the villain from Thunder Boy!', mood: 'surprised'},
-    {say:1, who:'mishti', bn:'তোমার কার্টুনের ভিলেন? সত্যি?', en:'The villain from your cartoon? Really?', mood: 'surprised'},
-    {say:1, who:'pupu', bn:'প্রতি পর্বে ও থান্ডার বয়ের বিজলি চুরি করতে চায়। কতদিন ভেবেছি, ওকে একটা উচিত শিক্ষা দেব!', en:'Every episode he tries to steal Thunder Boy\'s lightning. I\'ve always wanted to teach him a lesson!', mood: 'grin'},
-    {do: () => { tone(220, 0.3, 'square', 0.03, 440); }},
-    {say:1, who:'kalo', bn:'হা হা হা হা! কে ঢুকেছে আমার গবেষণাগারে?', en:'Ha ha ha haa! Who dares to walk into MY laboratory?', mood: 'laugh'},
-    {say:1, who:'pupu', bn:'আমি, পুপু! আর মিষ্টি!', en:'Me, Pupu! And Mishti!'},
-    {say:1, who:'kalo', bn:'এক পুঁচকে ছেলে আর একটা বেড়াল? আমার বিজলি-পোকারা তোমাদের তাড়িয়ে দেবে! আর আমার জ্বলজ্বলে জিনিসে একদম হাত দেবে না!', en:'A little boy and a cat? My spark-bugs will chase you out! And keep your hands off my glowing treasures!', mood: 'angry'},
-    {say:1, who:'mishti', bn:'জ্বলজ্বলে জিনিস? …চশমাটার মতো?', en:'Glowing treasures? …like the glasses?'},
-    {say:1, who:'pupu', bn:'তাহলে আমরাই আগে খুঁজে নেব! ওই দেখো, তাকের ওপর কী যেন জ্বলছে!', en:'Then we\'ll find them first! Look, something\'s glowing up on that shelf!', mood: 'grin'},
-  ], () => { G.state = 'aplay'; G.goalT = 0; });
-}
-function labPlace(chk) {
-  if (G.ver && G.ver.lab) G.ver.lab.arrive = 1;
-  const cx = LAB_CHECKS[chk || 0];
-  Object.assign(P, {x: cx, y: VF, surf: SURF[0], ground: true, face: 1, vx: 0, vy: 0, crouchOn: false, sneak: false, lie: 0, hidden: null, pickT: 0, anim: 0});
-  G.mx = cx - 50; G.my = VF; G.mwalk = false; G.camX = Math.max(-200, cx - 420);
-}
-function labHurt(why) {
-  if (G.state !== 'aplay') return;
-  const L = G.ver.lab; L.why = why;
-  G.state = 'acaught'; P.vx = 0; P.hidden = null;
-  G.ko = {kind: 'zap', t: 0.9, hit: false};
-  G.flash = 0.35; G.shake = 0.2;
-  if (why === 'fire') { tone(300, 0.35, 'sawtooth', 0.06, 120); G.pSay = {bn: 'উহ্‌! গরম!', en: 'Ow! Hot!', t: 1}; }
-  else { tone(1800, 0.25, 'square', 0.05, 300); tone(90, 0.3, 'sawtooth', 0.05, 60, 0.05); G.pSay = {bn: 'ঝিঁইইৎ!', en: 'Zzzzt!', t: 1}; }
-}
-function labRetryTip() { const w = G.ver.lab.why; retryTip(w === 'fire' ? 'Too hot! Cross when the flame is low and blue.' : 'Zap! Jump over the little sparks.'); }
-// crouch-under places: the big table and the sparking hanging cables (standing or jumping into them stops him)
-function labLow(z, cable) {
-  const L = G.ver.lab; if (cable && L.solved) return;
-  if (!(P.x > z.x0 - 8 && P.x < z.x1 + 8) || P.y < VF - 300) return;
-  const ox = P.px0 ?? P.x, wasIn = ox > z.x0 - 8 && ox < z.x1 + 8, under = P.ground && P.y > VF - 4 && (P.sneak || P.crouchOn);
-  if (under || (wasIn && P.ground && P.y > VF - 4)) { P.crouchOn = true; return; }
-  const side = ox <= z.x0 ? -1 : ox >= z.x1 ? 1 : (P.vx >= 0 ? -1 : 1);
-  P.x = side < 0 ? z.x0 - (cable ? 30 : 8) : z.x1 + (cable ? 30 : 8); P.vx = 0;
-  if (!(L.zapT > 0)) { L.zapT = 1.6; G.shake = 0.12;
-    if (cable) { G.flash = 0.18; tone(1600, 0.18, 'square', 0.04, 400); G.pSay = {bn: 'ঝিঁৎ! তারের নিচে বসে বসে যাও!', en: 'Zzt! Crouch under the wires!', t: 1.5}; }
-    else { tone(140, 0.12, 'square', 0.06, 90); G.pSay = {bn: 'উফ্‌! বসে টেবিলের নিচে ঢোকো!', en: 'Ouch! Crouch to get under the table!', t: 1.5}; } }
-}
-function updateLab(dt) {
-  const V = G.ver, L = V.lab; if (!L) return;
-  L.zapT -= dt; L.crackT -= dt;
-  if (L.arrive > 0 && L.arrive < 1) L.arrive = Math.min(1, L.arrive + dt * 1.2);
-  { const kt = G.dialog && G.dialog.who === 'kalo'; if (kt) { L.kmood = (G.dialog.src && G.dialog.src.mood) || 'smug'; L.khold = 0.9; } else L.khold -= dt; const want = kt || L.khold > 0 ? 1 : 0; L.kshow += (want - L.kshow) * Math.min(1, dt * 6); if (L.kshow < 0.02 && !want) L.kshow = 0; }
-  if (L.entry > 0 && L.entry < 1) L.entry = Math.min(1, L.entry + dt * 1.4);
-  if (L.solved) { L.lights = Math.min(1, L.lights + dt * 0.8); L.door = Math.min(1, L.door + dt * 0.6); }
-  for (const b of L.bugs) { if (L.solved) { b.pop = Math.min(1, b.pop + dt * 2.5); continue; } b.x += b.dir * 95 * dt; if (b.x > b.b) { b.x = b.b; b.dir = -1; } if (b.x < b.a) { b.x = b.a; b.dir = 1; } b.anim += dt * 14; }
-  if (L.fly) L.fly.t += dt;
-  // a little crackle now and then near the live cables
-  if (!L.solved && L.crackT <= 0) { L.crackT = 0.5 + Math.random() * 0.9; const near = LAB_CABLES.some(c => Math.abs(P.x - (c.x0 + c.x1) / 2) < 420); if (near) tone(2000 + Math.random() * 1500, 0.05, 'square', 0.012, 700); }
-  // a scripted walk (the way in)
-  if (L.walkTo) { const d = L.walkTo - P.x; if (Math.abs(d) < 3) { P.x = L.walkTo; L.walkTo = 0; P.vx = 0; } else { P.x += Math.sign(d) * Math.min(Math.abs(d), 150 * dt); P.vx = Math.sign(d) * 150; P.face = Math.sign(d); P.anim += dt * 150 / 18.6; } }
-  if (L.board && !L.board.done) { wireUpdate(dt); return; }
-  if (G.state !== 'aplay') return;
-  P.x = Math.max(70, Math.min(L.door >= 0.9 ? 3860 : LAB_DOOR_X - 30, P.x));
-  // benches, stools and the cupboard are solid: jump onto them
-  for (const b of LAB_BLOCKS) if (P.y > VF - b.h + 4 && P.x > b.x0 - 8 && P.x < b.x1 + 8) { const ox = P.px0 ?? P.x; P.x = ox <= b.x0 ? b.x0 - 8 : ox >= b.x1 ? b.x1 + 8 : (P.vx >= 0 ? b.x0 - 8 : b.x1 + 8); P.vx = 0; }
-  labLow(LAB_TABLE, false); for (const c of LAB_CABLES) labLow(c, true);
-  if (!L.solved) {
-    for (const b of L.bugs) if (Math.abs(P.x - b.x) < 24 && P.y > VF - 30) return labHurt('bug');
-    for (const bn of LAB_BURNERS) if (labFlame(bn) === 2 && Math.abs(P.x - bn.x) < 24 && P.y > VF - 256 && P.y < VF - 60) return labHurt('fire');
-  }
-  for (let i = 0; i < 3; i++) { const p = LAB_PARTS[i]; if (!L.parts[i] && Math.abs(P.x - p.x) < 30 && Math.abs(P.y - p.y) < 40 && (i !== 1 || P.sneak || P.crouchOn)) return labPick(i); }
-  if (L.parts[1] && L.chk < 1 && P.x > LAB_CHECKS[1] - 30) { L.chk = 1; tone(880, 0.12, 'triangle', 0.03); tone(1320, 0.18, 'triangle', 0.03, 0, 0.1); }
-  if (edges.use && !G.dialog) labUse();
-}
-function labNear() {   // what Pupu could use right here (for the use pop-up)
-  const L = G.ver && G.ver.lab; if (!L) return null;
-  if (!L.solved && Math.abs(P.x - LAB_BOARD_X) < 70 && P.y > VF - 4) return {k: 'board'};
-  if (L.solved && !L.radioTaken && Math.abs(P.x - LAB_RADIO_X) < 70) return {k: 'radio'};
-  return null;
-}
-function labUse() {
-  const n = labNear(); if (!n) return; const L = G.ver.lab;
-  if (n.k === 'part') return labPick(n.i);
-  if (n.k === 'board') { if (L.parts.every(Boolean)) return labBoard(); G.pSay = {bn: 'আগে জ্বলজ্বলে জিনিসগুলো খুঁজে নিই…', en: 'Let me find the glowing things first…', t: 1.8}; return; }
-  if (n.k === 'radio') return labRadio();
-}
-const LAB_PICK_LINES = [
-  [{say:1, who:'pupu', bn:'একটা ব্যাটারি… আর চশমাটার মতো জ্বলছে!', en:'A battery… and it\'s glowing, just like the glasses!', mood: 'surprised'},
-   {say:1, who:'mishti', bn:'ব্যাটারি এখানে কী করছে? রেখে দাও, কাজে লাগতে পারে!', en:'What\'s a battery doing up here? Keep it, it might be useful!'},
-   {say:1, who:'kalo', bn:'আমার ব্যাটারি! বিজলি-পোকারা, ধরো ওকে!', en:'My battery! Spark-bugs, get him!', mood: 'angry'}],
-  [{say:1, who:'pupu', bn:'একটা ছোট্ট গোল নব। এটাও জ্বলছে!', en:'A little round knob. This one\'s glowing too!', mood: 'surprised'},
-   {say:1, who:'mishti', bn:'আরেকটা! আরও আছে নাকি?', en:'Another one! Are there more?', mood: 'happy'}],
-  [{say:1, who:'pupu', bn:'একটা সরু ধাতুর কাঠি… টানলে লম্বা হয়!', en:'A thin metal rod… it slides out longer!', mood: 'grin'},
-   {say:1, who:'kalo', bn:'এই! ওটা রাখো! ওগুলো সব আমার!', en:'Hey! Put that down! Those are all MINE!', mood: 'angry'},
-   {say:1, who:'pupu', bn:'আপনার না, প্রফেসর!', en:'They\'re not yours, Professor!', mood: 'grin'},
-   {say:1, who:'mishti', bn:'তিনটে জ্বলজ্বলে জিনিস… কিন্তু এগুলো কীসের?', en:'Three glowing things… but what are they all for?'},
-   {say:1, who:'pupu', bn:'জানি না। আগে ওই দরজাটা খুলতে হবে, ওর বিদ্যুতের বোর্ড দিয়ে।', en:'I don\'t know. First let\'s open that door, with his power board.'}],
-];
-function labPick(i) {
-  const L = G.ver.lab; G.state = 'acut'; P.vx = 0; P.pickT = 0.55;
-  play([{wait: 0.3}, {do: () => { L.parts[i] = true; tone(784, 0.15, 'triangle', 0.05); tone(1175, 0.25, 'triangle', 0.04, 0, 0.1); }}, {wait: 0.5}, ...LAB_PICK_LINES[i]], () => { G.state = 'aplay'; G.goalT = 0; });
-}
-function labBoard() {
-  const L = G.ver.lab; G.state = 'acut'; P.vx = 0; P.face = 1;
-  play([
-    {say:1, who:'pupu', bn:'ওর বিদ্যুতের বোর্ড! তারগুলো বাতির দিকে জুড়ে দিলে ওর যন্ত্রগুলো আর বিদ্যুৎ পাবে না!', en:'His power board! If I join the wires to the bulb instead, his machines won\'t get any power!', mood: 'grin'},
-    {say:1, who:'mishti', bn:'বাতি জ্বললে হয়তো দরজাটাও খুলবে!', en:'And when the bulb lights, maybe the door will open!', mood: 'happy'},
-    {do: () => { L.board = makeWirePuzzle(); }}, {until: () => L.board.done},
-    {wait: 0.9}, {do: () => { L.board = null; L.solved = true; tone(523, 0.2, 'triangle', 0.05); tone(659, 0.2, 'triangle', 0.05, 0, 0.15); tone(784, 0.4, 'triangle', 0.05, 0, 0.3); tone(240, 1.2, 'sine', 0.04, 160, 0.4); }},
-    {wait: 1.2},
-    {say:1, who:'kalo', bn:'না না না! আমার বিদ্যুৎ! কী করলে তুমি?!', en:'No, no, NO! My power! What have you done?!', mood: 'shock'},
-    {say:1, who:'mishti', bn:'আলো জ্বলেছে! ফুলকিগুলোও থেমে গেছে!', en:'The lights are on! And the sparks have stopped!', mood: 'happy'},
-    {say:1, who:'pupu', bn:'দরজাটা খুলে গেছে! আর ভেতরে… কিছু একটা জ্বলছে!', en:'The door\'s open! And inside… something\'s glowing!', mood: 'grin'},
-  ], () => { G.state = 'aplay'; G.goalT = 0; });
-}
-function labRadio() {
-  const L = G.ver.lab; G.state = 'acut'; P.vx = 0; P.face = 1;
-  play([
-    {say:1, who:'pupu', bn:'একটা পুরোনো রেডিও! ব্যাটারির খোপ ফাঁকা, নব নেই, অ্যান্টেনাও নেই…', en:'An old radio! The battery box is empty, the knob is missing, and there\'s no antenna…', mood: 'surprised'},
-    {say:1, who:'mishti', bn:'যে জিনিসগুলো পেলে… ওগুলো কি এতে লাগে?', en:'The things you found… do they fit in it?'},
-    {do: () => { L.fly = {t: 0}; }}, {wait: 2.4},
-    {say:1, who:'pupu', bn:'লেগে গেছে! এটা… এটা তো দাদুর রেডিও!', en:'They fit! This is… this is Dadu\'s radio!', mood: 'grin'},
-    {say:1, who:'mishti', bn:'আলো ছড়াচ্ছে… ঠিক পাথর আর চশমাটার মতো!', en:'It\'s glowing… just like the stone and the glasses!', mood: 'surprised'},
-    {say:1, who:'kalo', bn:'ওই রেডিওর আলোতেই আমার পুরো ল্যাব চলে! ফেরত দাও!', en:'That radio\'s glow powers my whole lab! Give it back!', mood: 'angry'},
-    {say:1, who:'pupu', bn:'এটা আপনার না। এটা আমার দাদুর!', en:'It\'s not yours. It\'s my Dadu\'s!', mood: 'angry'},
-    {do: () => { P.pickT = 0.55; }}, {wait: 0.35}, {do: () => { L.radioTaken = true; L.kmood = 'zapped'; L.khold = 3; G.flash = 0.5; G.shake = 0.3; tone(1800, 0.3, 'square', 0.05, 200); tone(90, 0.5, 'sawtooth', 0.05, 50, 0.1); }}, {wait: 0.9},
-    {say:1, who:'kalo', bn:'ঝিঁইইইৎ! আউউউ! আমার নিজের বিজলি…!', en:'Bzzzzzt! Owww! My own lightning…!', mood: 'zapped'},
-    {say:1, who:'pupu', bn:'এটাই আপনার উচিত শিক্ষা, প্রফেসর!', en:'That\'s your lesson, Professor!', mood: 'grin'},
-    {say:1, who:'kalo', bn:'এর শোধ আমি নেব, পুপু… নেবই!', en:'I\'ll get you for this, Pupu… I will!', mood: 'zapped'},
-    {wait: 0.8},
-    // Dadu's memory 3: the radio — an evening on the verandah, fixing it together
-    {do: () => { sfx.memory(); G.fadeTarget = 1; G.fadeSpeed = 1.2; }}, {wait: 1},
-    {do: () => { G.fb = {kind: 'radio', t: 0}; G.fadeTarget = 0; G.fadeSpeed = 1; }}, {wait: 1.2},
-    {say:1, who:'narr', bn:'অনেক বছর আগের এক সন্ধ্যা…', en:'One evening, many years ago…', auto: 3},
-    {say:1, who:'pupu', bn:'দাদু, রেডিওটা নষ্ট হয়ে গেছে! একটুও আওয়াজ নেই!', en:'Dadu, the radio\'s broken! Not a sound!', mood: 'sad'},
-    {say:1, who:'dadu', bn:'নষ্ট? কই, দেখি তো দাদুভাই। চল, দুজনে মিলে সারাই।', en:'Broken? Let me see, Dadubhai. Come, let\'s fix it together.'},
-    {do: () => startRadioGame()}, {until: () => G.fb.rg.done},
-    {say:1, who:'dadu', bn:'দেখলি? যত্ন আর ধৈর্য দিয়ে সারালে, ভাঙা জিনিসও আবার গান গায়।', en:'See? Fix things with care and patience, and even broken things sing again.', mood: 'happy'},
-    {say:1, who:'pupu', bn:'দাদু, রোজ সন্ধ্যায় আমরা গান শুনব?', en:'Dadu, can we listen to songs every evening?', mood: 'grin'},
-    {say:1, who:'dadu', bn:'রোজ সন্ধ্যায়। এই বারান্দায়, তুই আর আমি।', en:'Every evening. Right here on the verandah, you and me.', mood: 'happy'},
-    {do: () => { G.fadeTarget = 1; G.fadeSpeed = 1.1; }}, {wait: 1},
-    {do: () => { G.fb = null; radioStaticOff(); G.fadeTarget = 0; G.cups = 3; showToast('Dadu\'s things 3 of 10: his pocket radio'); sfx.cp(); }}, {wait: 1.4},
-    {say:1, who:'pupu', bn:'রোজ সন্ধ্যায় দাদু আর আমি বারান্দায় বসে এই রেডিওতে গান শুনতাম… আমি ভুলেই গিয়েছিলাম।', en:'Every evening Dadu and I sat on the verandah and listened to songs on this radio… I\'d forgotten.', mood: 'sad'},
-    {say:1, who:'mishti', bn:'এখনো বাজে?', en:'Does it still play?'},
-    {do: () => { radioSong(2, 0.02); }}, {wait: 1.2},
-    {say:1, who:'pupu', bn:'হুঁ… এখনো গান গায়।', en:'Mm… it still sings.', mood: 'happy'},
-    {do: () => { G.fadeTarget = 1; G.fadeSpeed = 0.7; }}, {wait: 1.8},
-    {do: () => { G.state = 'l3end'; G.endT = 0; G.fade = 0; G.fadeTarget = 0; }},
-  ]);
-}
-function labGoal() {
-  const L = G.ver.lab; if (!L || L.board || G.state !== 'aplay') return null;
-  const p = L.parts;
-  if (L.solved) return L.radioTaken ? null : {bn: 'খোলা দরজা দিয়ে ঢুকে জ্বলজ্বলে জিনিসটা দেখো', en: 'Go through the open door to the glowing thing', x: LAB_RADIO_X, k: ['E']};
-  if (!p[0]) { if (P.x < 700) return {bn: 'ছোট্ট ফুলকিগুলো লাফিয়ে পার হও', en: 'Jump over the little sparks', x: 780, k: ['Space']};
-    return P.x < 1000 ? {bn: 'শিখা নীল আর নিচু থাকতেই পার হও', en: 'Cross while the flame is low and blue', x: 1050, k: ['Space']} : {bn: 'লাফিয়ে তাকের ওপর আলোটার কাছে ওঠো', en: 'Jump up onto the shelf to the glow', x: LAB_PARTS[0].x, y: LAB_PARTS[0].y, k: ['Space']}; }
-  if (!p[1]) { if (P.x < 2040) return {bn: 'ঝুলন্ত তারের নিচে বসে বসে যাও', en: 'Crouch under the sparking wires', x: 2060, k: ['Shift', 'Space']};
-    return {bn: 'বসে টেবিলের নিচে ঢুকে আলোটা নাও', en: 'Crouch under the table to reach the glow', x: LAB_PARTS[1].x, k: ['Shift']}; }
-  if (!p[2]) return {bn: 'শিখা নিচু হলে পার হও, আলমারির মাথায় ওঠো', en: 'Cross the flames when they\'re low, then climb onto the cupboard', x: LAB_PARTS[2].x, y: LAB_PARTS[2].y, k: ['Space']};
-  return {bn: 'বিদ্যুতের বোর্ডে যাও', en: 'Go to the power board', x: LAB_BOARD_X, k: ['E']};
-}
-
 // ---- the power board: turn the wire tiles so the power runs from the battery to the bulb (a new layout every time) ----
 const WP_C = 5, WP_R = 3, WP_N = 1, WP_E = 2, WP_S = 4, WP_WW = 8;
 const wpRot = m => ((m << 1) | (m >> 3)) & 15;
@@ -6209,58 +6024,6 @@ const RADIO_SONGS = [   // little folk tunes in a pentatonic scale (note, beats)
   [[330, 1], [392, 1], [440, 1], [523, 1], [440, 2], [392, 1], [330, 1], [294, 2], [330, 1], [392, 1], [330, 3]],
 ];
 function radioSong(k, vol) { if (!AC) return; const s = RADIO_SONGS[k % RADIO_SONGS.length], b = 0.32; let t = 0; for (const [f, n] of s) { tone(f, n * b * 0.95, 'triangle', vol || 0.035, 0, t); tone(f / 2, n * b * 0.9, 'sine', (vol || 0.035) * 0.5, 0, t); t += n * b; } return t; }
-const RG_PARTS = ['battery', 'knob', 'antenna'];
-const RG_QS = [
-  {a: 'battery', ask: ['আগে বল তো, রেডিও শক্তি পায় কোথা থেকে?', 'First, tell me: where does a radio get its power from?'], ok: ['ঠিক! ব্যাটারি ছাড়া একটুও আওয়াজ হবে না।', 'Right! Without the battery there\'s no sound at all.']},
-  {a: 'knob', ask: ['এবার? কোন স্টেশন শুনব, সেটা বাছব কী দিয়ে?', 'Next? What do we use to choose a station?'], ok: ['হ্যাঁ, নব! এটা ঘুরিয়েই স্টেশন খুঁজি।', 'Yes, the knob! We turn it to find a station.']},
-  {a: 'antenna', ask: ['আর আকাশ থেকে গান আর কথা ধরে কে?', 'And what catches the songs and voices from the sky?'], ok: ['অ্যান্টেনা! টেনে লম্বা করে দে।', 'The antenna! Pull it out nice and long.']},
-];
-function startRadioGame() {
-  const tgt = 0.2 + Math.random() * 0.6;
-  G.fb.rg = {step: 'parts', i: 0, sel: 0, crossed: [], fbk: null, placed: [], fly: null, rects: [], done: false,
-    tune: {pos: 0.04, goal: null, target: tgt, hold: 0, locked: false, song: Math.floor(Math.random() * RADIO_SONGS.length), lockT: 0}};
-  rgSay(...RG_QS[0].ask);
-}
-function rgSay(bn, en) { G.dialog = {src: null, who: 'dadu', bn, en, t: 0}; }
-function rgOpts() { const R = G.fb.rg; return RG_PARTS.filter(p => !R.placed.includes(p)); }
-function radioGameUpdate(dt) {
-  const R = G.fb.rg; if (!R || R.done) return; if (G.dialog) G.dialog.t += dt;
-  if (R.fly) { R.fly.t += dt; if (R.fly.t > 0.7) { R.placed.push(R.fly.k); R.fly = null; tone(880, 0.12, 'triangle', 0.04); } }
-  if (R.step === 'parts') {
-    const q = RG_QS[R.i], ops = rgOpts();
-    if (R.fbk) { R.fbk.t += dt;
-      if (R.fbk.ok && R.fbk.t > 1.8 && !R.fly) { R.i++; R.fbk = null; R.crossed = []; R.sel = 0;
-        if (R.i >= RG_QS.length) { R.step = 'tune'; rgSay('এবার নবটা আস্তে আস্তে ঘোরা। ঝিরঝির আওয়াজের ভেতরে গান খোঁজ।', 'Now turn the knob slowly. Listen for a song inside the hiss.'); }
-        else rgSay(...RG_QS[R.i].ask); }
-      else if (!R.fbk.ok && R.fbk.t > 1.3) { R.fbk = null; rgSay(...q.ask); }
-      return; }
-    const free = ops.map((_, k) => k).filter(k => !R.crossed.includes(ops[k]));
-    if (!free.includes(R.sel)) R.sel = free[0];
-    if (edges.left) { const j = free.indexOf(R.sel); R.sel = free[(j + free.length - 1) % free.length]; tone(520, 0.04, 'triangle', 0.02); }
-    if (edges.right) { const j = free.indexOf(R.sel); R.sel = free[(j + 1) % free.length]; tone(520, 0.04, 'triangle', 0.02); }
-    let pick = -1;
-    if (edges.tap) { for (let k = 0; k < R.rects.length; k++) { const r = R.rects[k]; if (r && tapX > r[0] && tapX < r[0] + r[2] && tapY > r[1] && tapY < r[1] + r[3]) pick = k; } }
-    else if (edges.use || edges.jump) pick = R.sel;
-    if (pick < 0 || pick >= ops.length || R.crossed.includes(ops[pick])) return;
-    R.sel = pick;
-    if (ops[pick] === q.a) { R.fbk = {ok: true, t: 0}; R.fly = {k: q.a, t: 0}; rgSay(...q.ok); tone(660, 0.15, 'triangle', 0.05); tone(990, 0.25, 'triangle', 0.04, 0, 0.12); }
-    else { R.crossed.push(ops[pick]); R.fbk = {ok: false, t: 0}; rgSay('ওটা না, দাদুভাই… আবার চেষ্টা কর।', 'Not that one, Dadubhai… try again.'); tone(200, 0.2, 'square', 0.03, 150); }
-    return;
-  }
-  // tuning: hold left/right (or tap the dial) to move the needle; the hiss fades as you get near the station
-  const T = R.tune;
-  if (T.locked) { T.lockT += dt; radioStatic(0.004); if (T.lockT > 5.2) { R.done = true; G.dialog = null; } return; }
-  const sp = 0.22; let mv = 0;
-  if (held.left) mv -= 1; if (held.right) mv += 1;
-  if (edges.tap) { const d = R.dial; if (d && tapY > d[1] - 30 && tapY < d[1] + d[3] + 30) T.goal = Math.max(0, Math.min(1, (tapX - d[0]) / d[2])); }
-  if (mv) { T.goal = null; T.pos = Math.max(0, Math.min(1, T.pos + mv * sp * dt)); }
-  else if (T.goal !== null) { const d = T.goal - T.pos; T.pos += Math.sign(d) * Math.min(Math.abs(d), 0.3 * dt); if (Math.abs(d) < 0.002) T.goal = null; }
-  const dist = Math.abs(T.pos - T.target), str = Math.max(0, 1 - dist * 9);
-  radioStatic(0.05 * (1 - str * 0.85));
-  if (str > 0.45 && Math.random() < dt * 3 * str) tone(RADIO_SONGS[T.song][Math.floor(Math.random() * 5)][0], 0.12, 'triangle', 0.012 * str);   // bits of a tune through the hiss
-  if (dist < 0.022) { T.hold += dt; if (T.hold > 0.7) { T.locked = true; T.pos = T.target; radioStatic(0.004); radioSong(T.song, 0.04); rgSay('শোন… গান!', 'Listen… a song!'); tone(1320, 0.2, 'triangle', 0.03); } }
-  else T.hold = Math.max(0, T.hold - dt);
-}
 function drawPartIcon(k, x, y, s, alpha) {   // battery, tuning knob, telescopic antenna
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s); if (alpha !== undefined) ctx.globalAlpha *= alpha;
   if (k === 'battery') { box(-16, -8, 32, 16, '#2E6A3A', 4, 2); box(-16, -8, 10, 16, '#C8A040', 3, 2); box(16, -3, 4, 6, '#C0C4C8', 1, 1.4); line(-2, -8, -2, 8, 'rgba(0,0,0,.25)', 1.2); line(3, -4, 11, -4, 'rgba(255,255,255,.35)', 1.6); }
@@ -6322,6 +6085,48 @@ function drawFbRadio() {
   { const v = ctx.createRadialGradient(480, 300, 160, 480, 300, 620); v.addColorStop(0, 'rgba(40,16,4,0)'); v.addColorStop(0.7, 'rgba(40,16,4,.3)'); v.addColorStop(1, 'rgba(30,10,2,.75)'); ctx.fillStyle = v; ctx.fillRect(0, 0, W, H); }
   if (R && !R.done) drawRadioGame();
 }
+// (v261) Memory 3 is hands-on: little Pupu puts the radio back together himself, Dadu shows him how
+const RG_STEPS = [
+  {k: 'battery', say: ['আগে ব্যাটারি: এটাই রেডিওর শক্তি। খোপের ভেতর ঠেলে ঢোকা!', 'First the battery: it gives the radio its strength. Push it into the box!'], ok: ['খট্‌! ঢুকে গেছে। এবার রেডিওর গায়ে শক্তি এল।', 'Click! It\'s in. Now the radio has its strength.'], how: ['E / Space চেপে চেপে ঠেলো', 'Press E or Space to push'], howT: ['বারবার চাপ দাও', 'Tap again and again']},
+  {k: 'knob', say: ['এবার নবটা বসা, আর ঘুরিয়ে ঘুরিয়ে টাইট কর।', 'Now fit the knob, and turn it round and round till it\'s tight.'], ok: ['বাহ্‌! এই নব ঘুরিয়েই আমরা স্টেশন খুঁজব।', 'Lovely! We\'ll turn this knob to find a station.'], how: ['◀ ▶ পালা করে চাপো', 'Press ◀ and ▶ in turn'], howT: ['বাঁয়ে-ডানে পালা করে চাপ দাও', 'Tap left, then right, in turn']},
+  {k: 'antenna', say: ['শেষে অ্যান্টেনা। টেনে টেনে লম্বা কর, আকাশ থেকে গান ধরবে!', 'Last, the antenna. Pull it out nice and long, it catches songs from the sky!'], ok: ['এই তো! পুরো লম্বা।', 'There! All the way out.'], how: ['▲ (W) চেপে চেপে টানো', 'Press ▲ (W) to pull'], howT: ['বারবার চাপ দাও', 'Tap again and again']},
+];
+function startRadioGame() {
+  const tgt = 0.2 + Math.random() * 0.6;
+  G.fb.rg = {step: 'build', i: 0, prog: 0, last: 0, fbk: null, placed: [], done: false, spin: 0,
+    tune: {pos: 0.04, goal: null, target: tgt, hold: 0, locked: false, song: Math.floor(Math.random() * RADIO_SONGS.length), lockT: 0}};
+  rgSay(...RG_STEPS[0].say);
+}
+function rgSay(bn, en) { G.dialog = {src: null, who: 'dadu', bn, en, t: 0}; }
+function radioGameUpdate(dt) {
+  const R = G.fb.rg; if (!R || R.done) return; if (G.dialog) G.dialog.t += dt;
+  R.spin = Math.max(0, R.spin - dt * 4);
+  if (R.step === 'build') {
+    const S = RG_STEPS[R.i];
+    if (R.fbk) { R.fbk.t += dt; if (R.fbk.t > 1.7) { R.fbk = null; R.i++; R.prog = 0; R.last = 0;
+        if (R.i >= RG_STEPS.length) { R.step = 'tune'; rgSay('এবার নবটা আস্তে আস্তে ঘোরা। ঝিরঝির আওয়াজের ভেতরে গান খোঁজ।', 'Now turn the knob slowly. Listen for a song inside the hiss.'); } else rgSay(...RG_STEPS[R.i].say); }
+      return; }
+    let add = 0;
+    if (S.k === 'battery') { if (edges.use || edges.jump || edges.tap) { add = 0.26; tone(300 + R.prog * 300, 0.06, 'square', 0.03); } }
+    else if (S.k === 'knob') { let side = 0; if (edges.left) side = -1; if (edges.right) side = 1; if (edges.tap) side = tapX < W / 2 ? -1 : 1; if (side && side !== R.last) { add = 0.17; R.last = side; R.spin = 1; tone(500 + R.prog * 300, 0.05, 'triangle', 0.03); } }
+    else { if (edges.up || edges.use || edges.jump || edges.tap) { add = 0.22; tone(700 + R.prog * 500, 0.06, 'triangle', 0.03); } }
+    if (add) { R.prog = Math.min(1, R.prog + add); if (R.prog >= 1) { R.placed.push(S.k); R.fbk = {ok: true, t: 0}; rgSay(...S.ok); tone(660, 0.15, 'triangle', 0.05); tone(990, 0.25, 'triangle', 0.04, 0, 0.12); } }
+    return;
+  }
+  // tuning: hold left/right (or tap the dial) to move the needle; the hiss fades as you get near the station
+  const T = R.tune;
+  if (T.locked) { T.lockT += dt; radioStatic(0.004); if (T.lockT > 5.2) { R.done = true; G.dialog = null; } return; }
+  const sp = 0.22; let mv = 0;
+  if (held.left) mv -= 1; if (held.right) mv += 1;
+  if (edges.tap) { const d = R.dial; if (d && tapY > d[1] - 30 && tapY < d[1] + d[3] + 30) T.goal = Math.max(0, Math.min(1, (tapX - d[0]) / d[2])); }
+  if (mv) { T.goal = null; T.pos = Math.max(0, Math.min(1, T.pos + mv * sp * dt)); }
+  else if (T.goal !== null) { const d = T.goal - T.pos; T.pos += Math.sign(d) * Math.min(Math.abs(d), 0.3 * dt); if (Math.abs(d) < 0.002) T.goal = null; }
+  const dist = Math.abs(T.pos - T.target), str = Math.max(0, 1 - dist * 9);
+  radioStatic(0.05 * (1 - str * 0.85));
+  if (str > 0.45 && Math.random() < dt * 3 * str) tone(RADIO_SONGS[T.song][Math.floor(Math.random() * 5)][0], 0.12, 'triangle', 0.012 * str);
+  if (dist < 0.022) { T.hold += dt; if (T.hold > 0.7) { T.locked = true; T.pos = T.target; radioStatic(0.004); radioSong(T.song, 0.04); rgSay('শোন… গান!', 'Listen… a song!'); tone(1320, 0.2, 'triangle', 0.03); } }
+  else T.hold = Math.max(0, T.hold - dt);
+}
 function drawRadioGame() {
   const R = G.fb.rg, x0 = 250, y0 = 10, w = 460, h = 196, cx = x0 + w / 2;
   ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(x0 + 5, y0 + 6, w, h);
@@ -6329,37 +6134,34 @@ function drawRadioGame() {
   ctx.fillStyle = '#FDFBF4'; ctx.fill(); ctx.strokeStyle = 'rgba(60,60,90,.5)'; ctx.lineWidth = 1.2; ctx.stroke();
   for (let y = y0 + 26; y < y0 + h; y += 22) line(x0, y, x0 + w, y, 'rgba(70,110,200,.22)', 1); line(x0 + 26, y0 + 4, x0 + 26, y0 + h, 'rgba(210,60,60,.5)', 1.3);
   text(L2('দাদুর সাথে রেডিও সারাই', 'Fixing the radio with Dadu'), x0 + 34, y0 + 20, 12, SINDOOR, 700);
-  const NAMES = {battery: ['ব্যাটারি', 'Battery'], knob: ['নব', 'Knob'], antenna: ['অ্যান্টেনা', 'Antenna']};
-  if (R.step === 'parts') {
-    const q = RG_QS[Math.min(R.i, RG_QS.length - 1)], ops = rgOpts();
-    const ls = wrapLines(L2(q.ask[0], q.ask[1]), '700 17px ' + bodyFont, w - 70); ls.forEach((l, i) => text(l, cx, y0 + 54 + i * 22, 17, INK, 700, 'center'));
-    R.rects = []; const bw = 112, bh = 78, gap = 18, by = y0 + 104, bx0 = cx - (bw * ops.length + gap * (ops.length - 1)) / 2;
-    ops.forEach((p, k) => {
-      const bx = bx0 + k * (bw + gap), crossed = R.crossed.includes(p), sel = R.sel === k && !R.fbk && !isTouch, okK = R.fbk && R.fbk.ok && p === q.a, lift = sel ? -3 + Math.sin(G.t * 6) * 1.5 : 0;
-      if (R.fly && R.fly.k === p) return;
-      ctx.save(); ctx.translate(bx + bw / 2, by + bh / 2 + lift); ctx.rotate((k - 1) * 0.03);
-      rr(-bw / 2 + 2, -bh / 2 + 3, bw, bh, 7); ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.fill();
-      rr(-bw / 2, -bh / 2, bw, bh, 7); ctx.fillStyle = crossed ? '#E6E0D2' : okK ? '#CFE8B8' : sel ? '#FFE29A' : '#FFF6D8'; ctx.fill(); ctx.lineWidth = sel || okK ? 2.8 : 2; ctx.strokeStyle = okK ? LEAF : INK; ctx.stroke();
-      drawPartIcon(p, 0, -10, 1.25, crossed ? 0.35 : 1);
-      text(L2(NAMES[p][0], NAMES[p][1]), 0, 28, 15, crossed ? 'rgba(28,20,16,.35)' : INK, 700, 'center');
-      if (crossed) { line(-bw / 2 + 12, -bh / 2 + 10, bw / 2 - 12, bh / 2 - 10, SINDOOR, 3); line(-bw / 2 + 12, bh / 2 - 10, bw / 2 - 12, -bh / 2 + 10, SINDOOR, 3); }
-      ctx.restore(); R.rects[k] = [bx, by, bw, bh];
-    });
+  if (R.step === 'build') {
+    const S = RG_STEPS[Math.min(R.i, RG_STEPS.length - 1)];
+    for (let k = 0; k < 3; k++) circ(x0 + w - 70 + k * 16, y0 + 16, 4, k < R.i || (k === R.i && R.fbk) ? LEAF : 'rgba(58,74,122,.25)', 0);
+    // the close-up: the part going in, step by step
+    const ox = cx - 60, oy = y0 + 104, p = R.prog;
+    ctx.save(); ctx.translate(ox, oy); ctx.scale(1.6, 1.6);
+    box(-34, -18, 68, 34, '#7A4626', 6, 2); box(-30, -14, 60, 26, '#8A5230', 4, 1);
+    if (S.k === 'battery') { box(-14, -6, 28, 12, '#1E120A', 2, 1); ctx.save(); ctx.beginPath(); ctx.rect(-40, -60, 80, 54 + 10); ctx.clip(); drawPartIcon('battery', 0, -40 + p * 40, 0.8); ctx.restore(); }
+    else if (S.k === 'knob') { circ(16, 2, 3, '#2A1A10', 1); ctx.save(); ctx.translate(16, 2 - (1 - p) * 26); ctx.rotate(p * 9 + R.spin); drawPartIcon('knob', 0, 0, 0.7); ctx.restore(); }
+    else { circ(28, -18, 2.4, '#2A1A10', 1); const L2a = 8 + p * 30; line(28, -18, 28 + L2a * 0.9, -18 - L2a * 0.7, '#C8D0D8', 3); for (let k = 0; k < 4; k++) if (p > k * 0.25) line(28 + (k + 1) * 11 * 0.42 * (L2a / 54), -18 - (k + 1) * 11 * (L2a / 54), 28 + (k + 1) * 11 * 0.42 * (L2a / 54) + 2, -18 - (k + 1) * 11 * (L2a / 54) + 1, '#8A929A', 2); circ(28 + L2a * 0.9, -18 - L2a * 0.7, 2.4, '#D8DDE2', 1); }
+    ctx.restore();
+    const ls = wrapLines(L2(S.say[0], S.say[1]), '700 14px ' + bodyFont, 230); ls.forEach((l, i) => text(l, x0 + w - 130, y0 + 56 + i * 19, 14, INK, 700, 'center'));
+    box(x0 + w - 230, y0 + 128, 200, 14, '#E6E0D2', 6, 1.6); box(x0 + w - 230, y0 + 128, 200 * p, 14, R.fbk ? LEAF : TURMERIC, 6, 0);
+    text(R.fbk ? '✓' : L2((isTouch ? S.howT : S.how)[0], (isTouch ? S.howT : S.how)[1]), x0 + w - 130, y0 + 166, R.fbk ? 20 : 13, R.fbk ? LEAF : '#3A4A7A', 700, 'center');
     return;
   }
-  // the tuning dial
   const T = R.tune, dx = x0 + 50, dw = w - 100, dy = y0 + 62, dh = 34; R.dial = [dx, dy, dw, dh];
   box(dx - 10, dy - 10, dw + 20, dh + 20, '#7A4626', 6, 2.4); box(dx, dy, dw, dh, '#EFE3C0', 3, 1.6);
   for (let i = 0; i <= 20; i++) { const x = dx + 8 + (dw - 16) * i / 20; line(x, dy + dh - 4, x, dy + dh - (i % 5 ? 10 : 16), '#5A4A3A', 1.2); if (i % 5 === 0) text(String(88 + i), x, dy + 13, 10, '#5A4A3A', 700, 'center'); }
   const nx = dx + 8 + (dw - 16) * T.pos; line(nx, dy - 4, nx, dy + dh + 4, SINDOOR, 3);
   const str = T.locked ? 1 : Math.max(0, 1 - Math.abs(T.pos - T.target) * 9);
-  // the signal lamp and the hiss (a wobbly line that calms as you get close)
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; const lg = ctx.createRadialGradient(dx + dw + 6, dy + dh + 40, 2, dx + dw + 6, dy + dh + 40, 24); lg.addColorStop(0, 'rgba(255,190,80,' + (0.2 + str * 0.8) + ')'); lg.addColorStop(1, 'rgba(255,190,80,0)'); ctx.fillStyle = lg; ctx.fillRect(dx + dw - 20, dy + dh + 14, 52, 52); ctx.restore();
   circ(dx + dw + 6, dy + dh + 40, 7, str > 0.8 ? '#FFC24A' : str > 0.3 ? '#C8862A' : '#5A3A20', 1.6);
   ctx.beginPath(); for (let i = 0; i <= 60; i++) { const x = dx + 10 + (dw - 60) * i / 60, a = (1 - str) * 9 * Math.sin(i * 1.7 + G.t * 40) * Math.sin(i * 0.31 + G.t * 7) + str * 7 * Math.sin(i * 0.45 + G.t * 6); if (i) ctx.lineTo(x, dy + dh + 40 + a); else ctx.moveTo(x, dy + dh + 40 + a); }
   ctx.strokeStyle = str > 0.8 ? LEAF : '#3A4A7A'; ctx.lineWidth = 2; ctx.stroke();
   text(T.locked ? L2('গান পাওয়া গেছে!', 'Found a song!') : isTouch ? L2('ডায়ালে চাপ দিয়ে কাঁটা সরাও', 'Tap the dial to move the needle') : L2('◀ ▶ চেপে ধরে আস্তে আস্তে ঘোরাও', 'Hold ◀ ▶ to turn the knob slowly'), cx, y0 + h - 14, 13, T.locked ? LEAF : '#3A4A7A', 700, 'center');
 }
+
 function drawLabEnd() {
   const a = Math.min(1, G.endT * 1.2); ctx.fillStyle = 'rgba(5,6,15,' + a + ')'; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = a;
   text('CHAPTER 3 COMPLETE  ·  তৃতীয় অধ্যায় শেষ', W / 2, 140, 15, TURMERIC, 600, 'center');
@@ -6371,115 +6173,577 @@ function drawLabEnd() {
   if (G.endT > 1) { ctx.globalAlpha = 0.6 + Math.sin(G.t * 3) * 0.4; text(isTouch ? 'Tap to return to the menu' : 'Press Enter to return to the menu', W / 2, 432, 18, TURMERIC, 700, 'center'); }
   ctx.globalAlpha = 1;
 }
-function drawLabHUD() {
-  const L = G.ver.lab; if (!L || G.fb) return;
-  drawKaloScreen();
-  if (L.board) return drawWirePuzzle();
-  if (L.solved) return;
-  panel(10, 8, 150, 30, 'rgba(243,230,200,.92)', 2); text('FOUND', 21, 28, 10, INK, 700);
-  ['battery', 'knob', 'antenna'].forEach((k, i) => { const x = 82 + i * 26, y = 23; if (L.parts[i]) { ctx.save(); ctx.shadowColor = 'rgba(255,200,90,.9)'; ctx.shadowBlur = 8; drawPartIcon(k, x, y, 0.55); ctx.restore(); } else { circ(x, y, 8, 'rgba(28,20,16,.12)', 1.2); } });
+// ================= Chapter 3 · Kalo-Bijli's Lab, v2 (v261): a tall cut-away laboratory on four floors =================
+// ACT 1 (ground floor): the door locks, a security eye sweeps a red beam (crouch behind a crate), a spark-bug, steps up onto a
+//   bench with a burner, a platform hanging on chains, a side ladder up to a storage loft, push the trolley off the loft, climb it,
+//   jump to the battery; the battery powers an old lift.
+// ACT 2 (machine room): a crusher press, an electric gate, a moving platform over a pit, a crawl tunnel, a side ladder up a machine
+//   to a switch that opens a cabinet (the knob), and a tall back-view ladder up to the upper lab.
+// ACT 3 (upper lab, a tall hall): live wires to crouch under, a front-view ladder to a shelf, a side ladder to a gantry, a moving
+//   elevator, two platforms hanging on chains, the top of a tall glass tank where a compartment holds the antenna; a walkway on.
+// ACT 4 (control room): three glowing slots on the console, one at a time: put the right thing in each; the Lightning Collector
+//   powers down, the secret room opens: Dadu's radio.
+const LG = 1600, LF1 = 1270, LF2 = 980, LF3 = 560, LROOF = 300, LW = 3420, LSL = 22;
+const LAB_SECRET_X = 300, LAB_RADIO_X = 150, LAB_LIFT = {x0: 2150, x1: 2280}, LAB_EYE = {x: 530, y: LF1 + LSL};
+const LAB_CRATES = [430, 650], LAB_SOCKETS = [760, 900, 1040], LAB_SOCK_PART = ['battery', 'knob', 'antenna'];
+const LAB_PRESS_X = 2380, LAB_GATE_X = 2500, LAB_PIT = [2580, 2820], LAB_CAB_X = 3150, LAB_SWITCH_X = 3320, LAB_CAP_X = 2060;
+const LAB_TUNNEL = {x0: 2880, x1: 3060, y: LF1}, LAB_WIRES = {x0: 3150, x1: 3250, y: LF2};
+const LAB_BURNERS = [{x: 1250, ph: 0, y: LG - 100}];
+const LAB_CHECKS = [{x: 260, y: LG}, {x: 2100, y: LG}, {x: 3330, y: LF2}];
+const AK_FL_VF = VF;
+const LS_ = (x0, x1, y, o) => Object.assign({x0, y0: y, x1, y1: y, floor: 1}, o || {});
+const LAB_S = {
+  floorA: LS_(-400, 1040, LG), ramp: {x0: 1040, y0: LG, x1: 1130, y1: LG - 100, floor: 1}, bench: LS_(1130, 1360, LG - 100), floorB: LS_(1360, 2300, LG),
+  hang: LS_(1400, 1500, LG - 172), loft: LS_(1470, 1900, LF1), shelfB: LS_(2050, 2130, LG - 150),
+  f1a: LS_(2060, 2150, LF1), f1b: LS_(2280, LAB_PIT[0], LF1), n1: LS_(2735, 2795, LF1 - 60), f1c: LS_(LAB_PIT[1], LW + 400, LF1), swTop: LS_(3225, 3350, LF1 - 190),
+  f2: LS_(1500, LW + 400, LF2), shelfA: LS_(2900, 3080, LF2 - 180), gantry: LS_(2700, 2930, LF2 - 340), sp1: LS_(2390, 2495, 460), sp2: LS_(2200, 2320, 480), cap: LS_(1995, 2125, 500),
+  f3: LS_(40, 1990, LF3),
+};
+// ladders: x, bottom (y0, feet) and top (y1); kind = how he is seen climbing it
+const LAB_LADDERS = [
+  {id: 's1', x: 1478, y0: LG - 172, y1: LF1, kind: 'side'}, {id: 's0', x: 1885, y0: LG, y1: LF1, kind: 'side'},
+  {id: 's2', x: 3236, y0: LF1, y1: LF1 - 190, kind: 'side'}, {id: 's3', x: 3392, y0: LF1, y1: LF2, kind: 'back'},
+  {id: 'bv', x: 2990, y0: LF2, y1: LF2 - 180, kind: 'front'}, {id: 's4', x: 2915, y0: LF2 - 180, y1: LF2 - 340, kind: 'side'},
+];
+const LAB_BUGS0 = [{a: 800, b: 980, y: LG}, {a: 3080, b: 3190, y: LF1}, {a: 2720, b: 2850, y: LF2 - 340}];
+function inLab() { return typeof G !== 'undefined' && G && G.level === 'anko2' && G.ver && G.ver.phase === 'lab'; }
+function labFlame(bn) { const L = G.ver && G.ver.lab; if (L && L.done) return 0; const t = (G.t + bn.ph) % 3.2; return t < 1.5 ? 0 : t < 1.9 ? 1 : 2; }
+function labCyc(t, per, a, b, c) {   // 0 at rest, rising to 1 and back: a = hold at 0, b = move, c = hold at 1 (the rest moves back)
+  const u = ((t % per) + per) % per; if (u < a) return 0; if (u < a + b) { const k = (u - a) / b; return k * k * (3 - 2 * k); } if (u < a + b + c) return 1; const k = Math.min(1, (u - a - b - c) / (per - a - b - c)); return 1 - k * k * (3 - 2 * k);
+}
+function labPress() { const L = G.ver.lab; if (L.done) return 0; const u = ((G.t + 0.4) % 2.8); return u < 1.6 ? 0 : u < 1.72 ? (u - 1.6) / 0.12 : u < 2.32 ? 1 : Math.max(0, 1 - (u - 2.32) / 0.45); }
+function labGateOn() { const L = G.ver.lab; if (L.done) return 0; const u = G.t % 3.0; return u < 1.4 ? 0 : u < 1.7 ? 1 : 2; }
+function labGround(x) { return G.my; }   // (Mishti is moved by labMishti in the lab)
+function labLowAt(x) { if (!inLab()) return false; const L = G.ver.lab; if (Math.abs(P.y - LF1) < 4 && x > LAB_TUNNEL.x0 - 10 && x < LAB_TUNNEL.x1 + 10) return true; if (!L.done && Math.abs(P.y - LF2) < 4 && x > LAB_WIRES.x0 - 10 && x < LAB_WIRES.x1 + 10) return true; return false; }
+function startLab() {
+  if (G.level !== 'anko2' || !G.ver) startVer();
+  G.cs = null; G.dialog = null; G.fb = null; radioStaticOff();
+  const V = G.ver; V.phase = 'lab'; V.jshow = false; V.say = null; V.ch = null; V.w = {mode: 'idle', t: 0, wait: 99, win: 0, bx: 0};
+  G.cups = 2; WW = LW; WH = 1780;
+  V.lab = {chk: 0, parts: [false, false, false], why: '', arrive: 0, kshow: 0, kmood: 'smug', khold: 0, zapT: 0, crackT: 0, seen: {},
+    lift: {y: LG, to: LG, bat: false}, tro: {x: 1585, y: LF1, vy: 0, vx: 0, lvl: 'loft'}, sw: 0, cab: 0, comp: 0, sock: [false, false, false], pick: null,
+    done: false, secret: 0, lights: 0, shut: 0, eye: 0, portal: 1, radioTaken: false, fly: null, fall: null, walkTo: 0,
+    bugs: LAB_BUGS0.map((b, i) => ({a: b.a, b: b.b, y: b.y, x: (b.a + b.b) / 2, dir: i % 2 ? -1 : 1, anim: 0, pop: 0}))};
+  labSurf();
+  labPlace(0); P.x = 140; G.mx = 120; G.my = LG; V.lab.arrive = 0;
+  Object.assign(G, {state: 'acut', fade: 1, fadeTarget: 0, fadeSpeed: 0.8, noise: 0, camX: -200, camY: LG - 470});
+  const L = V.lab;
+  play([
+    {wait: 0.6},
+    {do: () => { L.arrive = 0.001; G.flash = 0.4; tone(1200, 0.6, 'sine', 0.04, 300); }}, {wait: 1.0},
+    {do: () => { L.walkTo = 250; }}, {until: () => !L.walkTo},
+    {say:1, who:'narr', bn:'দরজার ওপাশে… তলার পর তলা, ঝিকমিক আর গুনগুন করা এক বিশাল গবেষণাগার।', en:'Beyond the door… a huge laboratory, floor upon floor, crackling and humming.', auto: 3.4},
+    {say:1, who:'mishti', bn:'(ফিসফিস) পুপু… কত উঁচু! আর তারগুলো নিজে নিজেই ফুলকি ছড়াচ্ছে!', en:'(whispering) Pupu… it\'s so tall! And the wires are sparking all by themselves!', mood: 'scared'},
+    {say:1, who:'pupu', bn:'দাঁড়াও… এই জায়গাটা আমি চিনি! এটা প্রফেসর কালো-বিজলির ল্যাব! থান্ডার বয়ের সেই ভিলেন!', en:'Wait… I know this place! It\'s Professor Kalo-Bijli\'s lab, the villain from Thunder Boy!', mood: 'surprised'},
+    {say:1, who:'mishti', bn:'তোমার কার্টুনের ভিলেন? সত্যি?', en:'The villain from your cartoon? Really?', mood: 'surprised'},
+    {say:1, who:'pupu', bn:'প্রতি পর্বে ও থান্ডার বয়ের বিজলি চুরি করতে চায়। কতদিন ভেবেছি, ওকে একটা উচিত শিক্ষা দেব!', en:'Every episode he tries to steal Thunder Boy\'s lightning. I\'ve always wanted to teach him a lesson!', mood: 'grin'},
+    {do: () => { tone(220, 0.3, 'square', 0.03, 440); }},
+    {say:1, who:'kalo', bn:'হা হা হা হা! কে ঢুকেছে আমার গবেষণাগারে?', en:'Ha ha ha haa! Who dares to walk into MY laboratory?', mood: 'laugh'},
+    {say:1, who:'pupu', bn:'আমি, পুপু! আর মিষ্টি!', en:'Me, Pupu! And Mishti!'},
+    {say:1, who:'kalo', bn:'এক পুঁচকে ছেলে আর একটা বেড়াল? নিরাপত্তা-ব্যবস্থা, চালু হও!', en:'A little boy and a cat? Security system: ON!', mood: 'angry'},
+    {do: () => { L.shut = 0.001; tone(90, 0.5, 'sawtooth', 0.06, 50); G.shake = 0.3; }}, {wait: 0.8},
+    {do: () => { L.eye = 0.001; tone(600, 0.4, 'square', 0.03, 300); }}, {wait: 0.9},
+    {say:1, who:'mishti', bn:'দরজাটা বন্ধ হয়ে গেল! আর ছাদে একটা বিশাল চোখ!', en:'The door\'s shut! And there\'s a giant eye on the ceiling!', mood: 'scared'},
+    {say:1, who:'kalo', bn:'আমার চোখ সব দেখে! আর আমার জ্বলজ্বলে জিনিসে একদম হাত দেবে না!', en:'My eye sees everything! And keep your hands off my glowing treasures!', mood: 'laugh'},
+    {say:1, who:'pupu', bn:'জ্বলজ্বলে জিনিস? চশমাটার মতো? তাহলে আমরাই আগে খুঁজে নেব!', en:'Glowing treasures? Like the glasses? Then we\'ll find them first!', mood: 'grin'},
+  ], () => { G.state = 'aplay'; G.goalT = 0; });
+}
+function labSurf() {   // the static floors plus the moving ones (the lift, the trolley's top, the moving platform, the elevator)
+  const L = G.ver.lab;
+  L.sLift = {x0: LAB_LIFT.x0, x1: LAB_LIFT.x1, y0: L.lift.y, y1: L.lift.y, floor: 1, mov: 1};
+  L.sTro = {x0: L.tro.x - 45, x1: L.tro.x + 45, y0: L.tro.y - 75, y1: L.tro.y - 75, floor: 1, mov: 1};
+  L.sM1 = {x0: 2610, x1: 2710, y0: LF1, y1: LF1, floor: 1, mov: 1};
+  L.sE1 = {x0: 2560, x1: 2670, y0: LF2 - 340, y1: LF2 - 340, floor: 1, mov: 1};
+  SURF = [...Object.values(LAB_S), L.sLift, L.sTro, L.sM1, L.sE1];
+}
+function labPlace(chk) {
+  const L = G.ver && G.ver.lab; const c = LAB_CHECKS[chk || 0];
+  Object.assign(P, {x: c.x, y: c.y, ground: true, face: 1, vx: 0, vy: 0, crouchOn: false, sneak: false, lie: 0, hidden: null, pickT: 0, anim: 0, ladder: null});
+  if (L) { L.arrive = 1; L.fall = null; L.pick = null; if (chk >= 1 && chk < 2) { L.lift.y = L.lift.to = LG; } labMoving(0); P.surf = SURF.find(s => P.x >= s.x0 && P.x <= s.x1 && Math.abs(s.y0 - c.y) < 2 && !s.mov) || SURF[0]; }
+  G.mx = c.x - 50; G.my = c.y; G.mwalk = false; G.mleap = null; G.camX = Math.max(-200, c.x - 420); G.camY = c.y - 470;
+}
+function labMoving(dt) {   // move the moving floors (and anyone standing on them goes with them)
+  const L = G.ver.lab;
+  const m = labCyc(G.t, 5, 1.2, 1.3, 1.2); L.sM1.y0 = L.sM1.y1 = LF1 - 20 + 90 * m;
+  const e = labCyc(G.t + 1.3, 5.2, 1.3, 1.4, 1.2); L.sE1.y0 = L.sE1.y1 = (LF2 - 340) - 172 * e;
+  const li = L.lift; if (li.y !== li.to) { const d = li.to - li.y; li.y += Math.sign(d) * Math.min(Math.abs(d), 150 * dt); }
+  L.sLift.y0 = L.sLift.y1 = li.y;
+  const T = L.tro; L.sTro.x0 = T.x - 45; L.sTro.x1 = T.x + 45; L.sTro.y0 = L.sTro.y1 = T.y - 75;
+}
+function labHurt(why) {
+  if (G.state !== 'aplay') return;
+  const L = G.ver.lab; L.why = why; P.ladder = null;
+  if (why === 'fall') { G.state = 'acaught'; L.fall = {t: 0}; G.fadeTarget = 1; G.fadeSpeed = 2.4; tone(400, 0.5, 'sine', 0.04, 120); return; }
+  G.state = 'acaught'; P.vx = 0; P.hidden = null; G.ko = {kind: 'zap', t: 0.9, hit: false}; G.flash = 0.35; G.shake = 0.2;
+  if (why === 'fire') { tone(300, 0.35, 'sawtooth', 0.06, 120); G.pSay = {bn: 'উহ্‌! গরম!', en: 'Ow! Hot!', t: 1}; }
+  else if (why === 'crush') { tone(80, 0.3, 'square', 0.07, 40); G.pSay = {bn: 'ধপাস!', en: 'Thud!', t: 1}; }
+  else if (why === 'eye') { tone(900, 0.4, 'square', 0.05, 300); G.pSay = {bn: 'ধরা পড়ে গেছি!', en: 'Spotted!', t: 1}; }
+  else { tone(1800, 0.25, 'square', 0.05, 300); tone(90, 0.3, 'sawtooth', 0.05, 60, 0.05); G.pSay = {bn: 'ঝিঁইইৎ!', en: 'Zzzzt!', t: 1}; }
+}
+function labRetryTip() { const w = G.ver.lab.why;
+  retryTip({eye: 'Spotted! Crouch behind a crate when the red beam comes.', fire: 'Too hot! Cross when the flame is low and blue.', crush: 'Squashed! Run under when the press goes up.', gate: 'Zap! Cross when the electric gate is off.', fall: 'You fell! Ride the moving platform across.'}[w] || 'Zap! Jump over the little sparks.'); }
+// crouch-under places (the crawl tunnel and the live wires): standing or jumping in stops him; crouched he creeps through
+function labLow(z, wire) {
+  const L = G.ver.lab; if (wire && L.done) return;
+  if (!(P.x > z.x0 - 8 && P.x < z.x1 + 8) || P.y < z.y - 200 || P.y > z.y + 2) return;
+  const ox = P.px0 ?? P.x, wasIn = ox > z.x0 - 8 && ox < z.x1 + 8, under = P.ground && Math.abs(P.y - z.y) < 4 && (P.sneak || P.crouchOn);
+  if (under || (wasIn && P.ground && Math.abs(P.y - z.y) < 4)) { P.crouchOn = true; return; }
+  const side = ox <= z.x0 ? -1 : ox >= z.x1 ? 1 : (P.vx >= 0 ? -1 : 1);
+  P.x = side < 0 ? z.x0 - (wire ? 30 : 8) : z.x1 + (wire ? 30 : 8); P.vx = 0;
+  if (!(L.zapT > 0)) { L.zapT = 1.6; G.shake = 0.12;
+    if (wire) { G.flash = 0.18; tone(1600, 0.18, 'square', 0.04, 400); G.pSay = {bn: 'ঝিঁৎ! তারের নিচে বসে বসে যাও!', en: 'Zzt! Crouch under the wires!', t: 1.5}; }
+    else { tone(140, 0.12, 'square', 0.06, 90); G.pSay = {bn: 'উফ্‌! বসে সুড়ঙ্গে ঢোকো!', en: 'Ouch! Crouch to get into the tunnel!', t: 1.5}; } }
+}
+// ---- ladders ----
+function labLadderNear(upOrDown) {
+  for (const L of LAB_LADDERS) { if (Math.abs(P.x - L.x) > 24) continue;
+    if (upOrDown < 0 && P.y <= L.y0 + 4 && P.y > L.y1 + 4) return L;   // at its foot (or partway, jumping): climb up
+    if (upOrDown > 0 && Math.abs(P.y - L.y1) < 6) return L; }          // standing at its top: climb down
+  return null;
+}
+function labClimb(dt) {
+  const D = P.ladder; if (!D) return false;
+  P.vx = 0; P.vy = 0; P.ground = false; P.surf = null; P.crouchOn = false; P.sneak = false;
+  P.x += (D.x - P.x) * Math.min(1, dt * 14);
+  const mv = (held.down ? 1 : 0) - (held.up ? 1 : 0);
+  if (mv) { const ny = Math.max(D.y1, Math.min(D.y0, P.y + mv * 125 * dt)); P.climbPh = (P.climbPh || 0) + Math.abs(ny - P.y) / 13; P.y = ny; if (Math.floor(P.climbPh / Math.PI) !== Math.floor((P.climbPh - 0.2) / Math.PI)) tone(260 + Math.random() * 40, 0.04, 'triangle', 0.015); }
+  const off = (y) => { P.ladder = null; P.y = y; P.ground = true; P.surf = SURF.filter(s => P.x >= s.x0 - 14 && P.x <= s.x1 + 14).sort((a, b) => Math.abs(a.y0 - y) - Math.abs(b.y0 - y))[0] || null; if (!P.surf || Math.abs(P.surf.y0 - y) > 6) { P.ground = false; P.surf = null; } P.landT = 0.1; };
+  if (P.y <= D.y1 + 0.5 && held.up) { off(D.y1); return true; }
+  if (P.y >= D.y0 - 0.5 && (held.down || held.left || held.right)) { off(D.y0); return true; }
+  if (edges.jump) { P.ladder = null; P.ground = false; P.vy = -380; P.vx = P.face * 120; edges.jump = false; P.buffer = 0; return true; }
+  if (edges.left) P.face = -1; if (edges.right) P.face = 1;
+  return true;
+}
+// ---- Mishti in the lab: she walks beside him on his floor, waits while he climbs, then leaps up (or down) to him ----
+function labMishti(dt) {
+  if (G.mleap) { const m = G.mleap; m.t += dt / m.dur; const u = Math.min(1, m.t); G.mx = m.x0 + (m.x1 - m.x0) * u; G.my = m.y0 + (m.y1 - m.y0) * u - Math.sin(u * Math.PI) * m.h; if (m.x1 !== m.x0) G.mface = Math.sign(m.x1 - m.x0); if (u >= 1) G.mleap = null; return; }
+  if (P.ladder || !P.ground || !P.surf || P.surf.mov) return;
+  if (Math.abs(P.vx) > 40) { G.mturn = (G.mturn || 0) + (Math.sign(P.vx) !== (G.mside || 1) ? dt : -G.mturn); if (G.mturn > 0.35) { G.mside = Math.sign(P.vx); G.mturn = 0; } }
+  const s = P.surf; let tx = P.x - (G.mside || 1) * 46; tx = Math.max(s.x0 + 12, Math.min(s.x1 - 12, tx));
+  const ty = surfYc(s, tx);
+  if (Math.abs(G.my - ty) > 20 || Math.abs(G.mx - tx) > 460) { const dy = G.my - ty; G.mleap = {x0: G.mx, y0: G.my, x1: tx, y1: ty, t: 0, dur: 0.5 + Math.min(0.45, Math.abs(dy) / 800), h: Math.max(36, dy * 0.25 + 50)}; G.mwalk = false; return; }
+  const dm = tx - G.mx; if (!G.mwalk && Math.abs(dm) > 24) G.mwalk = true; if (G.mwalk && Math.abs(dm) < 3) G.mwalk = false;
+  if (G.mwalk) { const v = Math.min(Math.abs(dm) * 6, Math.abs(dm) > 140 ? 280 : 175); G.mx += Math.sign(dm) * Math.min(Math.abs(dm), v * dt); G.manim += dt * Math.max(6, v / 14); G.mface = Math.sign(dm); } else G.mface = G.mside || 1;
+  G.my = surfYc(s, Math.max(s.x0, Math.min(s.x1, G.mx)));
+}
+function labOn(s) { return P.ground && P.surf === s; }
+function updateLab(dt) {
+  const V = G.ver, L = V.lab; if (!L) return;
+  L.zapT -= dt; L.crackT -= dt;
+  if (L.arrive > 0 && L.arrive < 1) L.arrive = Math.min(1, L.arrive + dt * 1.2);
+  if (L.shut > 0 && L.shut < 1) { L.shut = Math.min(1, L.shut + dt * 4); L.portal = 1 - L.shut; }
+  if (L.eye > 0 && L.eye < 1) L.eye = Math.min(1, L.eye + dt * 1.5);
+  if (L.sw > 0 && L.sw < 1) L.sw = Math.min(1, L.sw + dt * 3); if (L.cab > 0 && L.cab < 1) L.cab = Math.min(1, L.cab + dt * 1.6); if (L.comp > 0 && L.comp < 1) L.comp = Math.min(1, L.comp + dt * 1.8);
+  if (L.done) { L.lights = Math.min(1, L.lights + dt * 0.8); L.secret = Math.min(1, L.secret + dt * 0.5); }
+  { const kt = G.dialog && G.dialog.who === 'kalo'; if (kt) { L.kmood = (G.dialog.src && G.dialog.src.mood) || 'smug'; L.khold = 0.9; } else L.khold -= dt; const want = kt || L.khold > 0 ? 1 : 0; L.kshow += (want - L.kshow) * Math.min(1, dt * 6); if (L.kshow < 0.02 && !want) L.kshow = 0; }
+  for (const b of L.bugs) { if (L.done) { b.pop = Math.min(1, b.pop + dt * 2.5); continue; } b.x += b.dir * 95 * dt; if (b.x > b.b) { b.x = b.b; b.dir = -1; } if (b.x < b.a) { b.x = b.a; b.dir = 1; } b.anim += dt * 14; }
+  if (L.fly) L.fly.t += dt;
+  labMoving(dt); labTrolley(dt);
+  if (!L.done && L.crackT <= 0) { L.crackT = 0.6 + Math.random() * 0.9; if (Math.random() < 0.5) tone(2000 + Math.random() * 1500, 0.05, 'square', 0.01, 700); }
+  if (L.walkTo) { const d = L.walkTo - P.x; if (Math.abs(d) < 3) { P.x = L.walkTo; L.walkTo = 0; P.vx = 0; } else { P.x += Math.sign(d) * Math.min(Math.abs(d), 150 * dt); P.vx = Math.sign(d) * 150; P.face = Math.sign(d); P.anim += dt * 150 / 18.6; } }
+  if (L.fall) { L.fall.t += dt; if (L.fall.t > 0.6 && !L.fall.back) { L.fall.back = true; labPlace(L.chk); G.fadeTarget = 0; G.fadeSpeed = 1.6; G.state = 'aplay'; labRetryTip(); } return; }
+  labMishti(dt);
+  if (L.pick) { labPickUpdate(); return; }
+  if (G.state !== 'aplay') return;
+  // ladders: press up at the foot (or down at the top) to climb
+  if (!P.ladder) { const near = (edges.up || (held.up && !P.ground)) ? labLadderNear(-1) : edges.down ? labLadderNear(1) : null;
+    if (near) { P.ladder = near; P.climbPh = 0; P.vx = 0; P.vy = 0; P.ground = false; P.surf = null; P.buffer = 0; edges.jump = false; edges.sneak = false; if (Math.abs(P.y - near.y1) < 6) P.y = near.y1 + 2; if (!G.shown.ladder) { G.shown.ladder = true; } } }
+  if (P.ladder) return;
+  // side walls of the building, and the secret room's sliding wall until it opens
+  if (Math.abs(P.y - LF3) < 120 && P.x < LAB_SECRET_X + 30 && L.secret < 0.95) P.x = LAB_SECRET_X + 30;
+  if (P.y > LF1 + 10 && P.x > 2290 && P.x < 2420) P.x = 2290;   // the ground floor ends at the lift shaft
+  if (P.y > LF3 + 30 && P.y <= LF2 + 2 && P.x < 1516) P.x = 1516;   // the upper hall's left wall
+  // solid things: the bench side, the cupboards and the trolley body
+  for (const b of [{x0: 1142, x1: 1360, top: LG - 100, bot: LG}]) {
+    if (b.cab && L.cab > 0.9) continue;
+    if (P.y > b.top + 4 && P.y <= b.bot + 2 && P.x > b.x0 - 8 && P.x < b.x1 + 8) { const ox = P.px0 ?? P.x; P.x = ox <= b.x0 ? b.x0 - 8 : ox >= b.x1 ? b.x1 + 8 : (P.vx >= 0 ? b.x0 - 8 : b.x1 + 8); P.vx = 0; } }
+  labLow(LAB_TUNNEL, false); labLow(LAB_WIRES, true);
+  // hazards
+  if (!L.done) {
+    const g = Math.abs(P.y - LG) < 3 || (P.y > LF1 + 40 && P.y <= LG);
+    if (L.eye >= 1 && P.y > LF1 + 60 && P.x < 820) { const bx = labEyeX(); const cov = (P.sneak || P.crouchOn) && P.ground && LAB_CRATES.some(c => Math.abs(P.x - c) < 34); if (Math.abs(P.x - bx) < 44 && !cov) return labHurt('eye'); }
+    for (const b of L.bugs) if (Math.abs(P.x - b.x) < 24 && P.y > b.y - 30 && P.y <= b.y + 2) return labHurt('bug');
+    for (const bn of LAB_BURNERS) if (labFlame(bn) === 2 && Math.abs(P.x - bn.x) < 24 && P.y > bn.y - 156 && P.y <= bn.y + 2) return labHurt('fire');
+    if (labPress() > 0.55 && Math.abs(P.x - LAB_PRESS_X) < 38 && P.y > LF1 - 170 && P.y <= LF1 + 2) return labHurt('crush');
+    if (labGateOn() === 2 && Math.abs(P.x - LAB_GATE_X) < 16 && P.y > LF1 - 220 && P.y <= LF1 + 2) return labHurt('gate');
+  }
+  if (P.y > LF1 + 150 && P.x > LAB_PIT[0] - 10 && P.x < LAB_PIT[1] + 10) return labHurt('fall');
+  // things that pick themselves up
+  if (!L.parts[0] && labOn(LAB_S.shelfB) && Math.abs(P.x - 2090) < 40) return labPick(0);
+  if (!L.parts[1] && L.cab > 0.9 && Math.abs(P.y - LF1) < 4 && Math.abs(P.x - LAB_CAB_X) < 34) return labPick(1);
+  if (!L.parts[2] && L.comp > 0.9 && labOn(LAB_S.cap) && Math.abs(P.x - LAB_CAP_X) < 40) return labPick(2);
+  // checkpoints and story moments
+  if (L.parts[0] && L.chk < 1 && Math.abs(P.y - LG) < 4 && P.x > 2040) { L.chk = 1; labCP(); }
+  if (L.parts[1] && L.chk < 2 && Math.abs(P.y - LF2) < 4 && P.x > 3200) { L.chk = 2; labCP(); labSay2(); return; }
+  if (!L.seen.f1 && Math.abs(P.y - LF1) < 4 && P.x > 2280 && P.x < 2560) { L.seen.f1 = true; G.state = 'acut'; P.vx = 0; play([
+      {say:1, who:'kalo', bn:'আমার যন্ত্রঘরে স্বাগতম! পিষে-যন্ত্র আর বিজলি-গেট থেকে সাবধান, হা হা!', en:'Welcome to my machine room! Mind my crusher and my electric gate, ha ha!', mood: 'laugh'},
+      {say:1, who:'mishti', bn:'যন্ত্রটা ওপরে উঠলেই নিচ দিয়ে দৌড়াও!', en:'Run under the crusher when it goes up!', mood: 'scared'}], () => { G.state = 'aplay'; G.goalT = 0; }); return; }
+  if (!L.seen.f3 && Math.abs(P.y - LF3) < 4 && P.x < 1500) { L.seen.f3 = true; G.state = 'acut'; P.vx = 0; P.face = -1; play([
+      {say:1, who:'pupu', bn:'ওর নিয়ন্ত্রণ-ঘর! কনসোলে তিনটে ফাঁকা খোপ… একটা বিজলি, একটা গোল চাকতি, একটা ঢেউ।', en:'His control room! Three empty slots on the console… a lightning bolt, a round dial and a wave.', mood: 'surprised'},
+      {say:1, who:'mishti', bn:'আমাদের তিনটে জ্বলজ্বলে জিনিস! কোনটা কোথায় বসবে?', en:'Our three glowing things! Which one goes where?'},
+      {say:1, who:'kalo', bn:'খবরদার! ওই খোপগুলোয় হাত দেবে না!', en:'Don\'t you DARE touch those slots!', mood: 'angry'}], () => { G.state = 'aplay'; G.goalT = 0; }); return; }
+  if (edges.use && !G.dialog) labUse();
+}
+function labCP() { tone(880, 0.12, 'triangle', 0.03); tone(1320, 0.18, 'triangle', 0.03, 0, 0.1); }
+function labSay2() { G.state = 'acut'; P.vx = 0; play([
+  {say:1, who:'mishti', bn:'ওরে বাবা, কত উঁচু হলঘর!', en:'Wow, look how tall this hall is!', mood: 'surprised'},
+  {say:1, who:'pupu', bn:'আর ওই কাচের ট্যাঙ্কের একদম মাথায় কী যেন জ্বলছে!', en:'And something\'s glowing right at the top of that glass tank!', mood: 'surprised'},
+  {say:1, who:'kalo', bn:'আমার ট্যাঙ্কের মাথায় তুমি কোনোদিন পৌঁছাতে পারবে না!', en:'You\'ll never reach the top of my tank!', mood: 'laugh'}], () => { G.state = 'aplay'; G.goalT = 0; }); }
+function labEyeX() { return LAB_EYE.x + Math.sin(G.t * 1.15) * 230; }
+function labTrolley(dt) {   // push it along the loft, off the edge it rolls and drops; climb on it
+  const L = G.ver.lab, T = L.tro, hw = 45;
+  if (T.lvl === 'air') { T.vy += 1800 * dt; T.y += T.vy * dt; T.x += T.vx * dt; if (T.y >= LG) { T.y = LG; T.vy = 0; T.lvl = 'g'; G.shake = 0.25; tone(90, 0.3, 'square', 0.06, 50); tone(400, 0.2, 'triangle', 0.03, 0, 0.1);
+      if (!L.seen.tro) { L.seen.tro = true; G.pSay = {bn: 'নিচে পড়েছে! এবার ওটার ওপর উঠি।', en: 'It\'s down there! Now I can climb on it.', t: 2.2}; } } return; }
+  if (P.ladder) return;
+  const top = T.y - 75;
+  if (P.x > T.x - hw - 14 && P.x < T.x + hw + 14 && P.y > top + 4 && P.y <= T.y + 2) {
+    const ox = P.px0 ?? P.x, fromLeft = ox <= T.x, dir = fromLeft ? 1 : -1;
+    if (P.ground && Math.abs(P.y - T.y) < 4 && Math.sign(P.vx) === dir && Math.abs(P.vx) > 20) { T.x += dir * 120 * dt; if (Math.random() < dt * 6) tone(150 + Math.random() * 30, 0.06, 'triangle', 0.02); }
+    if (T.lvl === 'loft') T.x = Math.max(1480 + hw, T.x); else T.x = Math.max(1420 + hw, Math.min(2030 - hw, T.x));
+    P.x = fromLeft ? T.x - hw - 14 : T.x + hw + 14; P.vx = Math.sign(P.vx) * Math.min(Math.abs(P.vx), 120);
+  }
+  if (T.lvl === 'loft' && T.x > 1910) { T.lvl = 'air'; T.vx = 90; T.vy = 0; tone(300, 0.3, 'triangle', 0.03, 120); }
+}
+function labNear() {
+  const L = G.ver && G.ver.lab; if (!L || !P.ground) return null;
+  if (Math.abs(P.x - 2215) < 70 && (Math.abs(P.y - LG) < 4 || Math.abs(P.y - LF1) < 4)) return {k: 'lift'};
+  if (!L.sw && labOn(LAB_S.swTop) && Math.abs(P.x - LAB_SWITCH_X) < 44) return {k: 'switch'};
+  if (!L.comp && labOn(LAB_S.cap) && Math.abs(P.x - LAB_CAP_X) < 46) return {k: 'comp'};
+  if (Math.abs(P.y - LF3) < 4 && !L.done) for (let i = 0; i < 3; i++) if (!L.sock[i] && Math.abs(P.x - LAB_SOCKETS[i]) < 40) return {k: 'sock', i};
+  if (L.done && !L.radioTaken && Math.abs(P.y - LF3) < 4 && Math.abs(P.x - LAB_RADIO_X) < 70) return {k: 'radio'};
+  return null;
+}
+function labUse() {
+  const n = labNear(), L = G.ver.lab; if (!n) return;
+  if (n.k === 'lift') return labLiftUse();
+  if (n.k === 'switch') { G.state = 'acut'; P.vx = 0; P.face = 1; play([{do: () => { L.sw = 0.001; tone(500, 0.08, 'square', 0.05); tone(200, 0.6, 'sawtooth', 0.03, 120, 0.1); }}, {wait: 0.6}, {do: () => { L.cab = 0.001; tone(700, 0.3, 'triangle', 0.03, 900); }}, {wait: 0.8},
+      {say:1, who:'mishti', bn:'নিচের আলমারিটা খুলে গেছে!', en:'The cabinet down there just opened!', mood: 'happy'}], () => { G.state = 'aplay'; G.goalT = 0; }); return; }
+  if (n.k === 'comp') { G.state = 'acut'; P.vx = 0; play([{do: () => { L.comp = 0.001; tone(900, 0.2, 'triangle', 0.03, 600); }}, {wait: 0.7}], () => { G.state = 'aplay'; G.goalT = 0; }); return; }
+  if (n.k === 'sock') { if (n.i > 0 && !L.sock[n.i - 1]) { G.pSay = {bn: 'আগে বাঁয়ের জ্বলন্ত খোপটা…', en: 'The glowing slot on the left first…', t: 1.6}; return; } L.pick = {i: n.i, sel: 0, rects: []}; P.vx = 0; G.state = 'acut'; return; }
+  if (n.k === 'radio') return labRadio();
+}
+function labLiftUse() {
+  const L = G.ver.lab, li = L.lift, onLift = P.ground && P.x >= LAB_LIFT.x0 - 6 && P.x <= LAB_LIFT.x1 + 6 && Math.abs(P.y - li.y) < 4;
+  if (onLift) P.surf = L.sLift;
+  if (!L.parts[0]) { G.pSay = {bn: 'বিদ্যুৎ নেই… একটা ব্যাটারি লাগবে।', en: 'No power… it needs a battery.', t: 2}; return; }
+  if (!onLift) { if (Math.abs(li.y - P.y) > 4) { li.to = P.y; tone(300, 0.4, 'sawtooth', 0.02, 200); } return; }   // call it down (or up) to him
+  const ride = () => { li.to = li.y > LF1 + 10 ? LF1 : LG; G.mleap = {x0: G.mx, y0: G.my, x1: 2185, y1: li.y, t: 0, dur: 0.4, h: 40}; tone(140, 1.6, 'sawtooth', 0.03, 180); };
+  G.state = 'acut'; P.vx = 0;
+  const steps = [];
+  if (!li.bat) steps.push({say:1, who:'pupu', bn:'এই পুরোনো লিফটে বিদ্যুৎ নেই… ব্যাটারিটা লাগাই!', en:'This old lift has no power… let\'s try the battery!'}, {do: () => { li.bat = true; tone(700, 0.15, 'triangle', 0.04); }}, {wait: 0.5});
+  steps.push({do: ride}, {until: () => Math.abs(L.lift.y - L.lift.to) < 1}, {do: () => { G.mx = 2195; G.my = L.lift.y; }});
+  if (!L.seen.lift) steps.push({say:1, who:'pupu', bn:'চলছে! ব্যাটারিটা খুলে রাখি, পরে লাগবে।', en:'It works! I\'ll take the battery back out, we\'ll need it later.', mood: 'grin'}, {do: () => { L.seen.lift = true; }});
+  play(steps, () => { G.state = 'aplay'; G.goalT = 0; });
+}
+// the three slots on the console: pick which glowing thing goes in (one slot at a time, left to right)
+function labPickUpdate() {
+  const L = G.ver.lab, K = L.pick, opts = LAB_SOCK_PART.filter((p, i) => !L.sock[i] || true).filter(p => !L.sock[LAB_SOCK_PART.indexOf(p)]);
+  if (K.fb) { K.fb.t += 1 / 60; if (K.fb.t > (K.fb.ok ? 0.9 : 1.1)) { const ok = K.fb.ok; L.pick = null; G.state = 'aplay'; if (ok && L.sock.every(Boolean)) labFinale(); } return; }
+  if (edges.left) { K.sel = (K.sel + opts.length - 1) % opts.length; tone(520, 0.04, 'triangle', 0.02); }
+  if (edges.right) { K.sel = (K.sel + 1) % opts.length; tone(520, 0.04, 'triangle', 0.02); }
+  let pick = -1;
+  if (edges.tap) { K.rects.forEach((r, k) => { if (tapX > r[0] && tapX < r[0] + r[2] && tapY > r[1] && tapY < r[1] + r[3]) pick = k; }); }
+  else if (edges.use || edges.jump) pick = K.sel;
+  if (edges.pause || edges.sneak) { L.pick = null; G.state = 'aplay'; return; }
+  if (pick < 0 || pick >= opts.length) return;
+  K.sel = pick;
+  if (opts[pick] === LAB_SOCK_PART[K.i]) { L.sock[K.i] = true; K.fb = {ok: true, t: 0}; tone(660, 0.15, 'triangle', 0.05); tone(990, 0.25, 'triangle', 0.04, 0, 0.12); G.flash = 0.15; }
+  else { K.fb = {ok: false, t: 0}; G.flash = 0.2; tone(1600, 0.2, 'square', 0.04, 300); G.pSay = {bn: 'ঝিঁৎ! এটা এখানে বসে না!', en: 'Zzt! That one doesn\'t fit here!', t: 1.6}; }
+}
+function labFinale() {
+  const L = G.ver.lab; G.state = 'acut'; P.vx = 0;
+  play([
+    {wait: 0.4}, {do: () => { L.done = true; G.shake = 0.4; tone(523, 0.2, 'triangle', 0.05); tone(392, 0.3, 'triangle', 0.05, 0, 0.2); tone(240, 1.6, 'sine', 0.05, 90, 0.4); }}, {wait: 1.2},
+    {say:1, who:'kalo', bn:'না না না! আমার বিজলি-জমানো যন্ত্র! কী করলে তুমি?!', en:'No, no, NO! My Lightning Collector! What have you done?!', mood: 'shock'},
+    {say:1, who:'mishti', bn:'ফুলকিগুলো সব থেমে গেছে! আর দেখো, দেয়ালটা সরে যাচ্ছে!', en:'All the sparks have stopped! And look, the wall is sliding open!', mood: 'happy'},
+    {do: () => { L.fly0 = {t: 0}; tone(880, 0.3, 'triangle', 0.03, 1200); }}, {wait: 1.0},
+    {say:1, who:'pupu', bn:'একটা গোপন ঘর! আর ভেতরে কিছু একটা জ্বলছে!', en:'A secret room! And something\'s glowing inside!', mood: 'grin'},
+  ], () => { G.state = 'aplay'; G.goalT = 0; });
+}
+const LAB_PICK_LINES = [
+  [{say:1, who:'pupu', bn:'একটা ব্যাটারি… আর চশমাটার মতো জ্বলছে!', en:'A battery… and it\'s glowing, just like the glasses!', mood: 'surprised'},
+   {say:1, who:'mishti', bn:'ব্যাটারি এখানে কী করছে? রেখে দাও, কাজে লাগতে পারে!', en:'What\'s a battery doing up here? Keep it, it might be useful!'},
+   {say:1, who:'kalo', bn:'আমার ব্যাটারি! বিজলি-পোকারা, ধরো ওকে!', en:'My battery! Spark-bugs, get him!', mood: 'angry'}],
+  [{say:1, who:'pupu', bn:'একটা ছোট্ট গোল নব। এটাও জ্বলছে!', en:'A little round knob. This one\'s glowing too!', mood: 'surprised'},
+   {say:1, who:'mishti', bn:'আরেকটা! আরও আছে নাকি?', en:'Another one! Are there more?', mood: 'happy'}],
+  [{say:1, who:'pupu', bn:'একটা সরু ধাতুর কাঠি… টানলে লম্বা হয়!', en:'A thin metal rod… it slides out longer!', mood: 'grin'},
+   {say:1, who:'kalo', bn:'এই! ওটা রাখো! ওগুলো সব আমার!', en:'Hey! Put that down! Those are all MINE!', mood: 'angry'},
+   {say:1, who:'pupu', bn:'আপনার না, প্রফেসর!', en:'They\'re not yours, Professor!', mood: 'grin'},
+   {say:1, who:'mishti', bn:'তিনটে জ্বলজ্বলে জিনিস… কিন্তু এগুলো কীসের? চলো, ওই সরু পথ ধরে বাঁয়ে যাই।', en:'Three glowing things… but what are they for? Let\'s take that narrow walkway to the left.'}],
+];
+function labPick(i) {
+  const L = G.ver.lab; G.state = 'acut'; P.vx = 0; P.pickT = 0.55;
+  play([{wait: 0.3}, {do: () => { L.parts[i] = true; tone(784, 0.15, 'triangle', 0.05); tone(1175, 0.25, 'triangle', 0.04, 0, 0.1); }}, {wait: 0.5}, ...LAB_PICK_LINES[i]], () => { G.state = 'aplay'; G.goalT = 0; });
+}
+function labGoal() {
+  const L = G.ver.lab; if (!L || L.pick || G.state !== 'aplay' || P.ladder) return null;
+  const p = L.parts, y = P.y, onG = y > LF1 + 20, onF1 = y > LF2 + 20 && y <= LF1 + 20, onF2 = y > LF3 + 20 && y <= LF2 + 20;
+  const UP = ['Up'];
+  if (!p[0]) {
+    if (!onG) return L.tro.lvl === 'loft' ? {bn: 'ঠেলাগাড়িটা ঠেলে মাচার কিনারা থেকে ফেলে দাও', en: 'Push the trolley off the edge of the loft', x: 1910} : {bn: 'নিচে নামো: ঠেলাগাড়িতে উঠে ব্যাটারির দিকে লাফাও', en: 'Go down: climb onto the trolley, jump to the battery', x: 1885, k: ['Down']};
+    if (P.x < 760) return {bn: 'লাল আলো এলে বাক্সের পেছনে বসে পড়ো', en: 'When the red beam comes, crouch behind a crate', x: 900, k: ['Shift']};
+    if (L.tro.lvl === 'g') return {bn: 'ঠেলাগাড়িতে উঠে জ্বলজ্বলে ব্যাটারির দিকে লাফাও', en: 'Climb onto the trolley, then jump to the glowing battery', x: 2090, y: LG - 150, k: ['Space']};
+    if (labOn(LAB_S.hang)) return {bn: 'মই বেয়ে ওপরের মাচায় ওঠো', en: 'Climb the ladder up to the loft', x: 1478, y: LF1, k: UP};
+    if (P.x > 1360 && P.x < 1860) return {bn: 'বেঞ্চে উঠে ঝোলানো তক্তায় লাফাও (বেঞ্চে ফিরতে সিঁড়ি)', en: 'Get back on the bench and jump to the hanging platform', x: 1040};
+    if (P.x >= 1860) return {bn: 'মই বেয়ে মাচায় ওঠো', en: 'Climb the ladder up to the loft', x: 1885, y: LF1, k: UP};
+    return labOn(LAB_S.bench) ? {bn: 'শিখা নীল হলে পার হও, ঝোলানো তক্তায় লাফাও', en: 'Cross when the flame is low and blue, jump to the hanging platform', x: 1450, y: LG - 172, k: ['Space']}
+      : {bn: 'ফুলকি লাফিয়ে পার হও, সিঁড়ি দিয়ে বেঞ্চে ওঠো', en: 'Jump the spark, go up the steps onto the bench', x: 1180, y: LG - 100, k: ['Space']};
+  }
+  if (onG) return {bn: 'লিফটে উঠে চালাও', en: 'Step onto the lift and use it', x: 2215, k: ['E']};
+  if (!p[1] && onF1) {
+    if (P.x < LAB_PIT[0]) return {bn: 'যন্ত্র ওপরে উঠলে দৌড়াও, গেট নিভলে পার হও', en: 'Run under the crusher when it lifts, cross the gate when it\'s off', x: 2600};
+    if (P.x < LAB_PIT[1]) return {bn: 'চলন্ত তক্তায় চড়ে পার হও', en: 'Ride the moving platform across', x: 2830, k: ['Space']};
+    if (P.x < LAB_TUNNEL.x1 + 10) return {bn: 'বসে বসে সুড়ঙ্গ দিয়ে যাও', en: 'Crouch through the tunnel', x: 3080, k: ['Shift']};
+    if (!L.sw) return labOn(LAB_S.swTop) ? {bn: 'সুইচটা টানো', en: 'Pull the switch', x: LAB_SWITCH_X, k: ['E']} : {bn: 'মই বেয়ে যন্ত্রের মাথায় সুইচের কাছে ওঠো', en: 'Climb the ladder up the machine to the switch', x: 3236, y: LF1 - 190, k: UP};
+    return {bn: 'খোলা আলমারি থেকে নবটা নাও', en: 'Get the knob from the open cabinet', x: LAB_CAB_X};
+  }
+  if (onF1) return {bn: 'লম্বা মই বেয়ে ওপরতলায় ওঠো', en: 'Climb the tall ladder to the upper floor', x: 3392, y: LF2, k: UP};
+  if (!p[2]) {
+    if (labOn(LAB_S.cap)) return {bn: 'খোপটা খোলো', en: 'Open the compartment', x: LAB_CAP_X, k: ['E']};
+    if (labOn(LAB_S.shelfA)) return {bn: 'পাশের মই বেয়ে মাচায় ওঠো', en: 'Climb the side ladder to the gantry', x: 2915, y: LF2 - 340, k: UP};
+    if (labOn(LAB_S.gantry) || P.surf === L.sE1) return {bn: 'চলন্ত লিফটে চড়ে ঝোলানো তক্তায় লাফাও', en: 'Ride the elevator up, jump to the hanging platforms', x: 2445, y: 460, k: ['Space']};
+    if (labOn(LAB_S.sp1) || labOn(LAB_S.sp2)) return {bn: 'কাচের ট্যাঙ্কের মাথায় লাফাও', en: 'Jump onto the top of the glass tank', x: LAB_CAP_X, y: 500, k: ['Space']};
+    if (onF2 && P.x > LAB_WIRES.x0 - 20) return {bn: 'জ্যান্ত তারের নিচে বসে বসে যাও', en: 'Crouch under the live wires', x: 3000, k: ['Shift']};
+    return {bn: 'মই বেয়ে তাকে ওঠো', en: 'Climb the ladder up to the shelf', x: 2990, y: LF2 - 180, k: UP};
+  }
+  if (!L.done) { const i = L.sock.indexOf(false); return Math.abs(P.y - LF3) < 4 && P.x < 1500 ? {bn: 'জ্বলন্ত খোপে ঠিক জিনিসটা বসাও', en: 'Put the right thing in the glowing slot', x: LAB_SOCKETS[i], k: ['E']} : {bn: 'সরু পথ ধরে বাঁয়ে নিয়ন্ত্রণ-ঘরে যাও', en: 'Take the walkway left to the control room', x: 1300, y: LF3}; }
+  return L.radioTaken ? null : {bn: 'গোপন ঘরে জ্বলজ্বলে জিনিসটা দেখো', en: 'Look at the glowing thing in the secret room', x: LAB_RADIO_X, y: LF3, k: ['E']};
+}
+function labRadio() {
+  const L = G.ver.lab; G.state = 'acut'; P.vx = 0; P.face = -1;
+  play([
+    {say:1, who:'pupu', bn:'একটা পুরোনো রেডিও! ব্যাটারির খোপ ফাঁকা, নব নেই, অ্যান্টেনাও নেই…', en:'An old radio! The battery box is empty, the knob is missing, and there\'s no antenna…', mood: 'surprised'},
+    {say:1, who:'mishti', bn:'যে জিনিসগুলো পেলে… ওগুলো কি এতে লাগে?', en:'The things you found… do they fit in it?'},
+    {do: () => { L.fly = {t: 0}; }}, {wait: 2.4},
+    {say:1, who:'pupu', bn:'লেগে গেছে! এটা… এটা তো দাদুর রেডিও!', en:'They fit! This is… this is Dadu\'s radio!', mood: 'grin'},
+    {say:1, who:'mishti', bn:'আলো ছড়াচ্ছে… ঠিক পাথর আর চশমাটার মতো!', en:'It\'s glowing… just like the stone and the glasses!', mood: 'surprised'},
+    {say:1, who:'kalo', bn:'ওই রেডিওর আলোতেই আমার পুরো ল্যাব চলত! ফেরত দাও!', en:'That radio\'s glow powered my whole lab! Give it back!', mood: 'angry'},
+    {say:1, who:'pupu', bn:'এটা আপনার না। এটা আমার দাদুর!', en:'It\'s not yours. It\'s my Dadu\'s!', mood: 'angry'},
+    {do: () => { P.pickT = 0.55; }}, {wait: 0.35}, {do: () => { L.radioTaken = true; L.kmood = 'zapped'; L.khold = 3; G.flash = 0.5; G.shake = 0.3; tone(1800, 0.3, 'square', 0.05, 200); tone(90, 0.5, 'sawtooth', 0.05, 50, 0.1); }}, {wait: 0.9},
+    {say:1, who:'kalo', bn:'ঝিঁইইইৎ! আউউউ! আমার নিজের বিজলি…!', en:'Bzzzzzt! Owww! My own lightning…!', mood: 'zapped'},
+    {say:1, who:'pupu', bn:'এটাই আপনার উচিত শিক্ষা, প্রফেসর!', en:'That\'s your lesson, Professor!', mood: 'grin'},
+    {say:1, who:'kalo', bn:'এর শোধ আমি নেব, পুপু… নেবই!', en:'I\'ll get you for this, Pupu… I will!', mood: 'zapped'},
+    {wait: 0.8},
+    {do: () => { sfx.memory(); G.fadeTarget = 1; G.fadeSpeed = 1.2; }}, {wait: 1},
+    {do: () => { G.fb = {kind: 'radio', t: 0}; G.fadeTarget = 0; G.fadeSpeed = 1; }}, {wait: 1.2},
+    {say:1, who:'narr', bn:'অনেক বছর আগের এক সন্ধ্যা…', en:'One evening, many years ago…', auto: 3},
+    {say:1, who:'pupu', bn:'দাদু, রেডিওটা নষ্ট হয়ে গেছে! একটুও আওয়াজ নেই!', en:'Dadu, the radio\'s broken! Not a sound!', mood: 'sad'},
+    {say:1, who:'dadu', bn:'নষ্ট? কই, দেখি তো দাদুভাই। চল, দুজনে মিলে সারাই। তুই নিজের হাতে কর, আমি দেখিয়ে দিই।', en:'Broken? Let me see, Dadubhai. Come, let\'s fix it together. You do it with your own hands, I\'ll show you how.'},
+    {do: () => startRadioGame()}, {until: () => G.fb.rg.done},
+    {say:1, who:'dadu', bn:'দেখলি? যত্ন আর ধৈর্য দিয়ে সারালে, ভাঙা জিনিসও আবার গান গায়।', en:'See? Fix things with care and patience, and even broken things sing again.', mood: 'happy'},
+    {say:1, who:'pupu', bn:'দাদু, রোজ সন্ধ্যায় আমরা গান শুনব?', en:'Dadu, can we listen to songs every evening?', mood: 'grin'},
+    {say:1, who:'dadu', bn:'রোজ সন্ধ্যায়। এই বারান্দায়, তুই আর আমি।', en:'Every evening. Right here on the verandah, you and me.', mood: 'happy'},
+    {do: () => { G.fadeTarget = 1; G.fadeSpeed = 1.1; }}, {wait: 1},
+    {do: () => { G.fb = null; radioStaticOff(); G.fadeTarget = 0; G.cups = 3; showToast('Dadu\'s things 3 of 10: his pocket radio'); sfx.cp(); }}, {wait: 1.4},
+    {say:1, who:'pupu', bn:'রোজ সন্ধ্যায় দাদু আর আমি বারান্দায় বসে এই রেডিওতে গান শুনতাম… আমি ভুলেই গিয়েছিলাম।', en:'Every evening Dadu and I sat on the verandah and listened to songs on this radio… I\'d forgotten.', mood: 'sad'},
+    {say:1, who:'mishti', bn:'এখনো বাজে?', en:'Does it still play?'},
+    {do: () => { radioSong(2, 0.02); }}, {wait: 1.2},
+    {say:1, who:'pupu', bn:'হুঁ… এখনো গান গায়।', en:'Mm… it still sings.', mood: 'happy'},
+    {do: () => { G.fadeTarget = 1; G.fadeSpeed = 0.7; }}, {wait: 1.8},
+    {do: () => { G.state = 'l3end'; G.endT = 0; G.fade = 0; G.fadeTarget = 0; }},
+  ]);
 }
 
-// ---- the lab, drawn (art bible: layered back to front, cool moonlight against warm glows, props that tell the story) ----
-function labWindow(wx) {   // a tall steel-framed window: moonlit sky, a far tree, moonlight falling into the room
-  const y0 = VF - 590, w = 230, h = 330;
-  box(wx - 10, y0 - 10, w + 20, h + 20, '#2A3640', 2, 2.4);
-  const g = ctx.createLinearGradient(0, y0, 0, y0 + h); g.addColorStop(0, '#16285A'); g.addColorStop(1, '#2C4486'); ctx.fillStyle = g; ctx.fillRect(wx, y0, w, h);
-  ydBlob(wx + 60, y0 + h - 30, 70, '#132240'); ydBlob(wx + 170, y0 + h - 10, 80, '#152844');
-  for (let i = 0; i < 6; i++) circ(wx + 20 + (i * 47) % (w - 30), y0 + 20 + (i * 61) % 140, 1.3, 'rgba(255,250,230,.7)', 0);
-  for (let k = 1; k < 3; k++) line(wx + k * w / 3, y0, wx + k * w / 3, y0 + h, '#3A4650', 4);
-  for (let k = 1; k < 4; k++) line(wx, y0 + k * h / 4, wx + w, y0 + k * h / 4, '#3A4650', 4);
-  box(wx - 16, y0 + h + 6, w + 32, 12, '#3A4650', 2, 2);   // the sill
-  ctx.save(); ctx.globalCompositeOperation = 'lighter'; const sg = ctx.createLinearGradient(wx, y0, wx + 260, VF); sg.addColorStop(0, 'rgba(120,150,255,.13)'); sg.addColorStop(1, 'rgba(120,150,255,0)'); ctx.fillStyle = sg;
-  ctx.beginPath(); ctx.moveTo(wx, y0 + 20); ctx.lineTo(wx + w, y0 + 20); ctx.lineTo(wx + w + 260, VF + 10); ctx.lineTo(wx + 200, VF + 10); ctx.closePath(); ctx.fill(); ctx.restore();
+// ---- (v261) Pupu climbing a ladder in profile: he faces the rungs, hands reach up in turn, knees step up in turn ----
+function pupuClimbSide(o, ex, shoes) {
+  const ph = o.climb || 0, hipY = -33, TL = 20, shY = hipY - TL;
+  for (const [hx, off, col] of [[-1, Math.PI, '#A9693F'], [2, 0, SKIN]]) {
+    const s = Math.sin(ph + off), up = Math.max(0, s);
+    const fx = 8, fy = -up * 16, kx = 11 + up * 3, ky = hipY + 13 - up * 11;
+    limb(hx, hipY + 3, kx, ky, col, 4.4); limb(kx, ky, fx, fy - 2, col, 4.2);
+    ctx.save(); ctx.translate(fx + 1, fy); if (shoes) { ctx.beginPath(); ctx.ellipse(0, -1.5, 4.4, 2.6, 0, 0, Math.PI * 2); fs('#F4F1E8', 1.6); ctx.fillStyle = '#2C3E8C'; ctx.fillRect(-4.4, -0.3, 8.8, 1.4); } else { ctx.beginPath(); ctx.ellipse(0, -1.5, 3.8, 2.2, 0, 0, Math.PI * 2); fs(SKIN, 1.6); } ctx.restore();
+  }
+  ctx.beginPath(); ctx.moveTo(-7, hipY - 3); ctx.lineTo(7, hipY - 3); ctx.lineTo(8, hipY + 9); ctx.lineTo(-6, hipY + 9); ctx.closePath(); fs(PUPU_PANTS, 2.4);   // shorts
+  // the far arm (behind the body) reaches for a rung, then the body, then the near arm
+  const a1 = Math.max(0, Math.sin(ph + Math.PI)), a2 = Math.max(0, Math.sin(ph));
+  arm3(0, shY + 3, 8, shY - 6 - a1 * 6, 12, shY - 16 - a1 * 10, '#A9693F', 3.6, '#A9693F');
+  box(-6.5, shY - 1, 13, TL + 2, PUPU_SHIRT, 5, 2.5);
+  limb(1, shY, 2, shY - 5, SKIN, 4.4);
+  pupuHead(3, shY - 12, o, ex);
+  arm3(1, shY + 3, 9, shY - 2 - a2 * 6, 12.5, shY - 10 - a2 * 12, SKIN, 3.8, SKIN);
 }
-function labJars(x0, x1, y) {   // a high wall shelf of jars and bottles, some softly glowing
-  box(x0, y, x1 - x0, 10, '#5A3E28', 1, 2); for (const bx of [x0 + 16, x1 - 22]) { ctx.beginPath(); ctx.moveTo(bx, y + 10); ctx.lineTo(bx + 6, y + 10); ctx.lineTo(bx, y + 30); ctx.closePath(); fs('#3A2A1E', 1.4); }
-  let x = x0 + 8, i = 0;
-  while (x < x1 - 30) { const k = i % 4, hh = [38, 26, 46, 30][k], ww = [24, 30, 18, 26][k], col = ['rgba(90,200,140,.55)', 'rgba(200,120,220,.5)', 'rgba(240,200,90,.5)', 'rgba(120,180,240,.5)'][(i * 7 + x0) % 4];
-    if (k === 2) { box(x + 4, y - hh, ww - 8, hh, 'rgba(200,220,230,.25)', 4, 1.6); box(x + 6, y - hh * 0.6, ww - 12, hh * 0.6, col, 3, 0); box(x + 6, y - hh - 8, ww - 12, 9, '#5A3E28', 2, 1.4); }
-    else { box(x, y - hh, ww, hh, 'rgba(200,220,230,.22)', 5, 1.6); box(x + 2, y - hh * 0.55, ww - 4, hh * 0.55 - 2, col, 4, 0); box(x + 2, y - hh - 6, ww - 4, 7, '#7A6A5A', 2, 1.4); }
-    if (i % 3 === 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(x + ww / 2, y - hh * 0.3, 2, x + ww / 2, y - hh * 0.3, 34); g.addColorStop(0, col.replace(/[\d.]+\)$/, '.35)')); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(x - 30, y - hh - 30, ww + 60, hh + 60); ctx.restore(); }
-    x += ww + 8; i++; }
+// ---- the laboratory, drawn: a cut-away building, floor upon floor (layered back to front, cool moonlight against warm lamps) ----
+function labRoom(x0, x1, y0, y1, top, bot) { const g = ctx.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, top); g.addColorStop(1, bot); ctx.fillStyle = g; ctx.fillRect(x0, y0, x1 - x0, y1 - y0); }
+function labSlab(x0, x1, y, walk, th) {   // a concrete floor slab; its walkable edge has yellow-and-black hazard stripes
+  th = th || LSL; box(x0, y, x1 - x0, th, '#3A424A', 1, 2); line(x0, y + 1.5, x1, y + 1.5, 'rgba(200,215,230,.25)', 1.6);
+  if (walk) { ctx.save(); ctx.beginPath(); ctx.rect(x0, y + th - 7, x1 - x0, 6); ctx.clip(); for (let x = Math.floor(x0 / 16) * 16; x < x1; x += 16) { ctx.beginPath(); ctx.moveTo(x, y + th); ctx.lineTo(x + 8, y + th - 8); ctx.lineTo(x + 16, y + th - 8); ctx.lineTo(x + 8, y + th); ctx.closePath(); ctx.fillStyle = '#E3B02B'; ctx.fill(); } ctx.restore(); }
 }
-function labPosters() {
-  // the periodic table
-  { const px = 1460, py = VF - 520; box(px, py, 250, 150, '#E8E2D0', 2, 2); text(L2('পর্যায় সারণি', 'PERIODIC TABLE'), px + 125, py + 18, 12, INK, 700, 'center');
-    const cols = ['#E8A0A0', '#F0D090', '#A8D8A0', '#A0C8E8', '#D0B0E0'];
-    for (let r = 0; r < 6; r++) for (let c = 0; c < 18; c++) { if (r === 0 && c > 0 && c < 17) continue; if ((r === 1 || r === 2) && c > 1 && c < 12) continue; ctx.fillStyle = cols[(c + r * 3) % 5]; ctx.fillRect(px + 10 + c * 12.8, py + 28 + r * 18, 11, 16); } }
-  // the human skeleton chart
-  { const px = 2110, py = VF - 540; box(px, py, 120, 170, '#E8E2D0', 2, 2); text(L2('মানবদেহ', 'HUMAN BODY'), px + 60, py + 18, 11, INK, 700, 'center');
-    ctx.save(); ctx.translate(px + 60, py + 34); ctx.strokeStyle = '#6A5A4A'; ctx.lineWidth = 2; circ(0, 8, 9, 'rgba(0,0,0,0)', 1.6); line(0, 17, 0, 80, '#6A5A4A', 2); for (let k = 0; k < 5; k++) { ctx.beginPath(); ctx.ellipse(0, 30 + k * 8, 16 - k, 4, 0, 0, Math.PI); ctx.stroke(); }
-    line(0, 24, -22, 60, '#6A5A4A', 2); line(0, 24, 22, 60, '#6A5A4A', 2); line(0, 80, -14, 126, '#6A5A4A', 2); line(0, 80, 14, 126, '#6A5A4A', 2); ctx.restore(); }
-  // a safety sign and a plant-cell chart
-  { const px = 2700, py = VF - 470; box(px, py, 150, 64, '#E3A92B', 3, 2.4); text(L2('সাবধান!', 'CAUTION!'), px + 75, py + 26, 16, INK, 700, 'center'); text(L2('খোলা তারে হাত দিও না', 'Don\'t touch loose wires'), px + 75, py + 48, 11, INK, 700, 'center');
-    ctx.beginPath(); ctx.moveTo(px + 18, py + 44); ctx.lineTo(px + 26, py + 30); ctx.lineTo(px + 22, py + 30); ctx.lineTo(px + 28, py + 18); ctx.stroke(); }
-  labPostersVillain();
+function labLamp(x, y, col, r, a) {   // a hanging lamp and its pool of light
+  line(x, y - 40, x, y - 8, '#1A1E24', 2); ctx.beginPath(); ctx.moveTo(x - 14, y); ctx.lineTo(x + 14, y); ctx.lineTo(x + 7, y - 10); ctx.lineTo(x - 7, y - 10); ctx.closePath(); fs('#2A3038', 1.6); circ(x, y + 1, 4, col, 0);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(x, y, 4, x, y + r * 0.5, r); g.addColorStop(0, col.replace('rgb', 'rgba').replace(')', ',' + a + ')')); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(x - r, y - 20, r * 2, r * 1.4); ctx.restore();
 }
-function labBench(b) {   // a lab bench: a black top with a lit edge, a wooden cabinet with drawers; a sink and tap, or a microscope, or a globe
-  const top = VF - b.h, w = b.x1 - b.x0;
-  box(b.x0 + 6, top + 12, w - 12, b.h - 12, '#5A3A26', 1, 2.2);
-  for (let x = b.x0 + 16; x < b.x1 - 60; x += 92) { box(x, top + 24, 80, 30, '#6A4630', 2, 1.6); box(x + 32, top + 36, 16, 5, '#C8B080', 2, 1); box(x, top + 60, 80, b.h - 70, '#64422C', 2, 1.6); circ(x + 70, top + 82, 3, '#C8B080', 1); }
-  box(b.x0 - 6, top, w + 12, 14, '#1E2428', 2, 2.4); line(b.x0 - 2, top + 2, b.x1 + 2, top + 2, 'rgba(160,190,220,.35)', 2);
-  if (b.sink) { box(b.sink - 26, top + 2, 52, 8, '#0E1214', 2, 1.4); ctx.strokeStyle = '#A8B0B8'; ctx.lineWidth = 3.4; ctx.beginPath(); ctx.moveTo(b.sink + 18, top); ctx.lineTo(b.sink + 18, top - 40); ctx.quadraticCurveTo(b.sink + 18, top - 52, b.sink + 6, top - 50); ctx.lineTo(b.sink + 4, top - 42); ctx.stroke(); }
-  if (b.scope) { const x = b.scope; box(x - 16, top - 8, 32, 8, '#2A3038', 2, 1.6); ctx.strokeStyle = '#2A3038'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(x + 8, top - 8); ctx.quadraticCurveTo(x + 14, top - 30, x + 4, top - 48); ctx.stroke(); ctx.save(); ctx.translate(x - 2, top - 46); ctx.rotate(-0.4); box(-6, -24, 12, 30, '#C8CED4', 3, 1.6); box(-4, -32, 8, 9, '#2A3038', 2, 1.4); ctx.restore(); box(x - 14, top - 26, 22, 4, '#8A929A', 1, 1.2); }
-  if (b.globe) { const x = b.globe; line(x, top, x, top - 14, '#5A3E28', 4); box(x - 12, top - 4, 24, 5, '#5A3E28', 2, 1.4); circ(x, top - 36, 22, '#3A7AB8', 2); ctx.save(); ctx.beginPath(); ctx.arc(x, top - 36, 22, 0, 7); ctx.clip(); ctx.fillStyle = '#5AA05A'; for (const [dx, dy, r] of [[-8, -8, 9], [8, 4, 10], [-4, 12, 6]]) { ctx.beginPath(); ctx.ellipse(x + dx, top - 36 + dy, r, r * 0.7, 0.4, 0, 7); ctx.fill(); } ctx.restore(); ctx.beginPath(); ctx.arc(x, top - 36, 27, -2.2, 1.0); ctx.strokeStyle = '#8A6A3A'; ctx.lineWidth = 2.4; ctx.stroke(); }
-  // a few beakers and test tubes (away from the burners and the path)
-  for (const bx of [b.x0 + 30, b.x1 - 40]) { if (b.scope && Math.abs(bx - b.scope) < 50) continue; ctx.beginPath(); ctx.moveTo(bx - 9, top - 24); ctx.lineTo(bx + 9, top - 24); ctx.lineTo(bx + 11, top); ctx.lineTo(bx - 11, top); ctx.closePath(); fs('rgba(200,220,230,.3)', 1.6); ctx.fillStyle = 'rgba(120,220,170,.5)'; ctx.fillRect(bx - 9, top - 10, 18, 9); }
+function labLadderDraw(D) { const h = D.y0 - D.y1 + 20, x = D.x; box(x - 15, D.y1 - 20, 5, h + 2, '#8A929C', 1.2, 1.6); box(x + 10, D.y1 - 20, 5, h + 2, '#8A929C', 1.2, 1.6); for (let y = D.y0 - 14; y > D.y1 - 18; y -= 18) line(x - 12, y, x + 12, y, '#A8B0BA', 3.2); }
+function labWindowRound(x, y, r) { circ(x, y, r + 8, '#2A3440', 2); const g = ctx.createLinearGradient(0, y - r, 0, y + r); g.addColorStop(0, '#16285A'); g.addColorStop(1, '#2C4486'); circ(x, y, r, g, 1.6); ctx.save(); ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.clip(); circ(x + r * 0.4, y - r * 0.3, r * 0.22, '#F4F0DC', 0); for (let i = 0; i < 5; i++) circ(x - r * 0.6 + i * r * 0.3, y + r * 0.1 - (i % 2) * r * 0.4, 1.2, '#FFF8E0', 0); ydBlob(x - r * 0.3, y + r * 0.9, r * 0.6, '#132240'); ctx.restore(); line(x - r, y, x + r, y, '#2A3440', 3); line(x, y - r, x, y + r, '#2A3440', 3); }
+function labGear(x, y, r, t, col) { ctx.save(); ctx.translate(x, y); ctx.rotate(t); ctx.beginPath(); for (let i = 0; i < 24; i++) { const a = i / 24 * 6.283, rr2 = i % 2 ? r : r * 0.86; ctx.lineTo(Math.cos(a) * rr2, Math.sin(a) * rr2); } ctx.closePath(); fs(col, 2); circ(0, 0, r * 0.55, 'rgba(0,0,0,.25)', 1.4); for (let i = 0; i < 4; i++) { ctx.rotate(Math.PI / 2); box(-2, -r * 0.5, 4, r * 0.5, col, 1, 1); } circ(0, 0, r * 0.18, '#2A2420', 1.4); ctx.restore(); }
+function labTank(x, y, w, h, col) { box(x, y, w, h, 'rgba(160,200,210,.18)', 8, 2); box(x + 4, y + h * 0.35, w - 8, h * 0.65 - 4, col, 6, 0); for (let i = 0; i < 4; i++) circ(x + 8 + ((G.t * 20 + i * 13) % (w - 16)), y + h - 8 - ((G.t * 30 + i * 37) % (h * 0.6)), 2.5, 'rgba(255,255,255,.5)', 0); box(x - 4, y - 8, w + 8, 10, '#4A525A', 2, 1.6); box(x - 4, y + h - 2, w + 8, 10, '#4A525A', 2, 1.6);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(x + w / 2, y + h * 0.6, 4, x + w / 2, y + h * 0.6, w * 1.6); g.addColorStop(0, col.replace(/[\d.]+\)$/, '.35)')); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(x - w, y - h * 0.2, w * 3, h * 1.4); ctx.restore(); }
+function labCrate(x, y, w, h) { box(x - w / 2, y - h, w, h, '#7A5434', 2, 2.2); line(x - w / 2 + 4, y - h + 4, x + w / 2 - 4, y - 4, '#5A3A22', 3); line(x + w / 2 - 4, y - h + 4, x - w / 2 + 4, y - 4, '#5A3A22', 3); box(x - w / 2, y - h, w, 8, '#8A6440', 1, 1.4); }
+function labHazardBox(x0, y0, w, h) { box(x0, y0, w, h, '#2A2E34', 2, 2); ctx.save(); ctx.beginPath(); ctx.rect(x0, y0, w, 8); ctx.clip(); for (let x = x0 - 8; x < x0 + w; x += 14) { ctx.beginPath(); ctx.moveTo(x, y0 + 8); ctx.lineTo(x + 8, y0); ctx.lineTo(x + 15, y0); ctx.lineTo(x + 7, y0 + 8); ctx.closePath(); ctx.fillStyle = '#E3B02B'; ctx.fill(); } ctx.restore(); }
+function labPartGlow(k, x, y, s) {
+  const b = Math.sin(G.t * 2.5) * 3;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(x, y + b, 4, x, y + b, 54); g.addColorStop(0, 'rgba(255,214,120,.55)'); g.addColorStop(1, 'rgba(255,214,120,0)'); ctx.fillStyle = g; ctx.fillRect(x - 54, y + b - 54, 108, 108); ctx.restore();
+  ctx.save(); ctx.shadowColor = 'rgba(255,200,90,.95)'; ctx.shadowBlur = 16; drawPartIcon(k, x, y + b, s || 1.15); ctx.restore();
+  for (let k2 = 0; k2 < 4; k2++) { const a = G.t * 1.6 + k2 * 1.57; circ(x + Math.cos(a) * 24, y + b + Math.sin(a) * 14, 1.8, '#FFE9A0', 0); }
 }
-function labStool(b) { const top = VF - b.h, cx = (b.x0 + b.x1) / 2; line(cx - 14, VF, cx - 6, top + 6, '#4A5058', 3.4); line(cx + 14, VF, cx + 6, top + 6, '#4A5058', 3.4); line(cx - 11, VF - 18, cx + 11, VF - 18, '#4A5058', 2.4); box(b.x0 - 4, top - 2, b.x1 - b.x0 + 8, 10, '#8A3A2A', 4, 2.2); }
-function labCupboard(b) {   // a tall glass-fronted cupboard of bottles, its top a ledge to stand on
-  const top = VF - b.h, w = b.x1 - b.x0;
-  box(b.x0, top, w, b.h, '#4E3826', 2, 2.4); box(b.x0 - 6, top - 8, w + 12, 10, '#5E4430', 2, 2);
-  for (let r = 0; r < 3; r++) { const y = top + 14 + r * 64; box(b.x0 + 10, y, w - 20, 54, 'rgba(150,190,210,.18)', 2, 1.6);
-    for (let k = 0; k < 4; k++) { const bx = b.x0 + 18 + k * 22, hh = 26 + (k * 7 + r * 5) % 18; box(bx, y + 52 - hh, 14, hh, ['rgba(180,90,60,.6)', 'rgba(90,150,200,.55)', 'rgba(220,190,90,.55)', 'rgba(140,200,140,.55)'][(k + r) % 4], 3, 1.2); box(bx + 3, y + 46 - hh, 8, 6, '#6A5A4A', 1, 1); }
-    line(b.x0 + 10, y + 2, b.x0 + 30, y + 30, 'rgba(255,255,255,.18)', 2); }
-  box(b.x0 + 10, VF - 34, w - 20, 28, '#5A4230', 2, 1.6); box(b.x0 + w / 2 - 8, VF - 24, 16, 5, '#C8B080', 2, 1);
-}
-function labShelf(s) { const y = VF - s.h; box(s.x0, y, s.x1 - s.x0, 12, '#7A5434', 2, 2); line(s.x0 + 3, y + 2, s.x1 - 3, y + 2, 'rgba(255,220,170,.3)', 1.6);
-  for (const bx of [s.x0 + 22, s.x1 - 28]) { ctx.beginPath(); ctx.moveTo(bx, y + 12); ctx.lineTo(bx + 8, y + 12); ctx.lineTo(bx, y + 44); ctx.closePath(); fs('#3A2A1E', 1.4); } }
-function labSkeleton(x) {   // the classroom skeleton model on its stand (his jaw chatters when the sparks crackle)
-  const y = VF, ch = G.ver.lab.solved ? 0 : Math.max(0, Math.sin(G.t * 23)) * Math.max(0, Math.sin(G.t * 1.7)) * 3, B = '#E6E0CC';
-  line(x, y - 4, x, y - 250, '#4A5058', 4); line(x - 26, y - 4, x + 26, y - 4, '#4A5058', 4); circ(x - 24, y - 2, 4, '#2A2E34', 1.2); circ(x + 24, y - 2, 4, '#2A2E34', 1.2);
-  ctx.save(); ctx.translate(x, y - 250);
-  ctx.beginPath(); ctx.ellipse(4, 0, 17, 19, 0, 0, 7); fs(B, 2); circ(10, -2, 5, '#1A1A1A', 0); circ(-1, -2, 4, '#1A1A1A', 0); ctx.beginPath(); ctx.moveTo(6, 6); ctx.lineTo(9, 10); ctx.lineTo(3, 10); ctx.closePath(); ctx.fillStyle = '#1A1A1A'; ctx.fill();
-  box(-6, 14 + ch, 22, 8, B, 3, 1.6); for (let k = 0; k < 4; k++) line(-2 + k * 5, 15 + ch, -2 + k * 5, 21 + ch, '#8A8470', 1);
-  line(0, 24, 0, 110, B, 5); for (let k = 0; k < 6; k++) { ctx.beginPath(); ctx.ellipse(2, 40 + k * 10, 24 - k * 1.6, 5, 0, Math.PI * 0.05, Math.PI * 0.95); ctx.strokeStyle = B; ctx.lineWidth = 3; ctx.stroke(); ctx.strokeStyle = INK; ctx.lineWidth = 0.8; ctx.stroke(); }
-  line(-22, 32, 26, 32, B, 4); line(-22, 32, -30, 80, B, 3.6); line(-30, 80, -26, 124, B, 3.2); line(26, 32, 34, 80, B, 3.6); line(34, 80, 30, 122, B, 3.2);
-  ctx.beginPath(); ctx.ellipse(0, 118, 22, 12, 0, 0, 7); fs(B, 1.8); line(-10, 126, -12, 186, B, 4.2); line(-12, 186, -10, 236, B, 3.6); line(10, 126, 12, 186, B, 4.2); line(12, 186, 14, 236, B, 3.6);
+function labReactor(on) {   // Kalo-Bijli's Lightning Collector, in the middle of the building
+  const cx = 820, y0 = 690, y1 = 1230;
+  for (const [px, k] of [[420, 1], [1220, -1]]) { ctx.strokeStyle = '#3A3050'; ctx.lineWidth = 16; ctx.beginPath(); ctx.moveTo(px, y1); ctx.quadraticCurveTo(px + k * 60, (y0 + y1) / 2, cx - k * 150, y0 + 120); ctx.stroke(); ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.stroke(); }
+  box(cx - 230, y1 - 40, 460, 50, '#3A3050', 8, 2.4); box(cx - 200, y0 - 20, 400, 50, '#3A3050', 8, 2.4);
+  for (let i = 0; i < 5; i++) { box(cx - 190 + i * 80, y0 + 26, 60, 18, '#B87333', 3, 1.4); box(cx - 190 + i * 80, y1 - 58, 60, 18, '#B87333', 3, 1.4); }
+  ctx.save(); rr(cx - 170, y0 + 44, 340, y1 - y0 - 102, 40); ctx.clip();
+  const g = ctx.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, on ? '#2A1A5A' : '#1A1830'); g.addColorStop(1, on ? '#4A2A8A' : '#22203A'); ctx.fillStyle = g; ctx.fillRect(cx - 170, y0, 340, y1 - y0);
+  if (on) { ctx.globalCompositeOperation = 'lighter'; for (let s = 0; s < 4; s++) { ctx.beginPath(); let x = cx + (hash2(Math.floor(G.t * 9), s) - 0.5) * 200, y = y0 + 44; ctx.moveTo(x, y); while (y < y1 - 60) { y += 22; x += (hash2(Math.floor(G.t * 9) + s, y) - 0.5) * 60; ctx.lineTo(x, y); } ctx.strokeStyle = ['rgba(200,160,255,.9)', 'rgba(150,220,255,.9)'][s % 2]; ctx.lineWidth = 2.6; ctx.stroke(); }
+    const rg = ctx.createRadialGradient(cx, (y0 + y1) / 2, 10, cx, (y0 + y1) / 2, 260); rg.addColorStop(0, 'rgba(180,120,255,.35)'); rg.addColorStop(1, 'rgba(180,120,255,0)'); ctx.fillStyle = rg; ctx.fillRect(cx - 260, y0, 520, y1 - y0); }
   ctx.restore();
+  rr(cx - 170, y0 + 44, 340, y1 - y0 - 102, 40); ink(3); ctx.stroke(); line(cx - 130, y0 + 70, cx - 120, y1 - 80, 'rgba(255,255,255,.18)', 6);
+  box(cx - 110, y0 - 96, 220, 30, '#2A1E40', 4, 2); text(L2('বিজলি-জমানো যন্ত্র', 'LIGHTNING COLLECTOR'), cx, y0 - 76, 13, on ? '#C8A0FF' : '#6A5A80', 700, 'center');
+  if (on) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const h = ctx.createRadialGradient(cx, (y0 + y1) / 2, 40, cx, (y0 + y1) / 2, 520); h.addColorStop(0, 'rgba(150,90,255,.18)'); h.addColorStop(1, 'rgba(150,90,255,0)'); ctx.fillStyle = h; ctx.fillRect(cx - 600, y0 - 100, 1200, y1 - y0 + 200); ctx.restore(); }
 }
-function labCableTray(v) { box(v.L - 20, VF - 612, v.R - v.L + 40, 14, '#2E3A42', 0, 2); for (let x = Math.floor(v.L / 120) * 120; x < v.R; x += 120) line(x, VF - 640, x, VF - 612, '#2E3A42', 3); line(v.L, VF - 604, v.R, VF - 604, 'rgba(120,150,170,.25)', 1.4); }
-function labHanging(c) {   // a bundle of loose cables hanging from the tray, their bare copper ends spitting sparks
-  const L = G.ver.lab, live = !L.solved, n = 5;
-  for (let k = 0; k < n; k++) { const x = c.x0 + 10 + k * (c.x1 - c.x0 - 20) / (n - 1), sw = live ? Math.sin(G.t * 2 + k) * 3 : 0, end = VF - 150 - (k % 2) * 14 - (k === 2 ? 8 : 0);
-    ctx.strokeStyle = ['#1A1A1E', '#3A2A2A', '#1E2A3A'][k % 3]; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(x - 14, VF - 604); ctx.bezierCurveTo(x - 30, VF - 400, x + 20 + sw, VF - 260, x + sw, end); ctx.stroke();
-    line(x + sw, end, x + sw, end + 7, '#D08A40', 3); }
+function drawLab() {
+  const v = akView(), L = G.ver.lab, on = !L.done, t = G.t;
+  ctx.fillStyle = '#0A0E16'; ctx.fillRect(v.L, v.T, v.R - v.L, v.B - v.T);
+  // the night outside, above the roof
+  { const g = ctx.createLinearGradient(0, v.T, 0, LROOF); g.addColorStop(0, '#0A1238'); g.addColorStop(1, '#1A2766'); ctx.fillStyle = g; ctx.fillRect(v.L, v.T, v.R - v.L, Math.max(0, LROOF - v.T)); for (let i = 0; i < 40; i++) circ(-200 + (i * 197) % 3900, 60 + (i * 53) % 200, 1.2, 'rgba(255,250,230,.6)', 0); }
+  // ---- the rooms ----
+  labRoom(0, 2300, LF1 + LSL, LG, '#14242C', '#1E3240');                 // ground floor lab
+  ctx.fillStyle = '#22363E'; ctx.fillRect(0, LG - 140, 2300, 140); for (let x = 0; x < 2300; x += 40) line(x, LG - 140, x, LG, 'rgba(8,14,18,.4)', 1.2); for (let y = LG - 100; y < LG; y += 40) line(0, y, 2300, y, 'rgba(8,14,18,.4)', 1.2); line(0, LG - 140, 2300, LG - 140, '#3A5058', 3);
+  labRoom(1470, 1900, LF2 + LSL, LF1, '#2A2420', '#3A3026');             // the storage loft
+  labRoom(1900, 2150, LF2 + LSL, LF1 + LSL, '#10161C', '#141C24');        // the light well
+  labRoom(2060, LW, LF2 + LSL, LF1, '#2A1C18', '#3A2620');                 // the machine room
+  labRoom(2300, LW, LF1 + LSL, LG + 60, '#0C0E12', '#14100E');              // the machinery below (no way in)
+  labRoom(1500, LW, LROOF, LF2, '#10283A', '#1C3A4C');                      // the tall upper lab
+  labRoom(300, 1500, LROOF, LF3, '#1A1230', '#2A1C44');                     // the control room
+  labRoom(0, 300, LROOF, LF3, '#3A2A1E', '#4A3424');                        // the secret room
+  labRoom(0, 1500, LF3 + LSL, LF1, '#0C0A18', '#120E22');                   // the core of the building
+  // ---- the secret room: warm, old, Dadu's radio on a little table ----
+  { box(30, LF3 - 230, 90, 130, '#5A3A22', 3, 2); for (let k = 0; k < 3; k++) box(40 + k * 26, LF3 - 220 + (k % 2) * 8, 20, 50, ['#7A5A3A', '#4A5A6A', '#8A6A3A'][k], 2, 1.2); labLamp(150, LF3 - 200, 'rgb(255,214,140)', 150, 0.35);
+    const tx = LAB_RADIO_X; box(tx - 50, LF3 - 92, 100, 12, '#7A5434', 2, 2); line(tx - 40, LF3 - 80, tx - 44, LF3, '#5A3A22', 5); line(tx + 40, LF3 - 80, tx + 44, LF3, '#5A3A22', 5);
+    if (!L.radioTaken) { const fl = L.fly, have = []; if (fl) for (let i = 0; i < 3; i++) if (fl.t > 0.5 + i * 0.6) have.push(['battery', 'knob', 'antenna'][i]);
+      drawRadioBox(tx, LF3 - 92, 1.05, have, true);
+      if (fl) for (let i = 0; i < 3; i++) { const u = Math.max(0, Math.min(1, (fl.t - i * 0.6) / 0.5)); if (u > 0 && u < 1) { const sx = P.x, sy = P.y - 60, ex = tx + [-4, 17, 30][i], ey = LF3 - 92 - [10, 10, 40][i], e = u * u * (3 - 2 * u); drawPartIcon(['battery', 'knob', 'antenna'][i], sx + (ex - sx) * e, sy + (ey - sy) * e - Math.sin(u * Math.PI) * 50, 0.9); } } } }
+  // ---- the core: the Lightning Collector ----
+  labReactor(on);
+  // ---- the control room ----
+  { box(420, LROOF + 40, 520, 150, '#141020', 6, 2.4); box(430, LROOF + 50, 500, 130, on ? '#1E3A4A' : '#22303A', 4, 1.6); text('K-B', 680, LROOF + 132, 52, on ? 'rgba(255,210,60,.35)' : 'rgba(255,210,60,.15)', 700, 'center');
+    for (let yy = LROOF + 52; yy < LROOF + 178; yy += 4) { ctx.fillStyle = 'rgba(0,0,0,.12)'; ctx.fillRect(430, yy, 500, 1.4); }
+    labPostersVillainAt(1060, LF3 - 230, 1220, LF3 - 220);
+    box(660, LF3 - 70, 440, 70, '#3A2E50', 6, 2.4); box(670, LF3 - 92, 420, 26, '#4A3A66', 4, 2);   // the console
+    const syms = ['bolt', 'dial', 'wave'];
+    LAB_SOCKETS.forEach((sx, i) => { const lit = !L.sock[i] && (i === 0 || L.sock[i - 1]) && !L.done, done2 = L.sock[i];
+      box(sx - 26, LF3 - 88, 52, 40, done2 ? '#2E5A3A' : '#1A1424', 4, 1.6);
+      ctx.save(); ctx.translate(sx, LF3 - 108); ctx.strokeStyle = done2 ? '#9AF0A0' : lit ? '#FFD23A' : '#6A5A80'; ctx.lineWidth = 2.6; ctx.beginPath();
+      if (syms[i] === 'bolt') { ctx.moveTo(2, -10); ctx.lineTo(-4, 1); ctx.lineTo(2, 1); ctx.lineTo(-2, 10); }
+      else if (syms[i] === 'dial') { ctx.arc(0, 0, 8, 0, 7); ctx.moveTo(0, 0); ctx.lineTo(0, -8); }
+      else { ctx.moveTo(-10, 2); ctx.quadraticCurveTo(-5, -8, 0, 2); ctx.quadraticCurveTo(5, 12, 10, 2); }
+      ctx.stroke(); ctx.restore();
+      if (done2) drawPartIcon(LAB_SOCK_PART[i], sx, LF3 - 68, 0.8);
+      if (lit) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.shadowColor = 'rgba(255,200,100,.95)'; ctx.shadowBlur = 16 + 8 * Math.sin(t * 4); rr(sx - 26, LF3 - 88, 52, 40, 4); ctx.strokeStyle = 'rgba(255,215,140,.6)'; ctx.lineWidth = 2; ctx.stroke(); ctx.restore(); } });
+    for (let k = 0; k < 8; k++) circ(690 + k * 14, LF3 - 30, 3, on && Math.sin(t * 5 + k) > 0 ? '#E83A2A' : '#3A2A2A', 0);
+    labLamp(1300, LROOF + 80, 'rgb(200,150,255)', 200, 0.25); }
+  // the secret room's sliding wall (rises when the power goes off)
+  { const up = L.secret * (LF3 - LROOF); ctx.save(); ctx.beginPath(); ctx.rect(-40, LROOF, LAB_SECRET_X + 58, LF3 - LROOF); ctx.clip();   // the whole secret room is hidden behind a wall panel that slides up
+    labRoom(-40, LAB_SECRET_X + 18, LROOF - up, LF3 - up, '#221832', '#2C2040'); for (let y = LROOF + 40 - up; y < LF3 - up; y += 46) line(-40, y, LAB_SECRET_X + 18, y, 'rgba(0,0,0,.25)', 1.6);
+    box(LAB_SECRET_X - 12, LROOF - up, 30, LF3 - LROOF, '#4A3E5A', 1, 2.4); box(60, LF3 - 220 - up, 150, 110, '#3A2E50', 4, 2); text('K-B', 135, LF3 - 150 - up, 36, 'rgba(255,210,60,.3)', 700, 'center'); ctx.restore(); }
+  // ---- the tall upper lab ----
+  labWindowRound(2620, LROOF + 120, 70); labWindowRound(3220, LROOF + 120, 70);
+  for (const [x0, y0] of [[1560, LF2 - 250], [3120, LF2 - 360]]) { box(x0, y0, 200, 12, '#5A3E28', 1, 2); for (let k = 0; k < 6; k++) { const hh = 26 + (k * 7) % 20; box(x0 + 10 + k * 30, y0 - hh, 20, hh, ['rgba(90,200,140,.55)', 'rgba(200,120,220,.5)', 'rgba(240,200,90,.5)', 'rgba(120,180,240,.5)'][k % 4], 4, 1.4); } }
+  labLamp(1800, LROOF + 60, 'rgb(170,220,255)', 220, 0.2); labLamp(3000, LROOF + 60, 'rgb(170,220,255)', 220, 0.2);
+  labTank(1640, LF2 - 170, 60, 160, 'rgba(90,230,130,.6)'); labTank(1720, LF2 - 130, 50, 120, 'rgba(100,160,255,.6)');
+  // the tall glass tank (its top is a ledge; the antenna's compartment sits on it)
+  { const x0 = 1990, x1 = 2130, top = 500; box(x0 - 6, LF2 - 30, x1 - x0 + 12, 30, '#4A525A', 3, 2); ctx.save(); rr(x0, top + 10, x1 - x0, LF2 - 30 - top - 10, 10); ctx.clip(); const g = ctx.createLinearGradient(0, top, 0, LF2); g.addColorStop(0, 'rgba(120,200,255,.18)'); g.addColorStop(1, 'rgba(120,200,255,.35)'); ctx.fillStyle = g; ctx.fillRect(x0, top, x1 - x0, LF2 - top);
+    for (let i = 0; i < 6; i++) circ(x0 + 20 + ((G.t * 12 + i * 29) % (x1 - x0 - 40)), LF2 - 40 - ((G.t * 40 + i * 71) % (LF2 - top - 80)), 3, 'rgba(255,255,255,.4)', 0); ctx.restore();
+    rr(x0, top + 10, x1 - x0, LF2 - 30 - top - 10, 10); ink(2.4); ctx.stroke(); line(x0 + 16, top + 30, x0 + 16, LF2 - 60, 'rgba(255,255,255,.2)', 5);
+    box(x0 - 10, top, x1 - x0 + 20, 14, '#5A6474', 3, 2.2);
+    const cx = LAB_CAP_X, o = L.comp; box(cx - 22, top - 30, 44, 30, '#3A4250', 3, 2); ctx.save(); ctx.translate(cx - 22, top - 30); ctx.rotate(-o * 1.6); box(0, -4, 44, 6, '#5A6474', 2, 1.6); ctx.restore();
+    if (!L.parts[2]) { if (o > 0.5) labPartGlow('antenna', cx, top - 44, 0.9); else { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.shadowColor = 'rgba(255,200,100,.9)'; ctx.shadowBlur = 18 + 8 * Math.sin(t * 4); rr(cx - 22, top - 30, 44, 30, 3); ctx.strokeStyle = 'rgba(255,215,140,.5)'; ctx.lineWidth = 2; ctx.stroke(); ctx.restore(); } } }
+  // ---- the machine room ----
+  for (const [gx, gy, gr, sp] of [[2200, LF2 + 90, 46, 0.6], [2700, LF2 + 110, 60, -0.4], [3000, LF2 + 80, 36, 0.9], [3300, LF2 + 120, 50, -0.5]]) labGear(gx, gy, gr, on ? t * sp : 0, '#5A4636');
+  for (let x = 2100; x < LW; x += 160) { line(x, LF2 + 40, x, LF1 - 160, '#5A3A2A', 8); circ(x, LF1 - 160, 6, '#7A5A3A', 1.4); }
+  line(2060, LF2 + 60, LW, LF2 + 60, '#7A4A2A', 10); line(2060, LF2 + 60, LW, LF2 + 60, 'rgba(255,190,120,.2)', 2);
+  for (const lx of [2420, 2900, 3300]) { circ(lx, LF2 + 40, 8, on && Math.sin(t * 6 + lx) > 0 ? '#FF4A2A' : '#5A1A10', 1.4); if (on && Math.sin(t * 6 + lx) > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(lx, LF2 + 40, 2, lx, LF2 + 40, 120); g.addColorStop(0, 'rgba(255,80,40,.25)'); g.addColorStop(1, 'rgba(255,80,40,0)'); ctx.fillStyle = g; ctx.fillRect(lx - 120, LF2 - 80, 240, 240); ctx.restore(); } }
+  // ---- the ground-floor lab ----
+  for (const wx of [600, 1200]) { box(wx - 90, LF1 + 60, 180, 150, '#2A3440', 3, 2); const g = ctx.createLinearGradient(0, LF1 + 60, 0, LF1 + 210); g.addColorStop(0, '#16285A'); g.addColorStop(1, '#2C4486'); ctx.fillStyle = g; ctx.fillRect(wx - 82, LF1 + 68, 164, 134); line(wx, LF1 + 68, wx, LF1 + 202, '#2A3440', 4); line(wx - 82, LF1 + 135, wx + 82, LF1 + 135, '#2A3440', 4); }
+  labTank(60, LG - 210, 70, 190, 'rgba(90,230,130,.6)'); labTank(1580, LG - 150, 54, 130, 'rgba(230,120,200,.55)');
+  { const x0 = 1880, y0 = LG - 330; box(x0 - 70, y0, 150, 10, '#5A3E28', 1, 2); }
+  labPostersVillainAt(240, LF1 + 70, 880, LF1 + 60);
+  // the loft: boxes and a lamp
+  for (const [bx, w, h] of [[1500, 60, 60], [1560, 50, 90], [1840, 46, 46]]) labCrate(bx, LF1, w, h);
+  labLamp(1700, LF2 + 60, 'rgb(255,214,140)', 160, 0.25);
+  // ---- floors and walls ----
+  labSlab(-20, LW + 20, LG, true, 40);
+  labSlab(0, 1900, LF1, false); labSlab(1470, 1900, LF1, true); labSlab(2060, LAB_LIFT.x0, LF1, true); labSlab(LAB_LIFT.x1, LAB_PIT[0], LF1, true); labSlab(LAB_PIT[1], LW, LF1, true);
+  labSlab(1500, 3370, LF2, true); labSlab(3415, LW, LF2, true);
+  labSlab(0, 1500, LF3, true); labSlab(1500, 1990, LF3, true, 14); for (let x = 1510; x < 1990; x += 40) line(x, LF3 - 34, x, LF3, '#5A6474', 2); line(1500, LF3 - 34, 1990, LF3 - 34, '#6A7484', 3);
+  labSlab(-20, LW + 20, LROOF - 20, false, 20);
+  box(-30, LROOF - 20, 30, LG - LROOF + 60, '#2A3038', 1, 2); box(LW, LROOF - 20, 30, LG - LROOF + 60, '#2A3038', 1, 2);
+  box(2290, LF1 + LSL, 14, LG - LF1 - LSL, '#2A3038', 1, 1.6);   // the ground floor's end wall at the lift
+  box(1488, LF3 + LSL, 16, LF2 - LF3 - LSL, '#2A3038', 1, 1.6);   // the upper hall's left wall
+  // the pit below the moving platform
+  { ctx.fillStyle = '#05060A'; ctx.fillRect(LAB_PIT[0], LF1, LAB_PIT[1] - LAB_PIT[0], 240); if (on) for (let s = 0; s < 3; s++) { const sx = LAB_PIT[0] + 30 + ((t * 80 + s * 80) % (LAB_PIT[1] - LAB_PIT[0] - 60)); ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.beginPath(); ctx.moveTo(sx, LF1 + 200); ctx.lineTo(sx + 8, LF1 + 180); ctx.lineTo(sx - 4, LF1 + 170); ctx.lineTo(sx + 6, LF1 + 150); ctx.strokeStyle = 'rgba(150,220,255,.7)'; ctx.lineWidth = 2; ctx.stroke(); ctx.restore(); } }
+  // ---- platforms, shelves, ladders ----
+  { const s = LAB_S.hang; for (const cx of [s.x0 + 12, s.x1 - 12]) for (let y = LF1 + LSL; y < s.y0; y += 10) { ctx.beginPath(); ctx.ellipse(cx, y + 5, 3, 5, 0, 0, 7); ctx.strokeStyle = '#8A929C'; ctx.lineWidth = 1.8; ctx.stroke(); } box(s.x0, s.y0, s.x1 - s.x0, 12, '#5A6474', 2, 2); }
+  { const s = LAB_S.shelfB; box(s.x0, s.y0, s.x1 - s.x0, 10, '#7A5434', 1, 2); ctx.beginPath(); ctx.moveTo(s.x1 - 10, s.y0 + 10); ctx.lineTo(s.x1, s.y0 + 10); ctx.lineTo(s.x1, s.y0 + 40); ctx.closePath(); fs('#3A2A1E', 1.4); }
+  for (const s of [LAB_S.shelfA]) { box(s.x0, s.y0, s.x1 - s.x0, 12, '#5A6474', 2, 2); line(s.x0 + 10, s.y0 + 12, s.x0 + 10, LF2, '#4A525A', 5); line(s.x1 - 10, s.y0 + 12, s.x1 - 10, LF2, '#4A525A', 5); for (let k = 0; k < 4; k++) labCrate(s.x0 + 30 + k * 40, s.y0 + 170 - 0, 30, 30 + (k % 2) * 12); }
+  { const s = LAB_S.gantry; box(s.x0, s.y0, s.x1 - s.x0, 12, '#4A525A', 1, 2); for (let x = s.x0 + 6; x < s.x1; x += 12) line(x, s.y0 + 2, x, s.y0 + 10, 'rgba(0,0,0,.35)', 1.4); line(s.x0, s.y0 - 34, s.x1, s.y0 - 34, '#6A7484', 3); for (let x = s.x0 + 10; x < s.x1; x += 40) line(x, s.y0 - 34, x, s.y0, '#6A7484', 2); line(s.x0 + 20, s.y0 + 12, s.x0 + 20, LROOF, '#4A525A', 3); }
+  for (const s of [LAB_S.sp1, LAB_S.sp2]) { for (const cx of [s.x0 + 10, s.x1 - 10]) for (let y = LROOF; y < s.y0; y += 10) { ctx.beginPath(); ctx.ellipse(cx, y + 5, 3, 5, 0, 0, 7); ctx.strokeStyle = '#8A929C'; ctx.lineWidth = 1.8; ctx.stroke(); } box(s.x0, s.y0, s.x1 - s.x0, 12, '#5A6474', 2, 2); }
+  { const s = LAB_S.n1; box(s.x0, s.y0, s.x1 - s.x0, 10, '#5A6474', 2, 2); line((s.x0 + s.x1) / 2, s.y0 + 10, (s.x0 + s.x1) / 2, LF1 + 200, '#3A424A', 6); }
+  // the machine with the switch on top, and the cabinet
+  { const s = LAB_S.swTop; labHazardBox(s.x0, s.y0, s.x1 - s.x0, LF1 - s.y0); for (let k = 0; k < 3; k++) circ(s.x0 + 30 + k * 30, s.y0 + 60, 9, '#1A1E24', 1.6); box(s.x0 + 20, s.y0 + 100, 80, 40, '#1E3A4A', 3, 1.6);
+    const lx = LAB_SWITCH_X; box(lx - 12, s.y0 - 10, 24, 10, '#3A4048', 2, 1.6); ctx.save(); ctx.translate(lx, s.y0 - 6); ctx.rotate(-0.6 + L.sw * 1.2); line(0, 0, 0, -34, '#C8CED4', 4); circ(0, -36, 6, SINDOOR, 1.6); ctx.restore();
+    if (!L.sw && L.parts[0]) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(lx, s.y0 - 30, 2, lx, s.y0 - 30, 40); g.addColorStop(0, 'rgba(255,214,120,.45)'); g.addColorStop(1, 'rgba(255,214,120,0)'); ctx.fillStyle = g; ctx.fillRect(lx - 40, s.y0 - 70, 80, 80); ctx.restore(); } }
+  { const cx = LAB_CAB_X, o = L.cab; box(cx - 40, LF1 - 80, 80, 80, '#4E3826', 3, 2.4); box(cx - 32, LF1 - 72, 64, 62, 'rgba(150,190,210,.2)', 2, 1.4);
+    if (!L.parts[1]) { if (o > 0.5) labPartGlow('knob', cx, LF1 - 44, 1); else { ctx.save(); ctx.shadowColor = 'rgba(255,200,90,.9)'; ctx.shadowBlur = 10; drawPartIcon('knob', cx, LF1 - 42, 0.9); ctx.restore(); } }
+    ctx.save(); ctx.translate(cx - 32, 0); ctx.scale(1 - o * 0.85, 1); box(0, LF1 - 72, 64, 62, 'rgba(170,210,230,.35)', 2, 1.6); circ(56, LF1 - 40, 3, '#C8B080', 1); ctx.restore();
+    if (!o) { box(cx + 18, LF1 - 46, 12, 14, '#C8A040', 2, 1.4); } }
+  // the trolley
+  { const T = L.tro; box(T.x - 45, T.y - 75, 90, 52, '#7A8088', 4, 2.2); box(T.x - 38, T.y - 68, 76, 18, '#5A6068', 2, 1.4); line(T.x - 45, T.y - 44, T.x + 45, T.y - 44, '#4A5058', 2); circ(T.x - 30, T.y - 12, 10, '#2A2E34', 2); circ(T.x + 30, T.y - 12, 10, '#2A2E34', 2); circ(T.x - 30, T.y - 12, 3, '#8A929C', 0); circ(T.x + 30, T.y - 12, 3, '#8A929C', 0); line(T.x - 45, T.y - 75, T.x - 60, T.y - 100, '#4A5058', 4); }
+  // the lift: a cage on cables in its shaft
+  { const y = L.lift.y; line(LAB_LIFT.x0 - 4, LF2 + LSL, LAB_LIFT.x0 - 4, LG, '#3A424A', 6); line(LAB_LIFT.x1 + 4, LF2 + LSL, LAB_LIFT.x1 + 4, LG, '#3A424A', 6);
+    line((LAB_LIFT.x0 + LAB_LIFT.x1) / 2, LF2 + LSL, (LAB_LIFT.x0 + LAB_LIFT.x1) / 2, y - 170, '#8A929C', 2.4); box(LAB_LIFT.x0, y - 172, LAB_LIFT.x1 - LAB_LIFT.x0, 8, '#5A6474', 2, 1.6);
+    for (let x = LAB_LIFT.x0 + 8; x < LAB_LIFT.x1; x += 18) line(x, y - 164, x, y - 4, 'rgba(160,170,180,.45)', 1.6);
+    box(LAB_LIFT.x0, y, LAB_LIFT.x1 - LAB_LIFT.x0, 12, '#5A6474', 2, 2);
+    for (const yy of [LG, LF1]) { box(LAB_LIFT.x1 + 14, yy - 100, 22, 34, '#2A2E34', 3, 1.6); circ(LAB_LIFT.x1 + 25, yy - 83, 5, L.parts[0] ? '#3AE07A' : '#E83A2A', 1); } }
+  // moving platforms (pistons below them)
+  for (const s of [L.sM1, L.sE1]) { const cx = (s.x0 + s.x1) / 2, base = s === L.sM1 ? LF1 + 200 : LF2; box(cx - 8, s.y0 + 12, 16, base - s.y0 - 12, '#6A7484', 2, 1.6); box(cx - 14, base - 10, 28, 10, '#3A424A', 2, 1.6); box(s.x0, s.y0, s.x1 - s.x0, 12, '#E3B02B', 2, 2); ctx.save(); ctx.beginPath(); ctx.rect(s.x0, s.y0, s.x1 - s.x0, 12); ctx.clip(); for (let x = s.x0 - 8; x < s.x1; x += 16) { ctx.beginPath(); ctx.moveTo(x, s.y0 + 12); ctx.lineTo(x + 8, s.y0); ctx.lineTo(x + 14, s.y0); ctx.lineTo(x + 6, s.y0 + 12); ctx.closePath(); ctx.fillStyle = '#1A1A1E'; ctx.fill(); } ctx.restore(); }
+  for (const D of LAB_LADDERS) labLadderDraw(D);
+  // the bench with its steps, a sink and the burner
+  { box(1040, LG - 34, 30, 34, '#5A6068', 1, 1.6); box(1070, LG - 67, 30, 67, '#5A6068', 1, 1.6); box(1100, LG - 100, 30, 100, '#5A6068', 1, 1.6);
+    box(1136, LG - 88, 218, 88, '#5A3A26', 1, 2.2); for (let x = 1146; x < 1340; x += 70) { box(x, LG - 76, 60, 28, '#6A4630', 2, 1.6); box(x + 22, LG - 64, 16, 5, '#C8B080', 2, 1); }
+    box(1124, LG - 100, 242, 14, '#1E2428', 2, 2.4); line(1128, LG - 98, 1362, LG - 98, 'rgba(160,190,220,.35)', 2); }
+  for (const bn of LAB_BURNERS) labBurner3(bn);
+  // the security eye and its sweeping red beam
+  { const ex = LAB_EYE.x, ey = LAB_EYE.y, e = L.eye; box(ex - 30, ey, 60, 18, '#3A424A', 3, 2); line(ex, ey + 18, ex, ey + 34, '#3A424A', 6);
+    const bx = labEyeX(), ang = Math.atan2(LG - ey, bx - ex); ctx.save(); ctx.translate(ex, ey + 48); circ(0, 0, 18, '#D8DCE0', 2.2); circ(Math.cos(ang) * 6, Math.sin(ang) * 6, 9 * e + 1, on ? '#E83A2A' : '#5A2A2A', 1.4); circ(Math.cos(ang) * 7, Math.sin(ang) * 7, 3.4 * e, INK, 0); ctx.restore();
+    if (on && e >= 1) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.beginPath(); ctx.moveTo(ex, ey + 48); ctx.lineTo(bx - 50, LG); ctx.lineTo(bx + 50, LG); ctx.closePath(); const g = ctx.createLinearGradient(0, ey, 0, LG); g.addColorStop(0, 'rgba(255,60,40,.45)'); g.addColorStop(1, 'rgba(255,60,40,.12)'); ctx.fillStyle = g; ctx.fill(); ctx.beginPath(); ctx.ellipse(bx, LG, 52, 8, 0, 0, 7); ctx.fillStyle = 'rgba(255,80,60,.4)'; ctx.fill(); ctx.restore(); } }
+  // the crusher press and the electric gate
+  { const h = labPress(), x = LAB_PRESS_X, top = LF2 + LSL, low = LF1 - 6; labGear(x - 52, top + 40, 26, on ? t * 2 : 0, '#6A5A4A'); labGear(x + 52, top + 40, 26, on ? -t * 2 : 0, '#6A5A4A');
+    const hy = top + 40 + (low - 40 - top - 40) * h; box(x - 10, top, 20, hy - top, '#8A929C', 2, 1.6); labHazardBox(x - 40, hy, 80, 40); }
+  { const x = LAB_GATE_X, st = labGateOn(); box(x - 22, LF1 - 210, 12, 210, '#3A424A', 2, 1.6); box(x + 10, LF1 - 210, 12, 210, '#3A424A', 2, 1.6); circ(x - 16, LF1 - 214, 6, st ? '#7AE0FF' : '#2A3A4A', 1.4); circ(x + 16, LF1 - 214, 6, st ? '#7AE0FF' : '#2A3A4A', 1.4);
+    if (st) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (let s = 0; s < (st === 2 ? 4 : 1); s++) { if (st === 1 && Math.sin(t * 40) < 0) continue; ctx.beginPath(); let y = LF1 - 200; ctx.moveTo(x - 10, y); for (let j = 0; j < 9; j++) { y += 22; ctx.lineTo(x + (hash2(Math.floor(t * 20) + s, j) - 0.5) * 22, y); } ctx.strokeStyle = 'rgba(160,230,255,.9)'; ctx.lineWidth = 2.2; ctx.stroke(); }
+      if (st === 2) { const g = ctx.createRadialGradient(x, LF1 - 100, 4, x, LF1 - 100, 120); g.addColorStop(0, 'rgba(120,210,255,.35)'); g.addColorStop(1, 'rgba(120,210,255,0)'); ctx.fillStyle = g; ctx.fillRect(x - 120, LF1 - 230, 240, 240); } ctx.restore(); } }
+  // the crawl tunnel machine (its back), the live wires
+  { const z = LAB_TUNNEL; labHazardBox(z.x0, LF2 + 60, z.x1 - z.x0, LF1 - 158 - LF2 - 60); ctx.fillStyle = '#0A0C10'; ctx.fillRect(z.x0, LF1 - 158, z.x1 - z.x0, 158); for (let k = 0; k < 4; k++) circ(z.x0 + 30 + k * 40, LF2 + 120, 8, '#1A1E24', 1.4); }
+  { const z = LAB_WIRES, live = on; for (let k = 0; k < 5; k++) { const x = z.x0 + 10 + k * (z.x1 - z.x0 - 20) / 4, sw = live ? Math.sin(t * 2 + k) * 3 : 0, end = LF2 - 150 - (k % 2) * 14; ctx.strokeStyle = ['#1A1A1E', '#3A2A2A', '#1E2A3A'][k % 3]; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(x - 14, LROOF); ctx.bezierCurveTo(x - 30, LF2 - 500, x + 20 + sw, LF2 - 260, x + sw, end); ctx.stroke(); line(x + sw, end, x + sw, end + 7, '#D08A40', 3); } }
+  // the battery on its shelf
+  if (!L.parts[0]) labPartGlow('battery', 2090, LG - 176, 1.1);
+  // spark-bugs
+  for (const b of L.bugs) labBug3(b);
+  // the magic door they came in by (shut behind them by the steel shutter)
+  { if (L.portal > 0.01) drawPortal(140, {open: L.portal, y: LG}); const sh = L.shut; if (sh > 0) { const h = 270 * sh; box(50, LG - 270, 180, h, '#4A525A', 2, 2.4); for (let y = LG - 270 + 14; y < LG - 270 + h; y += 18) line(52, y, 228, y, 'rgba(0,0,0,.3)', 2); if (sh >= 1) labHazardBox(50, LG - 34, 180, 34); }
+    box(40, LG - 330, 220, 40, '#3A2A5A', 4, 2.4); text(L2('কালো-বিজলির গবেষণাগার', 'KALO-BIJLI LABORATORY'), 150, LG - 304, 12, '#FFD23A', 700, 'center'); }
 }
-function labSparks(c) {   // drawn in front: crackling blue sparks between the cable ends
-  const L = G.ver.lab; if (L.solved) return;
-  const fl = Math.sin(G.t * 31 + c.x0) * Math.sin(G.t * 13), mx = (c.x0 + c.x1) / 2, y = VF - 146;
-  ctx.save(); ctx.globalCompositeOperation = 'lighter';
-  const g = ctx.createRadialGradient(mx, y, 4, mx, y, 120); g.addColorStop(0, 'rgba(120,200,255,' + (0.18 + Math.max(0, fl) * 0.25) + ')'); g.addColorStop(1, 'rgba(120,200,255,0)'); ctx.fillStyle = g; ctx.fillRect(mx - 120, y - 120, 240, 240);
-  if (fl > -0.2) for (let s = 0; s < 3; s++) { const sx = c.x0 + 14 + ((G.t * 300 + s * 47) % (c.x1 - c.x0 - 28)); ctx.beginPath(); ctx.moveTo(sx, y - 4); for (let j = 1; j < 6; j++) ctx.lineTo(sx + (hash2(Math.floor(G.t * 20) + s, j) - 0.5) * 18, y + j * 5); ctx.strokeStyle = 'rgba(200,240,255,.9)'; ctx.lineWidth = 1.6; ctx.stroke(); }
-  ctx.restore();
+function labPostersVillainAt(bx, by, tx, ty) {   // his blueprint and a Thunder Boy poster he has crossed out
+  { const px = bx, py = by; box(px, py, 150, 110, '#1E4A8A', 2, 2); ctx.strokeStyle = 'rgba(220,235,255,.25)'; ctx.lineWidth = 1; for (let k = 1; k < 9; k++) { ctx.beginPath(); ctx.moveTo(px + k * 17, py); ctx.lineTo(px + k * 17, py + 110); ctx.stroke(); }
+    text(L2('বিজলি-চোর যন্ত্র', 'LIGHTNING STEALER'), px + 75, py + 16, 10, '#E8F0FF', 700, 'center'); ctx.strokeStyle = '#E8F0FF'; ctx.lineWidth = 1.6; ctx.strokeRect(px + 45, py + 38, 60, 44); ctx.beginPath(); ctx.arc(px + 75, py + 60, 12, 0, 7); ctx.stroke(); }
+  { const px = tx, py = ty; box(px, py, 110, 140, '#F0D060', 2, 2); box(px + 8, py + 8, 94, 100, '#2C3E8C', 1, 1.4);
+    ctx.save(); ctx.translate(px + 55, py + 60); circ(0, -22, 12, '#E8B888', 1.6); ctx.beginPath(); ctx.moveTo(-17, -8); ctx.lineTo(17, -8); ctx.lineTo(12, 34); ctx.lineTo(-12, 34); ctx.closePath(); fs('#E8402A', 1.6);
+    ctx.beginPath(); ctx.moveTo(4, -4); ctx.lineTo(-6, 12); ctx.lineTo(2, 12); ctx.lineTo(-4, 26); ctx.lineTo(10, 6); ctx.lineTo(2, 6); ctx.lineTo(8, -4); ctx.closePath(); fs('#FFD23A', 1.2); ctx.restore();
+    text('THUNDER BOY', px + 55, py + 128, 10, INK, 700, 'center'); line(px + 12, py + 14, px + 98, py + 104, 'rgba(200,30,30,.85)', 6); line(px + 98, py + 14, px + 12, py + 104, 'rgba(200,30,30,.85)', 6); }
 }
-function labBug(b) {   // a little spark-bug running along its cable: a crackling ball of blue light with big eyes
-  if (b.pop >= 1) return;
-  const y = VF - 12 - Math.abs(Math.sin(b.anim)) * 4, s = 1 - b.pop;
-  ctx.save(); ctx.translate(b.x, y); ctx.scale(s, s);
-  ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(0, 0, 2, 0, 0, 34); g.addColorStop(0, 'rgba(140,220,255,.7)'); g.addColorStop(1, 'rgba(140,220,255,0)'); ctx.fillStyle = g; ctx.fillRect(-34, -34, 68, 68); ctx.restore();
-  ctx.beginPath(); for (let i = 0; i < 14; i++) { const a = i / 14 * 6.283, r = i % 2 ? 7 : 12 + Math.sin(G.t * 40 + i) * 2; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.closePath(); fs('#8ADCFF', 1.6);
-  circ(0, 0, 6, '#F0FBFF', 0);
-  for (const ex of [-3, 4]) { circ(ex + b.dir * 2, -2, 3, '#FFFFFF', 1); circ(ex + b.dir * 3, -2, 1.5, INK, 0); }
-  for (const lx of [-6, 0, 6]) line(lx, 8, lx + Math.sin(b.anim + lx) * 3, 13, '#8ADCFF', 1.6);
-  ctx.restore();
-}
-function labFloorCable(b) { line(b.a - 40, VF - 3, b.b + 40, VF - 3, '#121418', 6); line(b.a - 40, VF - 5, b.b + 40, VF - 5, 'rgba(120,140,160,.25)', 1.4); box(b.a - 54, VF - 10, 16, 10, '#2A2E34', 2, 1.4); box(b.b + 38, VF - 10, 16, 10, '#2A2E34', 2, 1.4); }
-function labBurner(bn) {   // a Bunsen burner with its rubber tube: a little blue flame, a flicker, then a tall hot flame
-  const top = VF - 106, x = bn.x, st = labFlame(bn);
+function labBurner3(bn) {
+  const top = bn.y, x = bn.x, st = labFlame(bn);
   ctx.strokeStyle = '#B8402A'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x - 6, top - 6); ctx.quadraticCurveTo(x - 40, top - 2, x - 46, top + 2); ctx.stroke();
-  box(x - 14, top - 6, 28, 6, '#3A4048', 2, 1.6); box(x - 4, top - 34, 8, 30, '#8A929A', 1, 1.6); box(x - 6, top - 22, 12, 6, '#5A6068', 1, 1.2);
+  box(x - 14, top - 6, 28, 6, '#3A4048', 2, 1.6); box(x - 4, top - 34, 8, 30, '#8A929A', 1, 1.6);
   const fy = top - 34, t = G.t;
   if (st === 0) { ctx.beginPath(); ctx.moveTo(x - 5, fy); ctx.quadraticCurveTo(x - 4, fy - 10, x, fy - 14 - Math.sin(t * 9) * 2); ctx.quadraticCurveTo(x + 4, fy - 10, x + 5, fy); ctx.closePath(); ctx.fillStyle = 'rgba(110,170,255,.85)'; ctx.fill(); return; }
   const hh = st === 1 ? 26 + Math.sin(t * 40) * 10 : 150 + Math.sin(t * 17) * 10, ww = st === 1 ? 9 : 22;
@@ -6488,98 +6752,55 @@ function labBurner(bn) {   // a Bunsen burner with its rubber tube: a little blu
   for (const [k, col] of [[1, 'rgba(255,120,40,.85)'], [0.7, 'rgba(255,200,80,.9)'], [0.35, 'rgba(140,190,255,.9)']]) { ctx.beginPath(); ctx.moveTo(x - ww * k, fy); ctx.bezierCurveTo(x - ww * k * 1.2, fy - hh * k * 0.5, x - ww * k * 0.4 + Math.sin(t * 13) * 4, fy - hh * k * 0.8, x + Math.sin(t * 11) * 5, fy - hh * k); ctx.bezierCurveTo(x + ww * k * 0.4 + Math.sin(t * 9) * 4, fy - hh * k * 0.8, x + ww * k * 1.2, fy - hh * k * 0.5, x + ww * k, fy); ctx.closePath(); ctx.fillStyle = col; ctx.fill(); }
   ctx.restore();
 }
-function labPart(i) {   // a glowing thing: a soft halo behind it (never a white wash), sparkles round it
-  const L = G.ver.lab, p = LAB_PARTS[i]; if (L.parts[i]) return;
-  const b = Math.sin(G.t * 2.5) * 3, cy = p.y - 16 + b;
-  ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(p.x, cy, 4, p.x, cy, 54); g.addColorStop(0, 'rgba(255,214,120,.55)'); g.addColorStop(1, 'rgba(255,214,120,0)'); ctx.fillStyle = g; ctx.fillRect(p.x - 54, cy - 54, 108, 108); ctx.restore();
-  ctx.save(); ctx.shadowColor = 'rgba(255,200,90,.95)'; ctx.shadowBlur = 16; drawPartIcon(p.k, p.x, cy, 1.15); ctx.restore();
-  for (let k = 0; k < 4; k++) { const a = G.t * 1.6 + k * 1.57; circ(p.x + Math.cos(a) * 24, cy + Math.sin(a) * 14, 1.8, '#FFE9A0', 0); }
-}
-function labBoardWall() {   // the power board on the wall, a big bulb on top
-  const x = LAB_BOARD_X, L = G.ver.lab, y0 = VF - 360;
-  line(x, VF - 604, x, y0, '#1A1A1E', 5);
-  box(x - 50, y0, 100, 150, '#5A626A', 6, 2.4); box(x - 42, y0 + 8, 84, 134, '#3A4148', 4, 1.6);
-  for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) box(x - 36 + c * 19, y0 + 16 + r * 24, 15, 18, '#22282E', 2, 1);
-  circ(x - 18, y0 + 104, 10, '#E8E2D0', 1.6); line(x - 18, y0 + 104, x - 12 + (L.solved ? 10 : 0), y0 + 98, SINDOOR, 1.6); circ(x + 18, y0 + 104, 10, '#E8E2D0', 1.6); line(x + 18, y0 + 104, x + 12, y0 + 100, SINDOOR, 1.6);
-  box(x - 24, y0 + 122, 48, 12, L.solved ? '#2E6A3A' : '#6A2A22', 3, 1.4);
-  const lit = L.solved, by = y0 - 26;
-  if (lit) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(x, by, 4, x, by, 160); g.addColorStop(0, 'rgba(255,226,150,.7)'); g.addColorStop(1, 'rgba(255,226,150,0)'); ctx.fillStyle = g; ctx.fillRect(x - 160, by - 160, 320, 320); ctx.restore(); }
-  box(x - 8, by + 12, 16, 14, '#9AA0A6', 2, 1.6); ctx.beginPath(); ctx.arc(x, by, 16, 0, 7); fs(lit ? '#FFF2B0' : 'rgba(200,210,220,.4)', 2);
-  if (!lit && L.parts.every(Boolean)) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.shadowColor = 'rgba(255,200,100,.9)'; ctx.shadowBlur = 18 + 8 * Math.sin(G.t * 4); rr(x - 50, y0, 100, 150, 6); ctx.strokeStyle = 'rgba(255,215,140,.55)'; ctx.lineWidth = 2; ctx.stroke(); ctx.restore(); }   // its soft glow: it's the thing to use now
-}
-function labDoors() {
-  const L = G.ver.lab;
-  // the magic door they came in by, and his plaque
-  drawPortal(130, {open: 1});
-  box(20, VF - 360, 220, 40, '#3A2A5A', 4, 2.4); box(26, VF - 354, 208, 28, '#4A3470', 3, 1.2);
-  ctx.beginPath(); ctx.moveTo(44, VF - 352); ctx.lineTo(36, VF - 338); ctx.lineTo(42, VF - 338); ctx.lineTo(37, VF - 326); ctx.lineTo(50, VF - 342); ctx.lineTo(44, VF - 342); ctx.lineTo(49, VF - 352); ctx.closePath(); fs('#FFD23A', 1.2);
-  text(L2('কালো-বিজলির গবেষণাগার', 'KALO-BIJLI LABORATORY'), 136, VF - 334, 12, '#FFD23A', 700, 'center');
-  // the partition and the prep-room door on the right (it slides open into the wall when the power comes back)
-  const dx = LAB_DOOR_X;
-  { const k = L.lights, g = ctx.createLinearGradient(0, VF - 640, 0, VF); g.addColorStop(0, 'rgb(' + Math.round(22 + 40 * k) + ',' + Math.round(20 + 30 * k) + ',' + Math.round(18 + 20 * k) + ')'); g.addColorStop(1, 'rgb(' + Math.round(30 + 70 * k) + ',' + Math.round(26 + 52 * k) + ',' + Math.round(22 + 34 * k) + ')');
-    ctx.fillStyle = g; ctx.fillRect(dx + 20, VF - 640, LW + 300 - dx, 640); ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(dx + 20, VF - 40, LW + 300 - dx, 40); line(dx + 20, VF - 40, LW + 300, VF - 40, 'rgba(0,0,0,.35)', 2);
-    if (k > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const lg = ctx.createRadialGradient(LAB_RADIO_X, VF - 420, 10, LAB_RADIO_X, VF - 200, 360); lg.addColorStop(0, 'rgba(255,210,140,' + 0.25 * k + ')'); lg.addColorStop(1, 'rgba(255,210,140,0)'); ctx.fillStyle = lg; ctx.fillRect(dx + 20, VF - 640, 500, 640); ctx.restore();
-      line(LAB_RADIO_X, VF - 640, LAB_RADIO_X, VF - 440, '#2A2420', 2); ctx.beginPath(); ctx.moveTo(LAB_RADIO_X - 24, VF - 430); ctx.lineTo(LAB_RADIO_X + 24, VF - 430); ctx.lineTo(LAB_RADIO_X + 12, VF - 446); ctx.lineTo(LAB_RADIO_X - 12, VF - 446); ctx.closePath(); fs('#3A4048', 1.6); circ(LAB_RADIO_X, VF - 428, 6, '#FFF0B8', 0); } }
-  box(dx + 140, VF - 360, 120, 90, '#5A4230', 2, 2); for (let k = 0; k < 3; k++) box(dx + 150 + k * 34, VF - 352 + (k % 2) * 6, 28, 74 - (k % 2) * 6, ['#7A5A3A', '#4A5A6A', '#8A6A3A'][k], 2, 1.4);   // a dusty shelf of boxes
-  // the little table and the old radio
-  { const tx = LAB_RADIO_X; box(tx - 50, VF - 92, 100, 12, '#7A5434', 2, 2); line(tx - 40, VF - 80, tx - 44, VF, '#5A3A22', 5); line(tx + 40, VF - 80, tx + 44, VF, '#5A3A22', 5);
-    if (!L.radioTaken) { const fl = L.fly, have = []; if (fl) for (let i = 0; i < 3; i++) if (fl.t > 0.5 + i * 0.6) have.push(['battery', 'knob', 'antenna'][i]);
-      drawRadioBox(tx, VF - 92, 1.05, have, true);
-      if (fl) for (let i = 0; i < 3; i++) { const u = Math.max(0, Math.min(1, (fl.t - i * 0.6) / 0.5)); if (u > 0 && u < 1) { const sx = P.x, sy = P.y - 60, ex = tx + [-4, 17, 30][i], ey = VF - 92 - [10, 10, 40][i], e = u * u * (3 - 2 * u); drawPartIcon(['battery', 'knob', 'antenna'][i], sx + (ex - sx) * e, sy + (ey - sy) * e - Math.sin(u * Math.PI) * 50, 0.9); } } } }
-  box(dx, VF - 640, 24, 640, '#3A3430', 0, 2.4); box(dx, VF - 640, 24, 380, '#3A3430', 0, 2.4);
-  box(dx + 18, VF - 290, 8, 290, '#2A2420', 1, 1.6); box(dx + 18, VF - 296, 150, 10, '#2A2420', 1, 1.6);
-  ctx.save(); ctx.beginPath(); ctx.rect(dx + 24, VF - 288, 150, 290); ctx.clip(); ctx.translate(L.door * 152, 0);
-  box(dx + 24, VF - 288, 136, 288, '#6A7078', 2, 2); box(dx + 52, VF - 250, 80, 54, '#22303A', 3, 1.6); line(dx + 56, VF - 246, dx + 80, VF - 200, 'rgba(255,255,255,.15)', 3);
-  box(dx + 38, VF - 140, 16, 40, '#3A4048', 2, 1.4); box(dx + 70, VF - 170, 44, 22, '#E3A92B', 2, 1.4); ctx.beginPath(); ctx.moveTo(dx + 88, VF - 166); ctx.lineTo(dx + 96, VF - 160); ctx.lineTo(dx + 90, VF - 158); ctx.lineTo(dx + 96, VF - 152); ctx.strokeStyle = INK; ctx.lineWidth = 1.6; ctx.stroke();
+function labBug3(b) {
+  if (b.pop >= 1) return;
+  line(b.a - 30, b.y - 3, b.b + 30, b.y - 3, '#121418', 6);
+  const y = b.y - 12 - Math.abs(Math.sin(b.anim)) * 4, s = 1 - b.pop;
+  ctx.save(); ctx.translate(b.x, y); ctx.scale(s, s);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(0, 0, 2, 0, 0, 34); g.addColorStop(0, 'rgba(140,220,255,.7)'); g.addColorStop(1, 'rgba(140,220,255,0)'); ctx.fillStyle = g; ctx.fillRect(-34, -34, 68, 68); ctx.restore();
+  ctx.beginPath(); for (let i = 0; i < 14; i++) { const a = i / 14 * 6.283, r = i % 2 ? 7 : 12 + Math.sin(G.t * 40 + i) * 2; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.closePath(); fs('#8ADCFF', 1.6);
+  circ(0, 0, 6, '#F0FBFF', 0); for (const ex of [-3, 4]) { circ(ex + b.dir * 2, -2, 3, '#FFFFFF', 1); circ(ex + b.dir * 3, -2, 1.5, INK, 0); }
+  for (const lx of [-6, 0, 6]) line(lx, 8, lx + Math.sin(b.anim + lx) * 3, 13, '#8ADCFF', 1.6);
   ctx.restore();
-}
-function drawLab() {
-  const v = akView(), L = G.ver.lab;
-  const g = ctx.createLinearGradient(0, v.T, 0, VF); g.addColorStop(0, '#0E1820'); g.addColorStop(1, '#1C2C34'); ctx.fillStyle = g; ctx.fillRect(v.L, v.T, v.R - v.L, VF - v.T);
-  for (let i = 0; i < 18; i++) { const sx = hash2(i, 5) * LW; ctx.fillStyle = 'rgba(0,0,0,.08)'; ctx.beginPath(); ctx.ellipse(sx, VF - 300 - hash2(i, 6) * 260, 60 + hash2(i, 7) * 60, 20, 0, 0, 7); ctx.fill(); }   // damp patches on the plaster
-  for (const wx of [250, 1040, 1800, 2560, 3240]) if (wx > v.L - 300 && wx < v.R + 50) labWindow(wx);
-  // a tiled dado along the bottom of the wall
-  ctx.fillStyle = '#26363E'; ctx.fillRect(v.L, VF - 190, v.R - v.L, 190);
-  for (let x = Math.floor(v.L / 38) * 38; x < v.R; x += 38) line(x, VF - 190, x, VF, 'rgba(8,14,18,.4)', 1.2);
-  for (let y = VF - 190 + 38; y < VF; y += 38) line(v.L, y, v.R, y, 'rgba(8,14,18,.4)', 1.2);
-  line(v.L, VF - 190, v.R, VF - 190, '#3E5058', 4);
-  labPosters(); labJars(330, 700, VF - 340); labJars(2240, 2560, VF - 380); labJars(3290, 3420, VF - 420);
-  labCableTray(v);
-  // the floor: dark tiles in two shades
-  ctx.fillStyle = '#20282E'; ctx.fillRect(v.L, VF, v.R - v.L, 400);
-  for (let x = Math.floor(v.L / 64) * 64; x < v.R; x += 64) { ctx.fillStyle = (x / 64) % 2 ? '#283238' : '#222A30'; ctx.fillRect(x, VF, 64, 22); line(x, VF, x - 10, VF + 40, 'rgba(0,0,0,.3)', 1.2); }
-  line(v.L, VF, v.R, VF, '#3A4A52', 2); line(v.L, VF + 22, v.R, VF + 22, 'rgba(0,0,0,.3)', 1.4);
-  labDoors();
-  for (const c of LAB_CABLES) labHanging(c);
-  labBoardWall();
-  labSkeleton(2040);
-  for (const b of L.bugs) labFloorCable(b);
-  for (const s of LAB_SHELVES) labShelf(s);
-  for (const b of LAB_BLOCKS) { if (b.k === 'bench') labBench(b); else if (b.k === 'stool') labStool(b); else labCupboard(b); }
-  for (const bn of LAB_BURNERS) labBurner(bn);
-  // the big table at the back you creep under (its top and back legs)
-  { const t = LAB_TABLE, ty = VF - 160; box(t.x0 + 14, ty + 14, 10, 146, '#2E2A26', 1, 1.6); box(t.x1 - 24, ty + 14, 10, 146, '#2E2A26', 1, 1.6); box(t.x0 - 8, ty - 4, t.x1 - t.x0 + 16, 18, '#1E2428', 2, 2.2); line(t.x0 - 4, ty - 2, t.x1 + 4, ty - 2, 'rgba(160,190,220,.35)', 2); box(t.x0, ty + 14, t.x1 - t.x0, 10, '#4A3A2A', 1, 1.6);
-    for (const [bx, h, col] of [[t.x0 + 30, 34, 'rgba(200,220,230,.3)'], [t.x0 + 80, 22, 'rgba(240,200,90,.4)'], [t.x1 - 60, 40, 'rgba(200,220,230,.3)']]) box(bx, ty - 4 - h, 22, h, col, 4, 1.6); }
-  for (let i = 0; i < 3; i++) labPart(i);
-  for (const b of L.bugs) labBug(b);
 }
 function drawLabFront() {
-  const L = G.ver.lab, v = akView();
-  { const t = LAB_TABLE, ty = VF - 160; const g = ctx.createLinearGradient(0, ty + 24, 0, VF); g.addColorStop(0, 'rgba(4,6,10,.5)'); g.addColorStop(1, 'rgba(4,6,10,.12)'); ctx.fillStyle = g; ctx.fillRect(t.x0 + 8, ty + 24, t.x1 - t.x0 - 16, VF - ty - 24);
-    box(t.x0 + 2, ty + 14, 11, 146, '#3E3832', 1, 1.6); box(t.x1 - 13, ty + 14, 11, 146, '#3E3832', 1, 1.6); }
-  if (G.ver.lab.parts[1] === false) { /* the knob glows under the table */ }
-  for (const c of LAB_CABLES) labSparks(c);
-  // the light: a cool blue power-cut dark, then warm tube lights when the power comes back
+  const L = G.ver.lab, v = akView(), on = !L.done;
+  // the cover crates by the door (crouch behind them), the tunnel's front, the front-view ladder's rungs over Pupu
+  for (const c of LAB_CRATES) { labCrate(c, LG, 70, 92); labCrate(c + 30, LG, 40, 50); }
+  { const z = LAB_TUNNEL; labHazardBox(z.x0 - 6, LF1 - 170, z.x1 - z.x0 + 12, 16); box(z.x0 - 6, LF1 - 158, 14, 158, '#2A2E34', 1, 1.6); box(z.x1 - 8, LF1 - 158, 14, 158, '#2A2E34', 1, 1.6); }
+  if (P.ladder && P.ladder.kind === 'front') { const D = P.ladder; for (let y = D.y0 - 14; y > D.y1 - 18; y -= 18) line(D.x - 12, y, D.x + 12, y, '#A8B0BA', 3.2); box(D.x - 15, D.y1 - 20, 5, D.y0 - D.y1 + 22, '#8A929C', 1.2, 1.6); box(D.x + 10, D.y1 - 20, 5, D.y0 - D.y1 + 22, '#8A929C', 1.2, 1.6); }
+  // sparks on the live wires
+  if (on) { const z = LAB_WIRES, mx = (z.x0 + z.x1) / 2, y = LF2 - 146, fl = Math.sin(G.t * 31) * Math.sin(G.t * 13); ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(mx, y, 4, mx, y, 120); g.addColorStop(0, 'rgba(120,200,255,' + (0.18 + Math.max(0, fl) * 0.25) + ')'); g.addColorStop(1, 'rgba(120,200,255,0)'); ctx.fillStyle = g; ctx.fillRect(mx - 120, y - 120, 240, 240);
+    if (fl > -0.2) for (let s = 0; s < 3; s++) { const sx = z.x0 + 14 + ((G.t * 300 + s * 47) % (z.x1 - z.x0 - 28)); ctx.beginPath(); ctx.moveTo(sx, y - 4); for (let j = 1; j < 6; j++) ctx.lineTo(sx + (hash2(Math.floor(G.t * 20) + s, j) - 0.5) * 18, y + j * 5); ctx.strokeStyle = 'rgba(200,240,255,.9)'; ctx.lineWidth = 1.6; ctx.stroke(); } ctx.restore(); }
+  // the light: a cool cast while the Lightning Collector runs, warm work lights when it's off
   ctx.save();
-  if (L.lights < 1) { ctx.fillStyle = 'rgba(6,14,34,' + (0.2 * (1 - L.lights)) + ')'; ctx.fillRect(v.L, v.T, v.R - v.L, v.B - v.T); }
-  if (L.lights > 0) { ctx.globalCompositeOperation = 'lighter'; for (let x = Math.floor(v.L / 520) * 520 + 200; x < v.R + 300; x += 520) { const g = ctx.createRadialGradient(x, VF - 560, 10, x, VF - 300, 520); g.addColorStop(0, 'rgba(255,230,170,' + (0.22 * L.lights) + ')'); g.addColorStop(1, 'rgba(255,230,170,0)'); ctx.fillStyle = g; ctx.fillRect(x - 520, v.T, 1040, v.B - v.T); } }
+  if (L.lights < 1) { ctx.fillStyle = 'rgba(6,14,34,' + (0.16 * (1 - L.lights)) + ')'; ctx.fillRect(v.L, v.T, v.R - v.L, v.B - v.T); }
+  if (L.lights > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = 'rgba(255,220,160,' + (0.06 * L.lights) + ')'; ctx.fillRect(v.L, v.T, v.R - v.L, v.B - v.T); }
   ctx.restore();
-  if (L.lights > 0) for (let x = Math.floor(v.L / 520) * 520 + 200; x < v.R + 300; x += 520) { box(x - 70, VF - 598, 140, 10, '#C8CCD0', 4, 1.6); ctx.save(); ctx.globalAlpha = L.lights; box(x - 64, VF - 589, 128, 6, '#FFF6D8', 3, 0); ctx.restore(); }
-  for (let x = Math.floor(v.L / 900) * 900 + 300; x < v.R + 200; x += 900) for (let k = 0; k < 5; k++) { ctx.save(); ctx.translate(x + k * 24 - 50, VF + 150); ctx.rotate(-1.0 + k * 0.45); ctx.beginPath(); ctx.ellipse(0, -60, 16, 60, 0, 0, 7); ctx.fillStyle = k % 2 ? '#081210' : '#0C1A16'; ctx.fill(); ctx.restore(); }   // a potted fern in front of us
+}
+function drawLabHUD() {
+  const L = G.ver.lab; if (!L || G.fb) return;
+  drawKaloScreen();
+  if (L.pick) return drawSockPick();
+  if (L.done) return;
+  panel(10, 8, 150, 30, 'rgba(243,230,200,.92)', 2); text('FOUND', 21, 28, 10, INK, 700);
+  ['battery', 'knob', 'antenna'].forEach((k, i) => { const x = 82 + i * 26, y = 23; if (L.parts[i]) { ctx.save(); ctx.shadowColor = 'rgba(255,200,90,.9)'; ctx.shadowBlur = 8; drawPartIcon(k, x, y, 0.55); ctx.restore(); } else { circ(x, y, 8, 'rgba(28,20,16,.12)', 1.2); } });
+}
+function drawSockPick() {   // which glowing thing goes into this slot?
+  const L = G.ver.lab, K = L.pick, opts = LAB_SOCK_PART.filter(p => !L.sock[LAB_SOCK_PART.indexOf(p)]);
+  const NAMES = {battery: ['ব্যাটারি', 'Battery'], knob: ['নব', 'Knob'], antenna: ['অ্যান্টেনা', 'Antenna']}, SY = [['বিজলির খোপ', 'The lightning slot'], ['গোল চাকতির খোপ', 'The round dial slot'], ['ঢেউয়ের খোপ', 'The wave slot']][K.i];
+  const w = 420, h = 170, x0 = W / 2 - w / 2, y0 = 40;
+  box(x0, y0, w, h, 'rgba(243,230,200,.97)', 10, 2.4);
+  text(L2(SY[0], SY[1]) + ': ' + L2('কোনটা বসবে?', 'which one fits?'), W / 2, y0 + 30, 16, INK, 700, 'center');
+  K.rects = []; const bw = 110, bh = 90, gap = 16, bx0 = W / 2 - (bw * opts.length + gap * (opts.length - 1)) / 2;
+  opts.forEach((p, k) => { const bx = bx0 + k * (bw + gap), by = y0 + 52, sel = K.sel === k && !isTouch && !K.fb, okK = K.fb && K.fb.ok && k === K.sel, bad = K.fb && !K.fb.ok && k === K.sel;
+    box(bx, by, bw, bh, okK ? '#CFE8B8' : bad ? '#F2C0B0' : sel ? '#FFE29A' : '#FFF6D8', 8, sel || okK ? 2.8 : 2); drawPartIcon(p, bx + bw / 2, by + 34, 1.3); text(L2(NAMES[p][0], NAMES[p][1]), bx + bw / 2, by + 74, 14, INK, 700, 'center'); K.rects[k] = [bx, by, bw, bh]; });
+  text(isTouch ? L2('ঠিক জিনিসটায় চাপ দাও', 'Tap the right one') : L2('◀ ▶ বাছো, E দিয়ে বসাও', '◀ ▶ to choose, E to put it in'), W / 2, y0 + h - 10, 12, '#3A4A7A', 700, 'center');
 }
 
 // ---- (v259) the magic sci-fi door: a riveted steel arch with cyan light strips, a swirl of blue energy, crackling sparks ----
 function drawPortal(x, o) {
+  const VF = o.y || AK_FL_VF;
   const op = Math.min(1, o.open === undefined ? 1 : o.open), e = op * op * (3 - 2 * op); if (e <= 0) return;
   const w = 150, h = 262, y0 = VF - h, t = G.t;
   ctx.save(); ctx.translate(x, VF); ctx.scale(0.2 + 0.8 * e, 0.5 + 0.5 * e); ctx.translate(-x, -VF);
@@ -8460,7 +8681,7 @@ function frame(now) {
   // during the stone-skipping contest the whole screen is the throw button, so hide the move/jump buttons
   const mg = !!(G.fb && G.fb.game && G.fb.game.phase !== 'done') || !!(G.fb && G.fb.quiz && !G.fb.quiz.done);
   if (mg !== frame.mg) { frame.mg = mg; const t = document.getElementById('touch'); if (t) t.classList.toggle('minigame', mg); }
-  const dp = G.level === 'anko';   // ▲ ▼ buttons only in levels with depth
+  const dp = G.level === 'anko' || inLab();   // ▲ ▼ buttons only in levels with depth (and on the lab's ladders)
   if (dp !== frame.dp) { frame.dp = dp; const t = document.getElementById('touch'); if (t) t.classList.toggle('depth', dp); }
   const mn = ['title', 'story', 'howto', 'end', 'gend', 'aend', 'v2end', 'l3end'].includes(G.state);   // menus and chapter screens: no game buttons
   if (mn !== frame.mn) { frame.mn = mn; const t = document.getElementById('touch'); if (t) t.classList.toggle('menu', mn); }

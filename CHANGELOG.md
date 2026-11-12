@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0-demo · 2026-11-12
+- **Chapter 3 rebuilt** as a tall laboratory on four floors in four acts: a security eye, a trolley to push off a loft, a battery-powered lift, a crusher, an electric gate, a moving platform over a pit, a crawl tunnel, a switch and cabinet, an elevator, platforms hanging on chains, a glass tank's compartment, and a console with three slots that powers down the Lightning Collector and opens a secret room.
+- **Ladders** with three climbing styles: side, back and front views (W/S or ↑/↓, ▲▼ on phones). Mishti leaps from floor to floor after Pupu.
+- **Memory 3 is hands-on:** push the battery in, screw the knob on, pull the antenna out, then tune the dial.
+
 ## 1.1.1-demo · 2026-11-12
 - Chapter 2 now ends with a magic sci-fi door crackling into the schoolyard; the player walks Pupu into it.
 - Chapter 3 becomes **Kalo-Bijli's Lab**: the lab of Professor Kalo-Bijli, the villain of Pupu's favourite cartoon *Thunder Boy*. He taunts Pupu from his live screen, sends his spark-bugs, and is zapped by his own lightning when Pupu takes back Dadu's radio.
