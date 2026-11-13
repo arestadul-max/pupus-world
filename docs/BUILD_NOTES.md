@@ -493,3 +493,15 @@ The user sent a full design document (saved as `claude/chapter4-library-design.m
   - **saving** (localStorage `pupusworld.itch.save.v1`): the chapter reached: pro / ch1 / ch2 (Chapter 2's three parts count as one chapter) / ch3; Continue starts that chapter again;
   - fonts built in (data URLs), a full standalone page: works offline and in itch.io's frame.
   - Outputs: `browser/index.html` (zip it as PupusWorld_Browser.zip, "played in the browser") and `download/PupusWorld/Play Pupus World.html` + README.txt (zip as PupusWorld_Download.zip).
+
+## v284 · Chapter 4, Story 1: "The Clever Jackal and the Crocodile" (river world)
+- Placing the first book in the library (`libBook(0)`) opens the book; a soft fade and Pupu and Mishti fall into the page. `startStory1()` builds the river world (W 3640, floor 1050, water 1092). The library is kept (`V.libKeep`) and restored afterwards.
+- **Look:** the story is a picture book being drawn: a torn paper edge at the top, warm paper grain, and things not yet restored are pencil sketches that wipe into colour when restored.
+- **Story words:** three glowing Bangla word-sparks (`RV_WORDS`, goal "Bring the story's words back · n/3"). Each one restores part of the world (the bamboo bridge, the floating logs, the root) and types the next story line into the parchment caption at the top (dots show progress). Four lines in English and Bangla (`RV_LINES`); the fourth is typed by the trick.
+- **Crocodiles** (`RV_CROCS`): cycle 5.4 s: under water (eyes only), a 0.8 s warning ripple, then up for 2.7 s with the jaw opening. Water or a bite sends Pupu back to the last checkpoint. Checkpoints (sparse): bank 160, island 1890, far bank 2950.
+- **Ropes** (hanging roots) at x 330, 2765, 3060 use the ladder climb.
+- **Mishti** waits on safe ground and only crosses when Pupu is on a `safe` surface, with a big leap; she trembles with a worried drop (`G.mscared`) near crocodiles. She never knows more than Pupu.
+- **The trick (finale):** the big crocodile sleeps in the pool (3170–3400) under the banyan. With three words restored, the root on branch 3 is coloured in; Pupu stands at the knot (x ≤ 3222) and presses E "let it down". The root drops, the crocodile bites it ("Silly! That's a root you're biting!"), the jackal laughs and runs away, and page 1 flies out of the water back to the library: `found[0] = true`.
+- Camera in the river never rises above the floor line (`max(P.y, RV_FL-30)`), so the trick stays on screen.
+- Missions: new entry "Chapter 4 · Story 1: The Jackal and the Crocodile" (index 7). The menu rows are a little shorter so all eight fit.
+- Bug fixed: the new `startRiver` had the same name as Chapter 1's ghat river start and replaced it (Chapter 1 crashed). Renamed to `startStory1`.

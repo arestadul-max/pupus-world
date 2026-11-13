@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.0-demo · 2026-11-13
+- Chapter 4, Story 1: "The Clever Jackal and the Crocodile". Placing Dadu's storybook opens a river world drawn like a picture book: find the glowing words to restore the bridge, the logs and the story lines, cross the river between crocodile bites, and trick the big crocodile with a banyan root to bring the first lost page back to the library.
+- Select Mission: new entry for Story 1.
+- Fix: Chapter 1's ghat river start was replaced by a function with the same name.
+
 ## 1.5.4-demo · 2026-11-13
 - Main menu mentions the Chapter 4 first look.
 - itch.io packages: a browser zip and an offline download zip, with the fonts built in.

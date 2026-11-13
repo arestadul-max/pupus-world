@@ -670,6 +670,7 @@ function goalNow() {
     const V = G.ver; if (G.state !== 'aplay' || !V) return null;
     if (V.phase === 'lab') return labGoal();
     if (V.phase === 'lib') return libGoal();
+    if (V.phase === 'river') return riverGoal();
     if (V.phase === 'court') { const c = V.ch; if (c && c.end && c.end.portal && c.stage === 'door') return {bn: 'নীল দরজাটায় ঢোকো', en: 'Walk into the glowing door', x: c.end.portal.x, k: ['E']};
       if (!c || c.end || c.stage === 'catch') return null;
       if (c.stage === 'run2') return c.hwGot ? {bn: 'স্কুলের গেটে দৌড়াও!', en: 'Run to the school gate!', x: CT_GATE, k: ['Run']} : {bn: 'টায়ারে লাফিয়ে উঠে দেয়ালের খাতাটা নাও', en: 'Jump onto the tyres, then the wall: get your copy', x: 2340, k: ['Space']};
@@ -1165,7 +1166,7 @@ function camUpdate(dt) {
   const AKZ = G.level === 'anko' || G.level === 'anko2', zx = AKZ ? W / 2 / AK_ZOOM - W / 2 : 0;
   let tx = Math.max(-zx, Math.min(WW - W + zx, P.x - W / 2 + P.face * 60));
   if (G.level === 'prologue') tx = P.x > PV.x0 - 100 ? Math.max(PV.x0, Math.min(PV.x1 - W, tx)) : Math.min(2700 - W, tx);   // the house and the verandah are separate views
-  const ty = Math.max(G.level === 'ghat' ? -230 : 0, Math.min(WH - H - (AKZ ? H / 2 / AK_ZOOM - H / 2 : 0), P.y - (AKZ ? 470 : 400))); // the dream sky goes up further
+  const ty = Math.max(G.level === 'ghat' ? -230 : 0, Math.min(WH - H - (AKZ ? H / 2 / AK_ZOOM - H / 2 : 0), (inRiver() ? Math.max(P.y, RV_FL - 30) : P.y) - (AKZ ? 470 : 400))); // the dream sky goes up further · (v284) in the river book the water line always stays in view
   const k = Math.min(1, dt * 5);
   G.camX += (tx - G.camX) * k; G.camY += (ty - G.camY) * k;
 }
@@ -3163,6 +3164,7 @@ function worldPrompt() {
     if (G.state !== 'aplay' || G.dialog) return;
     label = null; { const c = G.ver && G.ver.ch; if (G.ver && G.ver.phase === 'court' && c && c.stage === 'door' && c.end && c.end.portal && Math.abs(P.x - c.end.portal.x) < 46) label = uk + ': go in'; }
     { const n = G.ver && G.ver.phase === 'lab' ? labNear() : null; if (n) label = uk + ': ' + ({lift: 'lift', switch: 'switch', comp: 'open', sock: 'put in', radio: 'look'})[n.k]; }
+    { const n = G.ver && G.ver.phase === 'river' ? riverNear() : null; if (n) label = uk + ': ' + ({root: 'let it down'})[n.k]; }
     { const n = G.ver && G.ver.phase === 'lib' ? libNear() : null; if (n) label = uk + ': ' + ({ladder: 'push', letgo: 'let go', book: 'open'})[n.k]; }
   } else if (G.level === 'ghat') {
     if (G.state !== 'gplay' || G.dialog) return;
@@ -3270,16 +3272,18 @@ const MISSIONS = [
   {t: 'Chapter 2 · Part 3: The Schoolyard', s: 'Down the stairs and RUN, all the way to the gate'},
   {t: 'Chapter 3 · Kalo-Bijli\'s Lab', s: 'The villain\'s lab: find the glowing things, light the bulb'},
   {t: 'Chapter 4 · The Library (first look)', s: 'The old village library: find the three glowing books'},
+  {t: 'Chapter 4 · Story 1: The Jackal and the Crocodile', s: 'Inside the river book: crocodiles, drifting logs and a clever trick'},
 ];
 function startMission(i) {
   setRun(false);
   if (i === 0) startGame(); else if (i === 1) startGhat(); else if (i === 2) startAnko(true); else if (i === 3) startVer();
   else if (i === 4) { startVer(); G.cs = null; G.dialog = null; startStairs(); }
   else if (i === 5) startLab();
-  else startLib();
+  else if (i === 6) startLib();
+  else { startLib(); G.cs = null; G.dialog = null; G.ver.lib.placed = true; G.ver.lib.glow = 1; G.ver.lib.arrive = 1; P.book = null; startStory1(); }
 }
 const MENU_MAIN = {x: W / 2 - 170, y: 290, w: 340, h: 54, gap: 10};
-const MENU_MIS = {x: W / 2 - 320, y: 84, w: 640, h: 52, gap: 6};
+const MENU_MIS = {x: W / 2 - 320, y: 70, w: 640, h: 48, gap: 5};
 function menuRects() {
   if ((G.menuPage || 'main') === 'main') return [0, 1, 2].map(i => ({x: MENU_MAIN.x, y: MENU_MAIN.y + i * (MENU_MAIN.h + MENU_MAIN.gap), w: MENU_MAIN.w, h: MENU_MAIN.h}));
   const r = MISSIONS.map((_, i) => ({x: MENU_MIS.x, y: MENU_MIS.y + i * (MENU_MIS.h + MENU_MIS.gap), w: MENU_MIS.w, h: MENU_MIS.h}));
@@ -3312,7 +3316,7 @@ function drawTitle() {
       const r = rs[i], on = i === sel;
       panelV1(r.x, r.y, r.w, r.h, on ? TURMERIC : 'rgba(243,230,200,.95)');
       circ(r.x + 32, r.y + r.h / 2, 17, on ? CREAM : '#E3A92B', 2.2); text(String(i + 1), r.x + 32, r.y + r.h / 2 + 6, 17, INK, 700, 'center');
-      text(m.t, r.x + 62, r.y + 23, 17, INK, 700); text(m.s, r.x + 62, r.y + 41, 12, '#5A3A22', 600);
+      text(m.t, r.x + 62, r.y + 21, 17, INK, 700); text(m.s, r.x + 62, r.y + 38, 12, '#5A3A22', 600);
       if (on) text(isTouch ? '' : 'Enter ▶', r.x + r.w - 16, r.y + r.h / 2 + 5, 13, INK, 700, 'right');
     });
     const b = rs[MISSIONS.length], on = sel === MISSIONS.length;
@@ -4923,7 +4927,7 @@ function verKO(fromX, fromY) {
 // Mishti hides where Pupu hides: when he is in a hiding place, she tucks in beside him in the same one (never left out in the open)
 function verMishtiSpot(tx) {
   const V = G.ver, sd = G.mside || 1;
-  if (V && (V.phase === 'lab' || V.phase === 'lib')) return tx;
+  if (V && (V.phase === 'lab' || V.phase === 'lib' || V.phase === 'river')) return tx;
   if (V && V.phase === 'court') { if (V.ch && V.ch.hid) return CT_TREE - 8; return tx; }
   if (!verSafe()) return tx;
   for (const [a, b] of VER_BENCHES) if (P.x > a + 14 && P.x < b - 14) return Math.max(a + 30, Math.min(b - 30, P.x - sd * 40));
@@ -4931,7 +4935,7 @@ function verMishtiSpot(tx) {
   return tx;
 }
 function verMishti(dt, fast) {
-  if (G.ver && (G.ver.phase === 'lab' || G.ver.phase === 'lib')) return;   // (v261) in the lab she follows him floor to floor (labMishti)
+  if (G.ver && (G.ver.phase === 'lab' || G.ver.phase === 'lib' || G.ver.phase === 'river')) return;   // (v261) in the lab she follows him floor to floor (labMishti)
   if (Math.abs(P.vx) > 40) { G.mturn = (G.mturn || 0) + (Math.sign(P.vx) !== (G.mside || 1) ? dt : -G.mturn); if (G.mturn > 0.35) { G.mside = Math.sign(P.vx); G.mturn = 0; } }
   const tx = verMishtiSpot(P.x - (G.mside || 1) * 46), dm = tx - G.mx;
   if (!G.mwalk && Math.abs(dm) > 24) G.mwalk = true; if (G.mwalk && Math.abs(dm) < 3) G.mwalk = false;
@@ -5117,6 +5121,7 @@ function updateVer(dt) {
   if (V.phase === 'court') return updateCourt(dt);
   if (V.phase === 'lab') return updateLab(dt);
   if (V.phase === 'lib') return updateLib(dt);
+  if (V.phase === 'river') return updateRiver(dt);
   if (G.state !== 'aplay') return;
   if (P.x > 3100) P.x = 3100;
   // standing, he bumps his head on a bench; under one he stays crouched
@@ -5396,7 +5401,7 @@ function verFloor(v) {
   ctx.restore();
 }
 function drawVer() {
-  const V = G.ver; if (V.phase === 'court') return drawCourt(); if (V.phase === 'stairs') return drawStairwell(); if (V.phase === 'lab') return drawLab(); if (V.phase === 'lib') return drawLib();
+  const V = G.ver; if (V.phase === 'court') return drawCourt(); if (V.phase === 'stairs') return drawStairwell(); if (V.phase === 'lab') return drawLab(); if (V.phase === 'lib') return drawLib(); if (V.phase === 'river') return drawRiver();
   const v = akView();
   ctx.fillStyle = '#2C333C'; ctx.fillRect(v.L, v.T, v.R - v.L, 780 - v.T);
   ctx.fillStyle = '#23342E'; ctx.fillRect(v.L, 780, v.R - v.L, VF - 780); line(v.L, 780, v.R, 780, '#1A2622', 4);
@@ -5957,6 +5962,7 @@ function drawVerFront() {
   if (V.phase === 'stairs') return drawStairFront();
   if (V.phase === 'lab') return drawLabFront();
   if (V.phase === 'lib') return drawLibFront();
+  if (V.phase === 'river') return drawRiverFront();
   if (V.phase === 'court') drawCourtFront();
   else {
     VER_BENCHES.forEach(([a, b]) => verBench(a, b, true));
@@ -5978,7 +5984,7 @@ function drawVerFront() {
   if (V.phase !== 'court') { const v = akView(); for (let x = Math.floor(v.L / 780) * 780 + 130; x < v.R + 200; x += 780) { if (Math.abs(x - VER_DOOR2) < 260) continue;   /* no pillar in front of the door he bursts out of: he must be seen clearly */ ctx.fillStyle = '#0E1116'; ctx.fillRect(x - 22, v.T, 44, VF + 260 - v.T); ctx.fillStyle = 'rgba(255,255,255,.04)'; ctx.fillRect(x - 22, v.T, 6, VF + 260 - v.T); } }
 }
 function drawVerChars() {
-  const V = G.ver, C = V.ch, pe = C && C.end && C.end.portal ? C.end.portal.enter : 0, ar = V.phase === 'lab' && V.lab ? V.lab.arrive * (1 - (V.lab.gone || 0)) : V.phase === 'lib' && V.lib ? V.lib.arrive : 1;
+  const V = G.ver, C = V.ch, pe = C && C.end && C.end.portal ? C.end.portal.enter : 0, ar = V.phase === 'lab' && V.lab ? V.lab.arrive * (1 - (V.lab.gone || 0)) : V.phase === 'lib' && V.lib ? V.lib.arrive : V.phase === 'river' && V.river ? V.river.arrive : 1;
   const al = pe > 0 ? Math.max(0, 1 - pe * 1.6) : Math.min(1, ar);
   if (al < 1) { if (al <= 0) return; ctx.save(); ctx.globalAlpha = al; drawVerChars0(); ctx.restore(); return; }
   drawVerChars0();
@@ -5986,11 +5992,12 @@ function drawVerChars() {
 function drawVerChars0() {
   const V = G.ver, C = V.ch;
   if (V.phase === 'stairs') return drawStairChars();
-  if ((V.phase === 'lab' || V.phase === 'lib') && P.ladder && !(P.lie > 0)) { drawMishti(G.mx, G.my, true, {face: G.mface, walk: null}); const k = P.ladder.kind;
+  if ((V.phase === 'lab' || V.phase === 'lib' || V.phase === 'river') && P.ladder && !(P.lie > 0)) { drawMishti(G.mx, G.my, true, {face: G.mface, walk: null}); const k = P.ladder.kind;
     const M = P.mantle, D = P.ladder; drawPupu(P.x, P.y, 1, {walkFB: 'back', climbFB: P.climbPh || 0, anim: M ? 0 : P.climbPh || 0, mantle: M ? {u: M.u, hy: (D.y1 - P.y) / SP} : undefined, expr: 'happy'}); return; }   // (v262) always his back, on every ladder
-  if ((V.phase === 'lab' || V.phase === 'lib') && G.mleap && !(P.lie > 0)) { drawMishti(G.mx, G.my, true, {face: G.mface, walk: 1.2}); drawAnkoPupu(); return; }
+  if ((V.phase === 'lab' || V.phase === 'lib' || V.phase === 'river') && G.mleap && !(P.lie > 0)) { drawMishti(G.mx, G.my, true, {face: G.mface, walk: 1.2}); drawAnkoPupu(); return; }
   if (V.phase === 'lab' && V.lab && V.lab.radioTaken && !V.lab.bookScene && !(P.lie > 0)) { drawMishti(G.mx, G.my, true, {face: G.mface, walk: G.mwalk ? G.manim : null, talk: G.dialog && G.dialog.who === 'mishti'}); drawPupu(P.x, P.y, P.face, {anim: 0, carry: 1, expr: 'grin', look: 0.3, talk: G.dialog && G.dialog.who === 'pupu'}); return; }
-  drawMishti(G.mx, G.my, true, {face: G.mface, walk: G.mwalk ? G.manim : null, talk: G.dialog && G.dialog.who === 'mishti'});
+  { const sc = V.phase === 'river' && G.mscared && !G.mwalk; drawMishti(G.mx + (sc ? Math.sin(G.t * 38) * 0.9 : 0), G.my, true, {face: G.mface, walk: G.mwalk ? G.manim : null, talk: G.dialog && G.dialog.who === 'mishti'});   // (v284) on the riverbank, watching him on the water: she trembles, a worried drop
+    if (sc) { const dx = G.mx - G.mface * 16, dy = G.my - 52 - Math.abs(Math.sin(G.t * 2)) * 3; ctx.beginPath(); ctx.moveTo(dx, dy - 8); ctx.quadraticCurveTo(dx + 5, dy, dx, dy + 3); ctx.quadraticCurveTo(dx - 5, dy, dx, dy - 8); fs('#BFE3F2', 1.4); } }
   if (C && C.getUp > 0 && C.getUp < 1) {   // getting up off the ground, still facing Anko Sir
     const u = C.getUp, ez = v => { v = Math.max(0, Math.min(1, v)); return v * v * (3 - 2 * v); };
     if (u < 0.45) drawPupu(P.x, P.y, P.face, {hug: -1, lieBack: 0.35 * (1 - ez(u / 0.45)), expr: 'surprised', blink: false, look: 0});
@@ -6017,6 +6024,7 @@ function drawVerHUD() {
   const V = G.ver; if (V.phase === 'stairs') return;
   if (V.phase === 'lab') return drawLabHUD();
   if (V.phase === 'lib') return drawLibHUD();
+  if (V.phase === 'river') return drawRiverHUD();
   if (V.phase === 'court') {
     if (V.ch.end || V.ch.stage === 'catch') return;   // nothing over the ending
     panel(10, 8, 172, 28, 'rgba(243,230,200,.92)', 2); text('STAMINA', 21, 27, 10, INK, 700);   // stamina for sprinting
@@ -6755,8 +6763,9 @@ const LIB_BOOKS = [
 ];
 const LIB_LETTERS = 'অআইউএকখগঘচজটডতদনপবমরলসহ';
 function inLib() { return typeof G !== 'undefined' && G && G.level === 'anko2' && G.ver && G.ver.phase === 'lib'; }
-function inClimb() { return inLab() || inLib(); }
+function inClimb() { return inLab() || inLib() || inRiver(); }
 function curLadders() {
+  if (inRiver()) return riverLadders();
   if (inLib()) { const L = G.ver.lib; return L.lad.x <= LIB_GAL_X[1] - 24 ? [{id: 'roll', x: L.lad.x, y0: LIB_FL, y1: LIB_GAL, kind: 'back'}] : []; }
   return LAB_LADDERS;
 }
@@ -6869,6 +6878,7 @@ function libBook(i) {
     {say:1, who:'pupu', bn:'লেখাগুলো বইটার ভেতরে ঘুরছে… ঠিক দাদুর… না, কারো একটা হাতের লেখা।', en:'The letters are swirling inside it… just like someone\'s handwriting… someone I know?', mood: 'surprised'},
     {say:1, who:'mishti', bn:'অক্ষরগুলো আমাদের ভেতরে ডাকছে!', en:'The letters are calling us inside!', mood: 'surprised'});
   else steps.push({say:1, who:'mishti', bn:'আরেকটা! এটাও ডাকছে!', en:'Another one! This one\'s calling too!', mood: 'happy'});
+  if (i === 0) { steps.push({do: () => { G.fadeTarget = 1; G.fadeSpeed = 1.4; tone(500, 0.9, 'sine', 0.03, 1400); }}, {wait: 0.9}); play(steps, () => { L.open = null; startStory1(); }); return; }   // (v284) Story 1 is built
   steps.push({do: () => { L.found[i] = true; L.open = null; showToast('Story world ' + (i + 1) + ' of 3 · ' + b.n[1] + ': coming in the next update'); sfx.cp(); }}, {wait: 1.2});
   play(steps, () => { G.state = 'aplay'; G.goalT = 0; });
 }
@@ -7019,6 +7029,347 @@ function drawLibHUD() {
   const L = G.ver.lib; if (!L || G.fb || L.glow <= 0) return;
   panel(10, 8, 150, 30, 'rgba(243,230,200,.92)', 2); text('STORIES', 21, 28, 10, INK, 700);
   LIB_BOOKS.forEach((b, i) => { const x = 84 + i * 24, y = 23; if (L.found[i]) { ctx.save(); ctx.shadowColor = 'rgba(255,200,90,.9)'; ctx.shadowBlur = 8; box(x - 6, y - 8, 12, 16, b.c1, 1.5, 1.6); line(x - 3, y - 3, x + 3, y - 3, b.c2, 1.6); ctx.restore(); } else box(x - 6, y - 8, 12, 16, 'rgba(28,20,16,.12)', 1.5, 1.2); });
+}
+
+// ================= Chapter 4 · Story 1: The Clever Jackal and the Crocodile (v284) =================
+// A painted-paper river inside the river book. The world is unfinished: the bamboo bridge, the drifting logs and much of the
+// scenery are only pencil lines until Pupu brings the story's words back (three clusters of glowing letters). A parchment caption
+// at the top writes the tale as the words return. A · riverbank: climb the banyan's hanging root to the first words, the bridge
+// colours in · B · crocodile crossing: backs to stand on while they are up; bubbles before they rise and before they sink ·
+// the muddy island: the jackal pacing, the second words; the logs appear · C · flooded forest: drifting logs, a stump, a hanging
+// root up to the third words, the line where the jackal laughs "That's a root you're biting!" · D · the big crocodile holds the
+// page in its jaws in a pool: let the root down from the branch above, the crocodile bites the root, the page is free.
+// Mishti hates water: she waits on dry land and catches up with one big leap.
+const RV_FL = 1050, RV_WAT = 1092, RV_W = 3640, RV_WH = 1250;
+const RV_CROCS = [{x: 1125, ph: 0}, {x: 1315, ph: 1.7}, {x: 1505, ph: 3.3, swing: 55}, {x: 1695, ph: 0.9}];
+const RV_CYC = 5.4, RV_UP = 2.7, RV_WARN = 0.8;   // up 2.7 s (the last 0.8 of it shaking and bubbling), down 2.7 s (bubbles 0.8 s before it rises)
+const RV_POOL = [3170, 3400], RV_CP = [{x: 160, y: RV_FL}, {x: 1890, y: RV_WAT - 34}, {x: 2950, y: RV_FL}];
+const RV_WORDS = [{x: 235, y: RV_FL - 250 - 46}, {x: 1900, y: RV_WAT - 34 - 70}, {x: 2905, y: 750 - 46}];
+const RV_LINES = [
+  ['এক যে ছিল চালাক শেয়াল, থাকত এক চওড়া নদীর ধারে।', 'Once, by a wide river, there lived a clever jackal.'],
+  ['নদীর ওপারে মিষ্টি আখের খেত, কিন্তু নদী ভরা কুমিরে।', 'Across the water grew sweet sugarcane, but the river was full of crocodiles.'],
+  ['কুমির তার পা কামড়ে ধরতেই শেয়াল হেসে বলল, “বোকা! ওটা তো গাছের শিকড়!”', 'When a crocodile caught his leg, the jackal laughed: “Silly! That\'s a root you\'re biting!”'],
+  ['আর বোকা কুমির অমনি পা ছেড়ে শিকড় কামড়ে ধরল।', 'And the silly crocodile let go, and bit the root instead.'],
+];
+const RV_ROPES = [{x: 330, y0: RV_FL, y1: RV_FL - 250}, {x: 2765, y0: RV_WAT - 40, y1: 750}, {x: 3060, y0: RV_FL, y1: RV_FL - 220}];
+function inRiver() { return typeof G !== 'undefined' && G && G.level === 'anko2' && G.ver && G.ver.phase === 'river'; }
+function riverLadders() { return RV_ROPES.map((r, i) => ({id: 'root' + i, x: r.x, y0: r.y0, y1: r.y1, kind: 'back', rope: 1})); }
+function startStory1() {
+  const V = G.ver; V.libKeep = V.lib; V.phase = 'river'; G.cs = null; G.dialog = null;
+  WW = RV_W; WH = RV_WH;
+  V.river = {arrive: 0.001, words: 0, wordT: [0, 0, 0], got: [false, false, false], fly: null, cp: 0, crocs: RV_CROCS.map(c => ({x: c.x, y: RV_WAT - 18, st: 'up', jaw: 0})), cap: {line: -1, t: 0},
+    jk: {x: 1880, face: 1, t: 0, mode: 'pace'}, big: {jaw: 0, bite: 0, page: 1}, root: 0, page: null, done: false, ko: null, enter: 1, leaves: []};
+  riverSurf();
+  Object.assign(P, {x: 150, y: RV_FL, ground: true, face: 1, vx: 0, vy: 0, crouchOn: false, sneak: false, lie: 0, hidden: null, pickT: 0, anim: 0, ladder: null, mantle: null, book: null});
+  P.surf = V.river.sBank; G.msurf = V.river.sBank; G.mx = 90; G.my = RV_FL; G.mwalk = false; G.mleap = null; G.mface = 1;
+  Object.assign(G, {state: 'acut', fade: 0, fadeTarget: 0, camX: 150 - W / 2, camY: RV_FL - 470});
+  const R = V.river;
+  play([
+    {wait: 1.1},
+    {say:1, who:'narr', bn:'নদীর বইয়ের ভেতরে… রং করা কাগজের এক নদী।', en:'Inside the river book… a river made of painted paper.', auto: 3},
+    {say:1, who:'mishti', bn:'পুপু… এখানে সবকিছু আধা-আঁকা! সেতুটা শুধু পেন্সিলের দাগ!', en:'Pupu… everything here is half-drawn! That bridge is only pencil lines!', mood: 'surprised'},
+    {say:1, who:'pupu', bn:'গল্পের কথাগুলো হারিয়ে গেছে… তাই গল্পটাও শেষ হয়নি।', en:'The story\'s words are missing… so the story isn\'t finished.', mood: 'surprised'},
+    {say:1, who:'mishti', bn:'আর ওটা… নদী! আমি কিন্তু পানিতে নামব না!', en:'And that… is a river! I am NOT going in the water!', mood: 'scared'},
+  ], () => { G.state = 'aplay'; G.goalT = 0; R.cap.line = -1; });
+}
+function riverSurf() {
+  const R = G.ver.river;
+  R.sBank = {x0: -300, x1: 560, y0: RV_FL, y1: RV_FL, floor: 1, safe: 1};
+  R.sBranch = {x0: 170, x1: 470, y0: RV_FL - 250, y1: RV_FL - 250, floor: 1, safe: 1};
+  R.sRootStep = {x0: 400, x1: 470, y0: RV_FL - 80, y1: RV_FL - 80, floor: 1, safe: 1};
+  R.sBridge = {x0: 560, x1: 905, y0: RV_FL - 14, y1: RV_FL - 14, floor: 1, safe: 1};
+  R.sBank2 = {x0: 905, x1: 1015, y0: RV_FL, y1: RV_FL, floor: 1, safe: 1};
+  R.sIsland = {x0: 1795, x1: 1995, y0: RV_WAT - 34, y1: RV_WAT - 34, floor: 1, safe: 1};
+  R.sStump1 = {x0: 2405, x1: 2475, y0: RV_WAT - 40, y1: RV_WAT - 40, floor: 1};
+  R.sStump2 = {x0: 2725, x1: 2805, y0: RV_WAT - 40, y1: RV_WAT - 40, floor: 1};
+  R.sBranch2 = {x0: 2700, x1: 2965, y0: 750, y1: 750, floor: 1};
+  R.sBankD = {x0: 2880, x1: RV_POOL[0], y0: RV_FL, y1: RV_FL, floor: 1, safe: 1};
+  R.sBranch3 = {x0: 2990, x1: 3230, y0: RV_FL - 220, y1: RV_FL - 220, floor: 1, safe: 1};
+  R.sBankE = {x0: RV_POOL[1], x1: RV_W + 300, y0: RV_FL, y1: RV_FL, floor: 1, safe: 1};
+  R.sCroc = R.crocs.map(c => ({x0: c.x - 62, x1: c.x + 62, y0: c.y, y1: c.y, floor: 1, croc: 1}));
+  R.sLog = [{x0: 0, x1: 0, y0: RV_WAT - 14, y1: RV_WAT - 14, floor: 1, mov: 1}, {x0: 0, x1: 0, y0: RV_WAT - 14, y1: RV_WAT - 14, floor: 1, mov: 1}];
+  SURF = [R.sBank, R.sBranch, R.sRootStep, R.sBank2, R.sIsland, R.sStump1, R.sStump2, R.sBranch2, R.sBankD, R.sBranch3, R.sBankE, ...R.sCroc, ...R.sLog];
+  if (R.words >= 1) SURF.push(R.sBridge);
+}
+function rvLogX(i, t) { const a = i ? 2490 : 2060, b = i ? 2680 : 2330, sp = i ? 62 : 70, L = b - a, u = (t * sp + i * 90) % (2 * L); return a + (u < L ? u : 2 * L - u) + 75; }
+function rvCrocState(c, i, t) {   // where crocodile i is in its cycle: up · sinking · down · rising
+  const u = ((t + RV_CROCS[i].ph) % RV_CYC + RV_CYC) % RV_CYC;
+  if (u < RV_UP - RV_WARN) return {st: 'up', k: 0};
+  if (u < RV_UP) return {st: 'sink', k: (u - (RV_UP - RV_WARN)) / RV_WARN};
+  if (u < RV_CYC - RV_WARN) return {st: 'down', k: 0};
+  return {st: 'rise', k: (u - (RV_CYC - RV_WARN)) / RV_WARN};
+}
+function riverMishti(dt) {
+  if (G.mleap) { const m = G.mleap; m.t += dt / m.dur; const u = Math.min(1, m.t); G.mx = m.x0 + (m.x1 - m.x0) * u; G.my = m.y0 + (m.y1 - m.y0) * u - Math.sin(u * Math.PI) * m.h; if (m.x1 !== m.x0) G.mface = Math.sign(m.x1 - m.x0); if (u >= 1) { G.mleap = null; G.msurf = m.s; } return; }
+  if (P.ladder || !P.ground || !P.surf || !P.surf.safe) { G.mface = Math.sign(P.x - G.mx) || 1; G.mwalk = false; G.mscared = !P.ground || (P.surf && !P.surf.safe); return; }   // he's on a crocodile or a log: she waits, ears flat
+  G.mscared = false;
+  const s = P.surf; let tx = P.x - (Math.sign(P.vx) || P.face) * 46; tx = Math.max(s.x0 + 12, Math.min(s.x1 - 12, tx)); const ty = surfYc(s, tx);
+  if (G.msurf !== s || Math.abs(G.my - ty) > 20) { const d = Math.hypot(tx - G.mx, ty - G.my); G.mleap = {x0: G.mx, y0: G.my, x1: tx, y1: ty, t: 0, dur: Math.min(1.25, 0.45 + d / 900), h: Math.max(40, Math.min(220, d * 0.35)), s}; G.mwalk = false; if (d > 300) tone(900, 0.25, 'triangle', 0.03, 1400); return; }
+  const dm = tx - G.mx; if (!G.mwalk && Math.abs(dm) > 24) G.mwalk = true; if (G.mwalk && Math.abs(dm) < 3) G.mwalk = false;
+  if (G.mwalk) { const v = Math.min(Math.abs(dm) * 6, Math.abs(dm) > 140 ? 280 : 175); G.mx += Math.sign(dm) * Math.min(Math.abs(dm), v * dt); G.manim += dt * Math.max(6, v / 14); G.mface = Math.sign(dm); } else G.mface = Math.sign(P.x - G.mx) || 1;
+  G.my = surfYc(s, Math.max(s.x0, Math.min(s.x1, G.mx)));
+}
+function riverHurt(why) {
+  const R = G.ver.river; if (R.ko || G.state !== 'aplay') return;
+  R.ko = {t: 0, why, x: P.x}; G.state = 'acaught'; P.ladder = null; P.mantle = null; P.vx = 0;
+  hiss(0.5, 0.06, 900, 'lowpass'); tone(320, 0.3, 'sine', 0.04, 140);
+  if (why === 'bite') { R.big.jaw = 1; tone(110, 0.15, 'square', 0.06, 70, 0.1); G.pSay = {bn: 'বাপরে!', en: 'Yikes!', t: 1}; }
+  else G.pSay = {bn: 'ঝপাং!', en: 'Splash!', t: 1};
+}
+function updateRiver(dt) {
+  const R = G.ver.river; if (!R) return;
+  if (R.arrive < 1) R.arrive = Math.min(1, R.arrive + dt * 1.4);
+  R.enter = Math.max(0, R.enter - dt * 0.9);
+  const t = G.t;
+  // the crocodiles: their backs are floors while they are up
+  R.crocs.forEach((c, i) => { const s = rvCrocState(c, i, t), sw = RV_CROCS[i].swing || 0, ox = c.x; c.x = RV_CROCS[i].x + Math.sin(t * 0.7 + i) * sw; c.st = s.st; c.k = s.k;
+    c.y = s.st === 'up' ? RV_WAT - 18 : s.st === 'sink' ? RV_WAT - 18 + s.k * s.k * 30 : s.st === 'rise' ? RV_WAT + 12 - s.k * 30 : RV_WAT + 14;
+    const sf = R.sCroc[i], solid = s.st === 'up' || (s.st === 'sink' && s.k < 0.75) || (s.st === 'rise' && s.k > 0.6);
+    if (solid) { sf.x0 = c.x - 62; sf.x1 = c.x + 62; sf.y0 = sf.y1 = Math.min(c.y, RV_WAT - 12); } else { sf.x0 = -9999; sf.x1 = -9990; }
+    if (P.ground && P.surf === sf) { if (solid) { P.x += c.x - ox; P.y = sf.y0; } else { P.ground = false; P.surf = null; } }
+    if (s.st === 'sink' && s.k < dt * 2) hiss(0.2, 0.012, 600, 'lowpass'); });
+  // the drifting logs (only once the second words are back)
+  R.sLog.forEach((sf, i) => { const ox = (sf.x0 + sf.x1) / 2, nx = rvLogX(i, t);
+    if (R.words >= 2) { sf.x0 = nx - 75; sf.x1 = nx + 75; if (P.ground && P.surf === sf) P.x += nx - ox; } else { sf.x0 = -9999; sf.x1 = -9990; } });
+  // leaves drifting on the current
+  if (Math.random() < dt * 1.5) R.leaves.push({x: G.camX - 100 + Math.random() * 60, y: RV_WAT + 6 + Math.random() * 40, r: Math.random() * 6, s: 30 + Math.random() * 30});
+  R.leaves.forEach(l => { l.x += l.s * dt; l.r += dt; }); R.leaves = R.leaves.filter(l => l.x < G.camX + W / 0.8 + 200);
+  riverMishti(dt);
+  R.jk.t += dt;
+  if (R.fly) { R.fly.t += dt; if (R.fly.t > 1.1) { const n = R.fly.n; R.fly = null; R.words = n + 1; R.cap = {line: n, t: 0}; R.wordT[n] = 0.001; riverSurf();
+      if (n === 1) { R.jk.mode = 'hop'; R.jk.t = 0; } tone(660, 0.15, 'triangle', 0.04, 990); tone(990, 0.3, 'triangle', 0.03, 1320, 0.15); } }
+  R.wordT = R.wordT.map(v => v > 0 ? Math.min(1, v + dt * 0.7) : 0);
+  R.cap.t += dt;
+  if (R.ko) { R.ko.t += dt; if (R.ko.t > 0.25 && R.ko.why !== 'bite') { P.y = Math.max(P.y, RV_WAT + 26); P.vy = 0; }
+    if (R.ko.t > 1.0 && G.fadeTarget === 0) { G.fadeTarget = 1; G.fadeSpeed = 3; }
+    if (R.ko.t > 1.4) { const c = RV_CP[R.cp]; R.ko = null; R.big.jaw = 0; Object.assign(P, {x: c.x, y: c.y, vx: 0, vy: 0, ground: true, ladder: null, mantle: null}); P.surf = SURF.find(s => s.safe && c.x >= s.x0 && c.x <= s.x1 && Math.abs(s.y0 - c.y) < 4) || null;
+      G.mx = c.x - 50; G.my = c.y; G.mleap = null; G.msurf = P.surf; G.state = 'aplay'; G.fadeTarget = 0; G.fadeSpeed = 2.5; retryTip('Splash!'); } }
+  if (R.big.bite > 0) R.big.bite = Math.min(1, R.big.bite + dt * 2.5);
+  if (R.root > 0 && R.root < 1) R.root = Math.min(1, R.root + dt * 1.6);
+  if (R.page) { R.page.t += dt; }
+  if (G.state !== 'aplay') return;
+  // checkpoints
+  for (let i = RV_CP.length - 1; i > R.cp; i--) if (P.ground && P.surf && P.surf.safe && Math.abs(P.x - RV_CP[i].x) < 70 && Math.abs(P.y - RV_CP[i].y) < 6) { R.cp = i; sfx.cp(); }
+  // ladders (hanging roots)
+  if (!P.ladder) { const near = (edges.up || (held.up && !P.ground)) ? labLadderNear(-1) : edges.down ? labLadderNear(1) : null;
+    if (near) { P.ladder = near; P.climbPh = 0; P.vx = 0; P.vy = 0; P.ground = false; P.surf = null; P.buffer = 0; edges.jump = false; edges.sneak = false; P.mantle = null; if (Math.abs(P.y - near.y1) < 6) { P.y = near.y1; P.mantle = {u: 0, dir: -1}; } } }
+  if (P.ladder) return;
+  if (P.x < 40) P.x = 40; if (P.x > RV_W - 40) P.x = RV_W - 40;
+  if (P.surf === G.ver.river.sBranch3 && P.x > 3222) { P.x = 3222; P.vx = Math.min(P.vx, 0); }   // the knot at the branch's end
+  // the words: touch the swirl of letters
+  RV_WORDS.forEach((w, i) => { if (!R.got[i] && i === R.words && !R.fly && Math.abs(P.x - w.x) < 40 && P.y > w.y - 30 && P.y < w.y + 90) { R.got[i] = true; R.fly = {n: i, t: 0, x: w.x, y: w.y}; tone(880, 0.2, 'triangle', 0.04, 1320); } });
+  // into the water
+  if (P.y > RV_WAT + 6 && !P.ladder) riverHurt(P.x > RV_POOL[0] - 20 && P.x < RV_POOL[1] + 20 && R.big.page ? 'bite' : 'water');
+  // the big crocodile snaps at anyone coming too close along the pool's edge
+  if (R.big.page && P.ground && P.surf === R.sBankD && P.x > RV_POOL[0] - 30) { R.big.jaw = 1; riverHurt('bite'); }
+  if (edges.use && !G.dialog) { const n = riverNear(); if (n && n.k === 'root') riverRoot(); }
+}
+function riverNear() { const R = G.ver && G.ver.river; if (!R || !P.ground || P.ladder) return null;
+  if (R.root === 0 && R.words >= 3 && P.surf === R.sBranch3 && P.x > 3150) return {k: 'root'}; return null; }
+function riverRoot() {   // the jackal's trick: let the root down, the crocodile bites it instead, the page is free
+  const R = G.ver.river; G.state = 'acut'; P.vx = 0; P.face = 1;
+  play([{do: () => { P.pickT = 0.55; R.root = 0.001; hiss(0.6, 0.03, 500, 'lowpass'); }}, {wait: 0.9},
+    {do: () => { R.big.bite = 0.001; tone(110, 0.18, 'square', 0.07, 70); tone(80, 0.25, 'square', 0.06, 50, 0.12); G.shake = 0.3; }}, {wait: 0.5},
+    {do: () => { R.big.page = 0; R.page = {t: 0}; tone(700, 0.5, 'triangle', 0.04, 1200); }}, {wait: 1.3},
+    {do: () => { R.cap = {line: 3, t: 0}; R.words = 4; R.jk.mode = 'laugh'; R.jk.t = 0; tone(523, 0.2, 'triangle', 0.04); tone(659, 0.2, 'triangle', 0.04, 0, 0.18); tone(784, 0.4, 'triangle', 0.04, 0, 0.36); }}, {wait: 3.2},
+    {say:1, who:'pupu', bn:'পাতাটা পেয়ে গেছি! গল্পের প্রথম পাতা!', en:'I\'ve got the page! The story\'s first page!', mood: 'grin'},
+    {say:1, who:'mishti', bn:'শেয়ালটা যেমন চালাক… তুমিও তেমন!', en:'You\'re as clever as that jackal!', mood: 'happy'},
+    {do: () => { R.done = true; R.exit = 0.001; tone(880, 0.6, 'sine', 0.03, 440); }}, {wait: 1.6},
+  ], () => riverBackToLibrary());
+}
+function riverBackToLibrary() {
+  const V = G.ver; V.phase = 'lib'; V.lib = V.libKeep || V.lib; const L = V.lib; WW = LIB_W; WH = LIB_WH; libSurf();
+  L.found[0] = true; L.open = null;
+  Object.assign(P, {x: LIB_BOOKS[0].x + 40, y: LIB_GAL, ground: true, face: -1, vx: 0, vy: 0, ladder: null, mantle: null, book: null}); P.surf = SURF.find(s => s.y0 === LIB_GAL);
+  G.mx = LIB_BOOKS[0].x + 100; G.my = LIB_GAL; G.mleap = null; G.state = 'acut'; G.fade = 1; G.fadeTarget = 0; G.fadeSpeed = 1.2;
+  play([{wait: 0.6}, {say:1, who:'pupu', bn:'একটা পাতা ফিরে এল! আরও দুটো বাকি।', en:'One page is back! Two more to go.', mood: 'grin'}], () => { G.state = 'aplay'; G.goalT = 0; showToast(L2('পাতা ১/৩ ফিরে এসেছে', 'Page 1 of 3 restored')); });
+}
+function riverGoal() {
+  const R = G.ver.river; if (!R || G.state !== 'aplay' || P.ladder) return null;
+  if (R.words < 3) return {bn: 'গল্পের কথাগুলো ফিরিয়ে আনো · ' + R.words + '/৩', en: 'Bring the story\'s words back · ' + R.words + '/3'};
+  const g = {bn: 'কুমিরের কাছ থেকে পাতাটা ফিরিয়ে আনো', en: 'Get the page back from the crocodile'};
+  if (riverNear()) g.k = ['E']; return g;
+}
+
+// ---------------- drawing: painted paper ----------------
+function rvTornTop(x0, x1, y, amp, seed, col, bot) {   // a band of paper with a torn top edge
+  ctx.beginPath(); ctx.moveTo(x0, bot); ctx.lineTo(x0, y);
+  for (let x = x0; x <= x1; x += 14) ctx.lineTo(x, y + (hash2(Math.floor(x / 14), seed) - 0.5) * amp);
+  ctx.lineTo(x1, bot); ctx.closePath(); ctx.fillStyle = col; ctx.fill();
+}
+function rvSketch(sk, colorFn, pencilFn, bx0, bx1) {   // pencil lines until restored, then the colour wipes in from the left
+  if (sk <= 0) { ctx.save(); ctx.globalAlpha = 0.55; pencilFn(); ctx.restore(); return; }
+  if (sk >= 1) { colorFn(); return; }
+  ctx.save(); ctx.globalAlpha = 0.55; pencilFn(); ctx.restore();
+  ctx.save(); ctx.beginPath(); ctx.rect(bx0 - 20, -5000, (bx1 - bx0 + 40) * sk, 10000); ctx.clip(); colorFn(); ctx.restore();
+}
+function rvPencil(pts, closed) { ctx.save(); ctx.strokeStyle = '#5A5A5E'; ctx.lineWidth = 1.6; for (const j of [0, 1.4]) { ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0] + j, p[1] - j * 0.5) : ctx.moveTo(p[0] + j, p[1] - j * 0.5)); if (closed) ctx.closePath(); ctx.stroke(); } ctx.restore(); }
+function rvCrown(cx, cy, rx, ry, seed) {   // a crown of paper leaf-clusters, darker underneath, lighter on top
+  const n = 30;
+  for (let k = 0; k < n; k++) { const a = Math.PI + (k / (n - 1)) * Math.PI + (hash2(k, seed) - 0.5) * 0.3, rr = 0.55 + hash2(seed, k) * 0.45, px = cx + Math.cos(a) * rx * rr, py = cy + Math.sin(a) * ry * rr + 10;
+    circ(px, py, 20 + hash2(k + 9, seed) * 14, ['#3E6B2A', '#4E7F34', '#5E9440'][k % 3], 2); }
+  for (let k = 0; k < 16; k++) { const px = cx + (hash2(k, seed + 5) - 0.5) * rx * 1.5, py = cy - ry * 0.4 + (hash2(seed + 5, k) - 0.5) * ry * 0.7; circ(px, py, 14 + hash2(k, k + seed) * 10, ['#5E9440', '#6FA548'][k % 2], 2); }
+  for (let k = 0; k < 18; k++) { const px = cx + (hash2(k, seed + 7) - 0.5) * rx * 1.6, py = cy - ry * 0.2 + (hash2(seed + 7, k) - 0.5) * ry; ctx.beginPath(); ctx.ellipse(px, py, 7, 3.5, hash2(k, 3) * 3, 0, 7); ctx.fillStyle = '#8FC05E'; ctx.fill(); }
+}
+function rvBanyan(x, y, s, sk, seed) {   // a big banyan: trunk, hanging roots, a wide crown of leaves
+  const col = () => { ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+    ctx.beginPath(); ctx.moveTo(-40, 0); ctx.quadraticCurveTo(-30, -120, -14, -230); ctx.lineTo(14, -230); ctx.quadraticCurveTo(30, -120, 44, 0); ctx.closePath(); fs('#6B4A2E', 3);
+    for (const dx of [-28, -6, 18]) line(dx, -60, dx + 4, -200, 'rgba(40,24,14,.4)', 2);
+    for (let k = 0; k < 7; k++) { const rx = -150 + k * 50 + hash2(k, seed) * 20; line(rx, -250 + hash2(seed, k) * 30, rx + 4, -40 - hash2(k + 3, seed) * 80, '#7A5A38', 2.4); }
+    rvCrown(0, -290, 200, 120, seed);
+    ctx.restore(); };
+  const pen = () => { ctx.save(); ctx.translate(x, y); ctx.scale(s, s); rvPencil([[-40, 0], [-14, -230], [14, -230], [44, 0]]); for (let k = 0; k < 5; k++) { ctx.beginPath(); ctx.arc(-140 + k * 70, -280 - Math.sin(k / 4 * Math.PI) * 60, 60, 0, 7); ctx.strokeStyle = '#5A5A5E'; ctx.lineWidth = 1.5; ctx.stroke(); } ctx.restore(); };
+  rvSketch(sk, col, pen, x - 200 * s, x + 200 * s);
+}
+function rvBanana(x, y, s, sk) { const col = () => { ctx.save(); ctx.translate(x, y); ctx.scale(s, s); line(0, 0, 4, -90, '#6E8B3D', 9); for (let k = 0; k < 5; k++) { const a = -2.6 + k * 0.6; ctx.save(); ctx.translate(4, -88); ctx.rotate(a); ctx.beginPath(); ctx.ellipse(0, -36, 13, 40, 0, 0, 7); fs(k % 2 ? '#7FB04F' : '#6A9E3E', 2); line(0, -4, 0, -72, '#4E7F34', 1.5); ctx.restore(); } ctx.restore(); };
+  rvSketch(sk, col, () => { ctx.save(); ctx.translate(x, y); ctx.scale(s, s); rvPencil([[0, 0], [4, -90]]); for (let k = 0; k < 4; k++) rvPencil([[4, -88], [4 + Math.cos(-2.3 + k * 0.7) * 60, -88 + Math.sin(-2.3 + k * 0.7) * 60]]); ctx.restore(); }, x - 60 * s, x + 60 * s); }
+function rvReeds(x, y, n, seed) { for (let k = 0; k < n; k++) { const rx = x + k * 9, h = 40 + hash2(k, seed) * 40, sw = Math.sin(G.t * 1.3 + k + seed) * 4; ctx.beginPath(); ctx.moveTo(rx, y); ctx.quadraticCurveTo(rx + sw * 0.5, y - h * 0.6, rx + sw, y - h); ctx.strokeStyle = k % 2 ? '#5E8C3A' : '#7FA84A'; ctx.lineWidth = 3; ctx.stroke(); if (k % 3 === 0) { ctx.beginPath(); ctx.ellipse(rx + sw, y - h - 8, 3.5, 10, 0, 0, 7); fs('#8A5A34', 1.4); } } }
+function rvShapla(x, y, s) {   // a water lily (shapla), the national flower of Bangladesh
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s); ctx.beginPath(); ctx.ellipse(-18, 4, 24, 7, 0, 0.3, Math.PI * 2 - 0.1); ctx.lineTo(-18, 4); fs('#4E8B3A', 1.6);
+  for (let k = 0; k < 6; k++) { const a = -Math.PI / 2 + (k - 2.5) * 0.42; ctx.save(); ctx.rotate(a); ctx.beginPath(); ctx.ellipse(0, -10, 4.5, 11, 0, 0, 7); fs(k % 2 ? '#F2B6C6' : '#FBF0F2', 1.2); ctx.restore(); } circ(0, -3, 3.4, '#E8B53A', 1);
+  ctx.restore(); }
+function rvBridge(sk) {   // the bamboo bridge
+  const x0 = 560, x1 = 905, y = RV_FL - 14;
+  const col = () => { for (const px of [575, 735, 890]) { line(px, y + 4, px, RV_WAT + 30, '#9C7A3E', 7); line(px - 1, y + 20, px - 1, y + 22, '#6E5428', 7); }
+    box(x0 - 4, y - 2, x1 - x0 + 8, 10, '#C9A45A', 2, 4); for (let x = x0 + 8; x < x1; x += 22) line(x, y - 1, x, y + 7, '#8E7036', 1.6);
+    for (const dy of [-40, -22]) { ctx.beginPath(); ctx.moveTo(x0, y + dy); ctx.quadraticCurveTo((x0 + x1) / 2, y + dy + 14, x1, y + dy); ctx.strokeStyle = '#8A6A3A'; ctx.lineWidth = 2.4; ctx.stroke(); }
+    for (const px of [x0 + 4, (x0 + x1) / 2, x1 - 4]) line(px, y, px, y - 44, '#9C7A3E', 4); };
+  const pen = () => { rvPencil([[x0, y], [x1, y]]); rvPencil([[x0, y + 8], [x1, y + 8]]); rvPencil([[x0, y - 40], [(x0 + x1) / 2, y - 28], [x1, y - 40]]); for (const px of [575, 735, 890]) rvPencil([[px, y], [px, RV_WAT + 20]]); };
+  rvSketch(sk, col, pen, x0, x1);
+}
+function rvLog(x, y, sk) { const col = () => { ctx.beginPath(); ctx.ellipse(x, y + 6, 76, 13, 0, 0, 7); fs('#8A5A34', 2.4); ctx.beginPath(); ctx.ellipse(x + 72, y + 6, 6, 12, 0, 0, 7); fs('#C9A06A', 1.6); circ(x + 72, y + 6, 3, '#8A5A34', 0); for (let k = -3; k < 3; k++) line(x + k * 20, y + 1, x + k * 20 + 14, y + 2, 'rgba(40,24,14,.4)', 1.4); circ(x - 30, y - 6, 5, '#5E8C3A', 1.2); };
+  rvSketch(sk, col, () => { ctx.beginPath(); ctx.ellipse(x, y + 6, 76, 13, 0, 0, 7); ctx.strokeStyle = '#5A5A5E'; ctx.lineWidth = 1.6; ctx.setLineDash([6, 5]); ctx.stroke(); ctx.setLineDash([]); }, x - 80, x + 80); }
+function rvStump(x0, x1, y) { box(x0, y, x1 - x0, RV_WAT + 30 - y, '#7A5A38', 2.4, 3); ctx.beginPath(); ctx.ellipse((x0 + x1) / 2, y + 2, (x1 - x0) / 2, 7, 0, 0, 7); fs('#C9A06A', 2); for (const r of [6, 13, 20]) { ctx.beginPath(); ctx.ellipse((x0 + x1) / 2, y + 2, r * (x1 - x0) / 60, r * 0.25, 0, 0, 7); ctx.strokeStyle = 'rgba(80,50,30,.5)'; ctx.lineWidth = 1; ctx.stroke(); } }
+function rvRope(r, drop) {   // a hanging banyan root, braided
+  const y1 = r.y1, y0 = r.y0, sw = Math.sin(G.t * 1.1 + r.x) * 2;
+  ctx.beginPath(); ctx.moveTo(r.x, y1); ctx.quadraticCurveTo(r.x + sw, (y0 + y1) / 2, r.x + sw * 0.5, y0 - 6); ctx.strokeStyle = '#6E4E2E'; ctx.lineWidth = 6; ctx.stroke(); ctx.strokeStyle = '#9A7444'; ctx.lineWidth = 2; ctx.stroke();
+  for (let y = y1 + 16; y < y0 - 8; y += 22) line(r.x - 3 + sw * 0.5, y, r.x + 3 + sw * 0.5, y + 6, 'rgba(40,24,14,.6)', 1.4);
+}
+function drawCroc(x, y, f, o) {   // a proud, gullible crocodile in painted paper; o: {st, k, jaw, eyesOnly, big, bite, page}
+  const s = o.big ? 1.45 : 1;
+  ctx.save(); ctx.translate(x, y); ctx.scale(f * s, s);
+  const shake = o.st === 'sink' ? Math.sin(G.t * 40) * 1.5 * o.k : 0; ctx.translate(shake, 0);
+  if (o.eyesOnly) { for (const ex of [40, 52]) { ctx.beginPath(); ctx.ellipse(ex, -4, 6, 5, 0, Math.PI, 0); fs('#3E6B3A', 1.6); circ(ex, -6, 2.6, '#F2C94C', 0.8); circ(ex + 0.6, -6, 1.2, '#1C1410', 0); } ctx.beginPath(); ctx.ellipse(82, -1, 4, 2.5, 0, Math.PI, 0); fs('#3E6B3A', 1.2); ctx.restore(); return; }
+  const jaw = Math.max(o.jaw || 0, o.bite > 0 ? (o.bite < 0.5 ? o.bite * 2 : 1 - (o.bite - 0.5) * 1.6) : 0);
+  // tail and body
+  ctx.beginPath(); ctx.moveTo(-60, 2); ctx.quadraticCurveTo(-110, -2, -128, 10); ctx.quadraticCurveTo(-100, 12, -60, 14); ctx.closePath(); fs('#3E6B3A', 2.2);
+  ctx.beginPath(); ctx.ellipse(0, 6, 66, 18, 0, Math.PI, 0); ctx.lineTo(66, 14); ctx.lineTo(-66, 14); ctx.closePath(); fs('#4A7D40', 2.4);
+  for (let k = -5; k <= 4; k++) { ctx.beginPath(); ctx.moveTo(k * 12 - 5, -10 + Math.abs(k) * 1.2); ctx.lineTo(k * 12, -18 + Math.abs(k) * 1.6); ctx.lineTo(k * 12 + 5, -10 + Math.abs(k) * 1.2); ctx.closePath(); fs('#2E5530', 1.4); }
+  for (let k = -4; k <= 3; k++) circ(k * 14, -2, 3, '#5E9440', 0);
+  // head: the top jaw lifts open
+  ctx.save(); ctx.translate(56, 0); ctx.rotate(-jaw * 0.55);
+  ctx.beginPath(); ctx.moveTo(0, -12); ctx.quadraticCurveTo(30, -16, 62, -6); ctx.quadraticCurveTo(68, -2, 64, 4); ctx.lineTo(0, 4); ctx.closePath(); fs('#4A7D40', 2.2);
+  if (jaw > 0.1) for (let k = 0; k < 6; k++) { ctx.beginPath(); ctx.moveTo(10 + k * 9, 4); ctx.lineTo(14 + k * 9, 9); ctx.lineTo(18 + k * 9, 4); ctx.closePath(); fs('#FBF5E9', 0.8); }
+  ctx.beginPath(); ctx.ellipse(10, -14, 9, 8, 0, Math.PI, 0); fs('#4A7D40', 2); circ(10, -15, 4.2, '#F2C94C', 1.2); circ(11, -15, 2, '#1C1410', 0); line(3, -20, 17, -20, '#2E5530', 2);   // the big proud eye, its lid low
+  circ(58, -7, 1.6, '#1C1410', 0); ctx.restore();
+  ctx.beginPath(); ctx.moveTo(56, 6); ctx.quadraticCurveTo(90, 8, 118, 6); ctx.quadraticCurveTo(120, 12, 112, 14); ctx.lineTo(56, 14); ctx.closePath(); fs('#9CC07A', 2);   // the lower jaw
+  if (jaw > 0.1) for (let k = 0; k < 6; k++) { ctx.beginPath(); ctx.moveTo(64 + k * 9, 6); ctx.lineTo(68 + k * 9, 1); ctx.lineTo(72 + k * 9, 6); ctx.closePath(); fs('#FBF5E9', 0.8); }
+  if (o.page) { ctx.save(); ctx.translate(98, 2 - jaw * 10); ctx.rotate(-0.25); box(-14, -10, 28, 18, '#F4ECD8', 1.6, 1.5); for (let k = 0; k < 3; k++) line(-10, -5 + k * 5, 10, -5 + k * 5, 'rgba(60,40,30,.5)', 1); ctx.restore(); }   // the page, held in its teeth
+  for (const lx of [-40, 28]) { ctx.beginPath(); ctx.ellipse(lx, 16, 9, 5, 0.3, 0, 7); fs('#3E6B3A', 1.8); }
+  ctx.restore();
+}
+function drawJackal(x, y, f, o) {   // the clever jackal: slim, big ears, a long bushy tail; o: {walk, hop, laugh, sk}
+  ctx.save(); ctx.translate(x, y); ctx.scale(f * 0.95, 0.95);
+  const w = o.walk || 0, lg = Math.sin(w) * 7, hop = o.hop ? -Math.abs(Math.sin(o.hop)) * 18 : 0, la = o.laugh ? Math.sin(G.t * 16) * 0.08 + 0.35 : 0;
+  ctx.translate(0, hop);
+  if (o.sk === 0) ctx.globalAlpha = 0.5;
+  const C = o.sk === 0 ? '#9A9A9E' : '#C8792E', C2 = o.sk === 0 ? '#C8C8CC' : '#F1D9A8';
+  ctx.beginPath(); ctx.moveTo(-26, -34); ctx.quadraticCurveTo(-60, -40 - Math.sin(G.t * 3) * 6, -72, -24); ctx.quadraticCurveTo(-58, -24, -50, -18); ctx.quadraticCurveTo(-40, -22, -24, -26); ctx.closePath(); fs(C, 2.2);   // the tail
+  ctx.beginPath(); ctx.ellipse(-70, -26, 9, 6, -0.4, 0, 7); fs(C2, 1.6);
+  for (const [lx, ph] of [[-18, 0], [-10, Math.PI], [14, Math.PI], [22, 0]]) { const a = Math.sin(w + ph) * 7; line(lx, -24, lx + a * 0.6, -2, '#5A3A22', 3.4); ctx.beginPath(); ctx.ellipse(lx + a * 0.6 + 2, -1, 4, 2.4, 0, 0, 7); fs('#3A2416', 1); }
+  ctx.beginPath(); ctx.ellipse(0, -34, 30, 14, 0, 0, 7); fs(C, 2.4);
+  ctx.beginPath(); ctx.ellipse(10, -27, 16, 8, 0, 0, Math.PI); ctx.fillStyle = C2; ctx.fill();
+  ctx.save(); ctx.translate(26, -44); ctx.rotate(-la);
+  ctx.beginPath(); ctx.moveTo(-8, -6); ctx.lineTo(-4, -30); ctx.lineTo(4, -10); ctx.closePath(); fs(C, 2); ctx.beginPath(); ctx.moveTo(-4, -10); ctx.lineTo(-3, -24); ctx.lineTo(1, -11); ctx.closePath(); ctx.fillStyle = '#5A3A22'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(4, -6); ctx.lineTo(10, -28); ctx.lineTo(14, -6); ctx.closePath(); fs(C, 2);
+  ctx.beginPath(); ctx.moveTo(-10, 0); ctx.quadraticCurveTo(-6, -14, 8, -12); ctx.quadraticCurveTo(26, -8, 36, 0); ctx.quadraticCurveTo(28, 6, 8, 8); ctx.quadraticCurveTo(-6, 8, -10, 0); ctx.closePath(); fs(C, 2.2);
+  ctx.beginPath(); ctx.moveTo(4, 4); ctx.quadraticCurveTo(20, 4, 34, 2); ctx.quadraticCurveTo(24, 8, 8, 8); ctx.closePath(); ctx.fillStyle = C2; ctx.fill();
+  circ(36, -1, 2.6, '#1C1410', 0);
+  if (o.laugh) { ctx.beginPath(); ctx.moveTo(14, 4); ctx.quadraticCurveTo(26, 10, 34, 4); ctx.strokeStyle = '#1C1410'; ctx.lineWidth = 1.6; ctx.stroke(); line(10, -6, 16, -5, '#1C1410', 2); }
+  else { ctx.beginPath(); ctx.ellipse(12, -5, 3.4, 2.4, 0.2, 0, 7); ctx.fillStyle = '#FBF5E9'; ctx.fill(); circ(13, -5, 1.6, '#1C1410', 0); line(18, 4, 28, 3, '#1C1410', 1.2); }
+  ctx.restore(); ctx.restore();
+}
+function drawRiver() {
+  const v = akView(), R = G.ver.river, t = G.t, w = R.words, sk = n => n < w ? 1 : n === w ? 0 : 0, wipe = n => R.wordT[n - 1] || (w >= n ? 1 : 0);
+  // a cream paper sky with painted clouds and a soft sun
+  { const g = ctx.createLinearGradient(0, v.T, 0, RV_WAT); g.addColorStop(0, '#E9D8B0'); g.addColorStop(1, '#F4E8CC'); ctx.fillStyle = g; ctx.fillRect(v.L, v.T, v.R - v.L, RV_WAT - v.T); }
+  circ(2400 + (v.L * 0.6), 560, 70, 'rgba(240,180,90,.55)', 0); circ(2400 + (v.L * 0.6), 560, 50, '#F2B85A', 0);
+  for (let k = 0; k < 8; k++) { const cx = ((k * 610 - v.L * 0.15) % 3800) + v.L * 0.85 - 100, cy = 440 + (k % 3) * 60; ctx.save(); ctx.globalAlpha = 0.85; for (let j = 0; j < 4; j++) { ctx.beginPath(); ctx.ellipse(cx + j * 34, cy - (j % 2) * 10, 38, 18, 0, 0, 7); ctx.fillStyle = '#FBF5E9'; ctx.fill(); } ctx.restore(); }
+  // distant bank: rooftops and palms (layer, slow parallax)
+  { const px = v.L * 0.35; rvTornTop(v.L - 50, v.R + 50, 900, 14, 7, '#B7C49A', RV_WAT);
+    for (let k = 0; k < 16; k++) { const hx = px + k * 260 + hash2(k, 9) * 80; if (hx < v.L - 200 || hx > v.R + 200) continue;
+      if (k % 3 === 0) { line(hx, 900, hx + 6, 800, '#6E7B58', 5); for (let j = 0; j < 5; j++) { const a = -2.6 + j * 0.55; line(hx + 6, 800, hx + 6 + Math.cos(a) * 34, 800 + Math.sin(a) * 22, '#7F8F62', 4); } }
+      else { const hw = 60 + hash2(k, 4) * 30; box(hx - hw / 2, 868, hw, 32, w >= 1 ? '#D8C9A6' : 'rgba(216,201,166,.5)', 1.4, 1); ctx.beginPath(); ctx.moveTo(hx - hw / 2 - 8, 870); ctx.lineTo(hx, 846); ctx.lineTo(hx + hw / 2 + 8, 870); ctx.closePath(); fs(w >= 2 ? '#A9B3B8' : 'rgba(169,179,184,.45)', 1.4); } } }
+  rvTornTop(v.L - 50, v.R + 50, 960, 18, 3, '#8FB06A', RV_WAT);
+  // the riverbank A: grass, the banyan, banana plants
+  rvTornTop(-300, 1015, RV_FL - 6, 10, 11, '#7A9E4A', RV_FL + 60); libFill(-300, RV_FL + 6, 1315, 60, '#8A5A34');
+  rvBanyan(300, RV_FL, 1, 1, 3); rvBanana(70, RV_FL, 0.9, wipe(1)); rvBanana(980, RV_FL, 0.8, wipe(1));
+  box(170, RV_FL - 258, 300, 14, '#6B4A2E', 2.4, 6); for (let x = 190; x < 460; x += 40) line(x, RV_FL - 252, x + 20, RV_FL - 250, 'rgba(40,24,14,.4)', 1.4);   // the low branch
+  box(400, RV_FL - 86, 70, 12, '#6B4A2E', 2, 5);   // a root step
+  rvRope(RV_ROPES[0]);
+  // the island with the jackal, and the far side
+  rvTornTop(1795, 1995, RV_WAT - 40, 8, 5, '#8A5A34', RV_WAT + 40); rvTornTop(1805, 1985, RV_WAT - 44, 6, 6, '#7A9E4A', RV_WAT - 30); rvReeds(1800, RV_WAT - 34, 6, 2); rvReeds(1950, RV_WAT - 34, 5, 4);
+  // the flooded forest: trunks in the water, the stumps, the second banyan with its branch and root
+  for (const tx of [2210, 2600]) { rvSketch(wipe(2), () => { box(tx - 22, 700, 44, RV_WAT - 700 + 20, '#6B4A2E', 2.4, 6); rvCrown(tx, 690, 120, 80, tx); }, () => { rvPencil([[tx - 22, RV_WAT], [tx - 22, 700]]); rvPencil([[tx + 22, RV_WAT], [tx + 22, 700]]); }, tx - 120, tx + 120); }
+  rvStump(R.sStump1.x0, R.sStump1.x1, R.sStump1.y0); rvStump(R.sStump2.x0, R.sStump2.x1, R.sStump2.y0);
+  rvBanyan(2860, RV_FL, 1.15, 1, 8); box(2700, 744, 265, 14, '#6B4A2E', 2.4, 6); rvRope(RV_ROPES[1]);
+  // the far bank D with its pool, the branch above the pool and the hidden root
+  rvTornTop(2880, RV_POOL[0], RV_FL - 6, 10, 13, '#7A9E4A', RV_FL + 60); libFill(2880, RV_FL + 6, RV_POOL[0] - 2880, 60, '#8A5A34');
+  rvTornTop(RV_POOL[1], RV_W + 300, RV_FL - 6, 10, 17, '#7A9E4A', RV_FL + 60); libFill(RV_POOL[1], RV_FL + 6, RV_W + 300 - RV_POOL[1], 60, '#8A5A34');
+  rvBanyan(3090, RV_FL, 1.05, 1, 12); box(2990, RV_FL - 226, 240, 14, '#6B4A2E', 2.4, 6); rvRope(RV_ROPES[2]);
+  { const rx = 3215; if (R.root > 0) { const yb = RV_FL - 212 + (RV_WAT - (RV_FL - 212) + 4) * R.root; rvRope({x: rx, y0: yb, y1: RV_FL - 214}); } else { ctx.beginPath(); for (let k = 0; k < 3; k++) ctx.arc(rx, RV_FL - 202, 8 - k * 2, 0, 7); ctx.strokeStyle = R.words >= 3 ? '#6E4E2E' : 'rgba(90,90,94,.5)'; ctx.lineWidth = R.words >= 3 ? 4 : 1.6; ctx.stroke(); } }
+  // sugarcane on the far side (what the jackal wanted)
+  for (let k = 0; k < 9; k++) { const sx = 3440 + k * 22, h = 120 + hash2(k, 21) * 40; rvSketch(wipe(2), () => { line(sx, RV_FL, sx + 4, RV_FL - h, '#7A9A3A', 5); for (let y = RV_FL - 20; y > RV_FL - h; y -= 24) line(sx - 3, y, sx + 7, y, '#5E7A2A', 1.6); line(sx + 4, RV_FL - h, sx + 30, RV_FL - h - 20, '#8FB06A', 3); }, () => rvPencil([[sx, RV_FL], [sx + 4, RV_FL - h]]), sx - 10, sx + 30); }
+  rvBanana(3600, RV_FL, 0.9, wipe(3));
+  // the bridge, the logs, the crocodiles, the big crocodile
+  rvBridge(wipe(1));
+  R.sLog.forEach((sf, i) => { const x = R.words >= 2 ? (sf.x0 + sf.x1) / 2 : rvLogX(i, t); rvLog(x, RV_WAT - 14, wipe(2)); });
+  R.crocs.forEach(c => { ctx.save(); ctx.translate(c.x, RV_WAT); ctx.scale(1.2, 1.2); ctx.translate(-c.x, -RV_WAT); if (c.st === 'down') drawCroc(c.x - 56, RV_WAT + 4, 1, {eyesOnly: 1}); else drawCroc(c.x - 10, c.y + 12, 1, {st: c.st, k: c.k}); ctx.restore(); });
+  { const B = R.big; drawCroc(3345, RV_WAT + 4, -1, {big: 1, jaw: B.jaw * 0.6 + (B.page ? Math.max(0, Math.sin(G.t * 0.8)) * 0.15 : 0), bite: B.bite, page: B.page}); }
+  // the jackal: pacing on the island (grey, stuck) → hopping ahead → laughing on the far bank
+  { const J = R.jk; if (J.mode === 'pace') { const u = (J.t * 0.35) % 2, xx = 1840 + (u < 1 ? u : 2 - u) * 110; drawJackal(xx, RV_WAT - 34, u < 1 ? 1 : -1, {walk: J.t * 9, sk: 0}); }
+    else if (J.mode === 'hop') { const u = Math.min(1, J.t / 3.2), xx = 1920 + u * (3480 - 1920), yy = u < 1 ? RV_WAT - 40 - Math.abs(Math.sin(u * 14)) * 60 : RV_FL; if (u < 1) drawJackal(xx, yy, 1, {walk: J.t * 10}); else drawJackal(3480, RV_FL, -1, {walk: 0}); }
+    else drawJackal(3480, RV_FL, -1, {laugh: 1}); }
+  // the swirls of letters (only the next one glows; the later ones are faint)
+  RV_WORDS.forEach((wd, i) => { if (R.got[i]) return; const on = i === R.words, a = on ? 1 : 0.25;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(wd.x, wd.y, 2, wd.x, wd.y, 60); g.addColorStop(0, 'rgba(255,214,120,' + 0.5 * a + ')'); g.addColorStop(1, 'rgba(255,214,120,0)'); ctx.fillStyle = g; ctx.fillRect(wd.x - 60, wd.y - 60, 120, 120); ctx.restore();
+    for (let k = 0; k < 9; k++) { const an = t * 1.8 + k * 0.7, r = 14 + (k % 3) * 9; ctx.globalAlpha = a; text(LIB_LETTERS[(k * 7 + i * 5) % LIB_LETTERS.length], wd.x + Math.cos(an) * r, wd.y + Math.sin(an) * r * 0.7, 13 + (k % 3) * 3, '#C2730E', 700, 'center'); } ctx.globalAlpha = 1; });
+  if (R.fly) { const u = Math.min(1, R.fly.t / 1.1), tx = [735, 2400, 3150][R.fly.n], ty = [RV_FL - 30, RV_WAT - 20, RV_FL - 230][R.fly.n];   // the letters fly to what they restore
+    for (let k = 0; k < 12; k++) { const e = Math.min(1, u * 1.2 - k * 0.02), x = R.fly.x + (tx - R.fly.x) * e + Math.sin(e * 9 + k) * 30 * (1 - e), y = R.fly.y + (ty - R.fly.y) * e - Math.sin(e * Math.PI) * 120; text(LIB_LETTERS[(k * 3) % LIB_LETTERS.length], x, y, 15, '#C2730E', 700, 'center'); } }
+  if (R.page) { const u = Math.min(1, R.page.t / 1.2), x = 3200 + (P.x - 3200) * u, y = RV_WAT - 10 + (P.y - 70 - (RV_WAT - 10)) * u - Math.sin(u * Math.PI) * 120; if (u < 1) { ctx.save(); ctx.translate(x, y); ctx.rotate(u * 6); box(-16, -11, 32, 22, '#F4ECD8', 1.6, 1.5); ctx.restore(); } }
+}
+function drawRiverFront() {
+  const v = akView(), R = G.ver.river, t = G.t;
+  // the river: three bands of torn-paper waves, drifting
+  for (const [dy, col, sp, amp] of [[0, '#5E9CB0', 18, 10], [22, '#3F7FA0', 28, 12], [52, '#2E6E78', 40, 14]]) {
+    ctx.beginPath(); ctx.moveTo(v.L - 40, v.B + 10); const off = (t * sp) % 60;
+    for (let x = v.L - 60; x <= v.R + 60; x += 30) { const xx = x - off; ctx.lineTo(xx, RV_WAT + dy + Math.sin((xx + dy * 7) / 46) * amp * 0.5 + (hash2(Math.floor((xx + 6000) / 30), dy) - 0.5) * 4); }
+    ctx.lineTo(v.R + 40, v.B + 10); ctx.closePath(); ctx.fillStyle = col; ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 2; ctx.stroke(); }
+  // where the banks are, the earth in front of the water
+  for (const [a, b] of [[-300, 1015], [2880, RV_POOL[0]], [RV_POOL[1], RV_W + 300]]) { libFill(a, RV_FL + 6, b - a, v.B - RV_FL, '#8A5A34'); rvTornTop(a, b, RV_FL - 4, 8, a, '#7A9E4A', RV_FL + 10); }
+  rvTornTop(1795, 1995, RV_WAT - 36, 6, 6, '#8A5A34', RV_WAT + 30);
+  // lilies and leaves on the current
+  for (const [x, s] of [[1220, 0.9], [1410, 1], [1600, 0.85], [2290, 1], [2540, 0.9], [3290, 1.1]]) rvShapla(x, RV_WAT + 8, s);
+  R.leaves.forEach(l => { ctx.save(); ctx.translate(l.x, l.y); ctx.rotate(Math.sin(l.r) * 0.4); ctx.beginPath(); ctx.ellipse(0, 0, 7, 3.5, 0, 0, 7); fs('#7FB04F', 1); ctx.restore(); });
+  // bubbles: a crocodile about to rise, or about to sink
+  R.crocs.forEach(c => { if (c.st === 'rise' || c.st === 'sink') for (let k = 0; k < 5; k++) { const u = (t * 1.6 + k * 0.23) % 1; circ(c.x - 40 + k * 18, RV_WAT + 4 - u * 22, 2.5 + (k % 2), 'rgba(255,255,255,' + (0.8 * (1 - u)) + ')', 1); } });
+  if (R.ko && R.ko.why !== 'bite' && R.ko.t < 0.8) for (let k = 0; k < 10; k++) { const a = -Math.PI + k * Math.PI / 9, u = R.ko.t / 0.8; circ(R.ko.x + Math.cos(a) * 40 * u, RV_WAT - Math.sin(-a) * 60 * u + u * u * 50, 4, 'rgba(255,255,255,' + (1 - u) + ')', 1); }
+  // reeds in front
+  rvReeds(1010, RV_FL + 30, 7, 9); rvReeds(2860, RV_FL + 30, 6, 13);
+  // the paper grain and the page edge (the world is inside a book)
+  ctx.save(); ctx.globalAlpha = 0.06; for (let k = 0; k < 60; k++) circ(v.L + hash2(k, 1) * (v.R - v.L), v.T + hash2(1, k) * (v.B - v.T), 1.5, '#5A3A22', 0); ctx.restore();
+  if (R.enter > 0 || R.exit) { const a = R.exit ? Math.min(1, R.exit) : R.enter; if (R.exit) R.exit += 1 / 60;   // a cream page sweeping across
+    ctx.save(); ctx.globalAlpha = Math.min(1, a * 1.2); ctx.fillStyle = '#F4ECD8'; ctx.fillRect(v.L, v.T, v.R - v.L, v.B - v.T); ctx.restore(); }
+}
+function drawRiverHUD() {   // the story caption: a strip of parchment; the line writes itself in as the words come back
+  const R = G.ver.river; if (!R) return;
+  const n = R.cap.line, w = 620, x = W / 2 - w / 2, y = 10;
+  ctx.save(); ctx.globalAlpha = 0.95; box(x, y, w, 46, '#F4ECD8', 2, 6); ctx.restore();
+  text(L2('শেয়াল আর কুমির', 'The Clever Jackal and the Crocodile'), W / 2, y + 15, 10, '#8A5A34', 700, 'center');
+  if (n < 0) { for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.moveTo(x + 60 + k * 170, y + 33); for (let j = 0; j < 8; j++) ctx.lineTo(x + 60 + k * 170 + j * 18, y + 33 + (j % 2 ? -3 : 3)); ctx.strokeStyle = 'rgba(90,90,94,.5)'; ctx.lineWidth = 1.4; ctx.stroke(); } return; }
+  const s = L2(RV_LINES[n][0], RV_LINES[n][1]), c = Math.floor(Math.min(1, R.cap.t / 2.2) * s.length);
+  text(s.slice(0, c), W / 2, y + 35, s.length > 70 ? 12 : 14, '#3A2416', 600, 'center');
+  for (let i = 0; i < 4; i++) { const on = i <= n || (i < 3 && R.got[i]); circ(W / 2 + w / 2 - 70 + i * 16, y + 14, 4, on ? '#E8B53A' : 'rgba(60,40,30,.2)', 1); }
 }
 
 // ---- (v261) Pupu climbing a ladder in profile: he faces the rungs, hands reach up in turn, knees step up in turn ----
